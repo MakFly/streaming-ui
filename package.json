@@ -31,7 +31,8 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview",
-    "registry:build": "node scripts/build-registry.mjs"
+    "registry:build": "REGISTRY_URL=https://streaming-ui.pulseview.app bun scripts/build-registry.mjs",
+    "registry:check": "bun run registry:build && git diff --exit-code -- registry.json registry public/r"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

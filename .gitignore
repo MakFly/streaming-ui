@@ -3,3 +3,7 @@ dist
 *.local
 .claude/
 .env*
+
+.env.shuttle
+.shuttle/
+.make/

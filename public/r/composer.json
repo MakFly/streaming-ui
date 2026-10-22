@@ -4,17 +4,17 @@
   "title": "Composer (all variants)",
   "description": "The eleven composers behind one <Composer variant=\"…\" /> switch, with a provider that lets a picker swap them everywhere.",
   "registryDependencies": [
-    "http://localhost:5173/r/composer-pill.json",
-    "http://localhost:5173/r/composer-box.json",
-    "http://localhost:5173/r/composer-panel.json",
-    "http://localhost:5173/r/composer-dock.json",
-    "http://localhost:5173/r/composer-command.json",
-    "http://localhost:5173/r/composer-inline.json",
-    "http://localhost:5173/r/composer-voice.json",
-    "http://localhost:5173/r/composer-halo.json",
-    "http://localhost:5173/r/composer-media.json",
-    "http://localhost:5173/r/composer-palette.json",
-    "http://localhost:5173/r/composer-mention.json"
+    "https://streaming-ui.pulseview.app/r/composer-pill.json",
+    "https://streaming-ui.pulseview.app/r/composer-box.json",
+    "https://streaming-ui.pulseview.app/r/composer-panel.json",
+    "https://streaming-ui.pulseview.app/r/composer-dock.json",
+    "https://streaming-ui.pulseview.app/r/composer-command.json",
+    "https://streaming-ui.pulseview.app/r/composer-inline.json",
+    "https://streaming-ui.pulseview.app/r/composer-voice.json",
+    "https://streaming-ui.pulseview.app/r/composer-halo.json",
+    "https://streaming-ui.pulseview.app/r/composer-media.json",
+    "https://streaming-ui.pulseview.app/r/composer-palette.json",
+    "https://streaming-ui.pulseview.app/r/composer-mention.json"
   ],
   "files": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "path": "src/lib/storage.ts",
-      "content": "// localStorage can throw (private windows, blocked site data): every access goes through here.\nexport const storage = {\n  get(key: string, fallback: string): string {\n    try {\n      return localStorage.getItem(key) ?? fallback;\n    } catch {\n      return fallback;\n    }\n  },\n  set(key: string, value: string) {\n    try {\n      localStorage.setItem(key, value);\n    } catch {\n      /* not persisted */\n    }\n  },\n};\n\nexport const STORAGE_KEYS = { theme: 'sui-theme', view: 'sr-view' } as const;\n",
+      "content": "// localStorage can throw (private windows, blocked site data): every access goes through here.\nexport const storage = {\n  get(key: string, fallback: string): string {\n    try {\n      return localStorage.getItem(key) ?? fallback;\n    } catch {\n      return fallback;\n    }\n  },\n  set(key: string, value: string) {\n    try {\n      localStorage.setItem(key, value);\n    } catch {\n      /* not persisted */\n    }\n  },\n};\n\nexport const STORAGE_KEYS = { theme: 'sui-theme', palette: 'sui-palette', view: 'sr-view' } as const;\n",
       "type": "registry:lib",
       "target": "lib/storage.ts"
     }

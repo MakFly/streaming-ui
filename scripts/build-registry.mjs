@@ -1,13 +1,20 @@
 // Builds the composer kit as a shadcn registry: writes registry.json, bundles the Streaming UI tokens into one CSS
 // file, then runs `shadcn build`, which emits one JSON per item into public/r/ (served next to the site).
 //
-//   REGISTRY_URL=https://your-site.dev npm run registry:build
+//   bun run registry:build                                   (production URL, set in package.json)
+//   REGISTRY_URL=https://your-site.dev bun scripts/build-registry.mjs
 //
 // Items that depend on each other reference their JSON by URL, so REGISTRY_URL must be where public/r is served.
+// There is no default: a silent localhost fallback once shipped a registry that only worked on the author's machine.
 import { execSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-const BASE = (process.env.REGISTRY_URL ?? 'http://localhost:5173').replace(/\/$/, '');
+if (!process.env.REGISTRY_URL) {
+  console.error('REGISTRY_URL is not set: give the public origin that serves public/r (see package.json registry:build).');
+  process.exit(1);
+}
+const BASE = process.env.REGISTRY_URL.replace(/\/$/, '');
+const SHADCN = 'shadcn@4.22.1'; // pinned: the registry output must not change with whatever shadcn is latest
 const url = (name) => `${BASE}/r/${name}.json`;
 const KIT = 'src/templates/kit';
 const TARGET = 'components/composer';
@@ -93,5 +100,5 @@ const registry = {
 };
 
 writeFileSync('registry.json', `${JSON.stringify(registry, null, 2)}\n`);
-execSync('npx --yes shadcn@latest build registry.json --output public/r', { stdio: 'inherit' });
+execSync(`bunx ${SHADCN} build registry.json --output public/r`, { stdio: 'inherit' });
 console.log(`Registry built for ${BASE}: ${registry.items.length} items in public/r/`);

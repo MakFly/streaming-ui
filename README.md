@@ -35,7 +35,7 @@
 - **A rebuild prompt for everything.** Each demo, template and composer opens a Markdown prompt with the exact choreography, timings and source files, ready to paste into an AI coding assistant.
 - **10 AI chat templates.** Assistant, Research, Coding Agent, Support Copilot, Data Analyst, Agent Builder, Canvas, Deep Research, Agent Approvals and Model Compare. Each one plays a scripted conversation, then answers what you type, with a desktop / tablet / mobile preview.
 - **11 interchangeable composers.** Pill, Box, Panel, Dock, Command, Inline, Voice, Halo, Media, Palette and Mention, all behind one `<Composer variant="…" />` API. Pick one for every template at once from any header.
-- **A shadcn registry.** Every composer, the shared kit, the model picker and the design tokens install into your own project with one `npx shadcn add` command.
+- **A shadcn registry.** Every composer, the shared kit, the model picker and the design tokens install into your own project with one `bunx shadcn add` command.
 - **Light and dark, four palettes.** Graphite, Dusk, Slate and Sand swap the neutral and accent scales of the whole UI; the choice follows into every live preview.
 - **Built for real use.** Real dictation (Web Speech API, with a fallback), attachments with upload rings, a model picker with effort levels and fast mode, a context ring with usage limits, keyboard support everywhere.
 
@@ -52,13 +52,13 @@
 
 ## Quick start
 
-Requires Node.js 20 or later.
+Requires [Bun](https://bun.sh) 1.3 or later.
 
 ```bash
 git clone https://github.com/MakFly/streaming-ui.git
 cd streaming-ui
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Open <http://localhost:5173>.
@@ -69,10 +69,10 @@ The composers are published as a [shadcn registry](https://ui.shadcn.com/docs/re
 
 ```bash
 # one composer, with the kit and tokens it needs
-npx shadcn@latest add https://<your-deployment>/r/composer-pill.json
+bunx shadcn@latest add https://streaming-ui.pulseview.app/r/composer-pill.json
 
 # all eleven behind one <Composer variant="…" /> switch
-npx shadcn@latest add https://<your-deployment>/r/composer.json
+bunx shadcn@latest add https://streaming-ui.pulseview.app/r/composer.json
 ```
 
 Then import the tokens once in your global CSS, after Tailwind:
@@ -94,10 +94,10 @@ export function Chat() {
 }
 ```
 
-The registry items point at each other by URL. Build them for the address you deploy to:
+The registry items point at each other by URL. `bun run registry:build` builds them for <https://streaming-ui.pulseview.app>; for another deployment, set the address yourself (the script refuses to run without one):
 
 ```bash
-REGISTRY_URL=https://your-site.example npm run registry:build
+REGISTRY_URL=https://your-site.example bun scripts/build-registry.mjs
 ```
 
 | Item | What you get |
@@ -139,21 +139,21 @@ src/
       variants/            one file per composer (+ *.showcase.tsx for the /composers page)
   styles/                  theme, typography, palettes, globals, scrollbars, per-collection scopes
 public/
-  r/                       the built shadcn registry (npm run registry:build)
+  r/                       the built shadcn registry (bun run registry:build)
   sources/                 original registry sources, used to build the demo prompts
 scripts/                   build-registry.mjs, collect-classes.mjs
-legacy/                    the earlier vanilla build, kept for reference
 ```
 
 ## Scripts
 
 | Command | Does |
 | --- | --- |
-| `npm run dev` | Dev server on <http://localhost:5173> |
-| `npm run build` | Typecheck, then production build in `dist/` |
-| `npm run preview` | Serve `dist/` |
-| `npm run typecheck` | `tsc -b` only |
-| `npm run registry:build` | Write `registry.json`, bundle the tokens, run `shadcn build` into `public/r/` |
+| `bun run dev` | Dev server on <http://localhost:5173> |
+| `bun run build` | Typecheck, then production build in `dist/` |
+| `bun run preview` | Serve `dist/` |
+| `bun run typecheck` | `tsc -b` only |
+| `bun run registry:build` | Write `registry.json`, bundle the tokens, run `shadcn build` into `public/r/` |
+| `bun run registry:check` | Rebuild the registry and fail if `public/r/` differs from what is committed |
 
 ## How it works
 
@@ -168,9 +168,9 @@ legacy/                    the earlier vanilla build, kept for reference
 Issues and pull requests are welcome.
 
 1. Fork the repository and create a branch.
-2. `npm install`, then `npm run dev`.
-3. Keep `npm run build` passing (it typechecks first).
-4. New composer: add `src/templates/kit/variants/<id>.tsx` (+ `<id>.showcase.tsx`), register it in `variants/index.ts` and `composer-variant.tsx`, then run `npm run registry:build`.
+2. `bun install`, then `bun run dev`.
+3. Keep `bun run build` passing (it typechecks first).
+4. New composer: add `src/templates/kit/variants/<id>.tsx` (+ `<id>.showcase.tsx`), register it in `variants/index.ts` and `composer-variant.tsx`, then run `bun run registry:build`.
 5. New template: add `src/templates/<name>.tsx` with a default export and register it in `src/templates/registry.ts`.
 
 ## Credits and license

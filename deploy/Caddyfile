@@ -1,0 +1,33 @@
+# TLS ends at Cloudflare and the Shuttle edge Caddy speaks plain HTTP to this service.
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+:8080 {
+	root * /srv
+	encode zstd gzip
+
+	respond /health 200
+
+	# Hashed Vite assets never change under the same name.
+	header /assets/* Cache-Control "public, max-age=31536000, immutable"
+
+	# The shadcn registry and the prompt sources are plain files: a miss is a 404, never the SPA shell.
+	@static path /r/* /sources/*
+	handle @static {
+		header Cache-Control "public, max-age=300"
+		header /r/* Access-Control-Allow-Origin "*"
+		file_server
+	}
+
+	# Everything else is a client-side route (createBrowserRouter): fall back to index.html.
+	handle {
+		# The shell must be revalidated, or a browser keeps pointing at hashed assets a later deploy removed.
+		# (A path matcher would not work here: header runs before try_files rewrites the path.)
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}

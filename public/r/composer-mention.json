@@ -7,7 +7,7 @@
     "lucide-react"
   ],
   "registryDependencies": [
-    "http://localhost:5173/r/composer-kit.json"
+    "https://streaming-ui.pulseview.app/r/composer-kit.json"
   ],
   "files": [
     {

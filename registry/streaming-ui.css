@@ -1419,25 +1419,6 @@
   color: inherit;
 }
 
-/* Composer Loader (components/application/composer-loader): the light band
- * orbiting the composer while the agent works. Dash segments on a
- * pathLength-normalized SVG stroke — the offset laps once per duration. */
-@keyframes sui-composer-loader-dash {
-  from {
-    stroke-dashoffset: 0;
-  }
-
-  to {
-    stroke-dashoffset: -100;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sui-composer-loader-rect {
-    animation: none !important;
-  }
-}
-
 /* Composer mic listening state (components/application/ai-chat): equalizer
  * bars dancing while voice input is active. Per-bar duration/delay come in
  * inline so the bars drift out of phase like real audio. */
@@ -1582,6 +1563,20 @@
   html { scrollbar-gutter: stable; }
 }
 
+/* Template previews (html.no-scrollbars, set by /preview/:slug): no visible scrollbar anywhere — panes still
+ * scroll by wheel, trackpad and touch, and the thread keeps its scroll-to-bottom button. Code wraps instead of
+ * scrolling sideways, so nothing hides past a bar you can't see. Unlayered, so it wins over the scrollbar-thin,
+ * whitespace-pre and min-w-fit utilities. */
+html.no-scrollbars { scrollbar-gutter: auto; }
+html.no-scrollbars,
+html.no-scrollbars * { scrollbar-width: none !important; }
+html.no-scrollbars ::-webkit-scrollbar { display: none !important; }
+html.no-scrollbars pre,
+html.no-scrollbars pre code,
+html.no-scrollbars pre .whitespace-pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+html.no-scrollbars pre code,
+html.no-scrollbars pre .whitespace-pre { min-width: 0; }
+
 
 /* ---- templates.css */
 /* Chat templates: motion for the agent primitives in templates/kit/primitives.tsx (keyframes shared with
@@ -1614,11 +1609,6 @@
 }
 .sui-agent-thinking-stars { color: color-mix(in oklab, currentColor 75%, transparent); }
 
-@keyframes sui-composer-loader-dash {
-  from { stroke-dashoffset: 0; }
-  to { stroke-dashoffset: -100; }
-}
-
 /* While the theme flips (see providers/theme-provider.tsx), nothing animates the colour swap. */
 .theme-switching, .theme-switching *, .theme-switching *::before, .theme-switching *::after { transition: none !important; }
 
@@ -1646,5 +1636,5 @@
 @media (prefers-reduced-motion: reduce) {
   .sui-agent-thinking-label { color: var(--sui-agent-thinking-tone); background-image: none; animation: none; }
   .sui-agent-thinking-star { animation: none; transform: none; opacity: 0.7; }
-  .sui-composer-loader-rect, .tpl-reveal, .tpl-guide, .tpl-scan, .tpl-tile-in { animation: none !important; }
+  .tpl-reveal, .tpl-guide, .tpl-scan, .tpl-tile-in { animation: none !important; }
 }

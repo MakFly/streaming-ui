@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "app": "streaming-ui",
+  "domain": "streaming-ui.pulseview.app",
+  "server": {
+    "host": "192.168.1.230",
+    "user": "deploy",
+    "port": 22,
+    "access": {
+      "allowed_public_tcp_ports": [80, 443, 3000]
+    }
+  },
+  "setup": {
+    "slo_seconds": 600
+  },
+  "deploy": {
+    "strategy": "swarm",
+    "primary_service": "web",
+    "timeout": 180,
+    "retain": 2,
+    "promotion_slo_seconds": 60,
+    "total_slo_seconds": 180,
+    "compose_files": ["docker-compose.shuttle.yml"],
+    "prune_build_cache": "capped",
+    "build_cache_keep": "5GB",
+    "prune_local_images": true,
+    "edge_proxy": true
+  },
+  "retention": {
+    "registry_cache": "3GB",
+    "min_free_percent": 20
+  },
+  "production": {
+    "redis": false,
+    "rabbitmq": false
+  },
+  "services": {
+    "web": {
+      "port": 8080,
+      "resources": {
+        "memory": "128M"
+      },
+      "healthcheck": {
+        "type": "http",
+        "path": "/health"
+      }
+    }
+  },
+  "readiness": {
+    "preset": "docker-swarm",
+    "healthcheck_path": "/health"
+  },
+  "caddy": {
+    "image": "caddy@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+    "tls_mode": "off",
+    "trusted_cidrs": ["192.168.1.222/32"],
+    "headers": {
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    }
+  }
+}
