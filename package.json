@@ -28,7 +28,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && bun scripts/prerender-html.mjs",
     "typecheck": "tsc -b",
     "preview": "vite preview",
     "registry:build": "REGISTRY_URL=https://streaming-ui.pulseview.app bun scripts/build-registry.mjs",

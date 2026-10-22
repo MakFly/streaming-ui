@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { TEMPLATES, applyHead } from '@/seo/routes';
 import { Link } from 'react-router';
 import { Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,7 @@ export function TemplateCard({ t, featured }: { t: TemplateMeta; featured?: bool
 /** `/templates` — every chat template, each thumbnail a live, playing preview. */
 export function TemplatesPage() {
   useEffect(() => {
-    document.title = 'Chat templates · Streaming UI';
+    applyHead(TEMPLATES);
   }, []);
   return (
     <PageShell width="wide">

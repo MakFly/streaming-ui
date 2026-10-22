@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Link, Outlet, useParams } from 'react-router';
+import { Link, Outlet, useLocation, useParams } from 'react-router';
 import { SiteHeader } from '@/components/site-header';
 import { PageShell } from '@/components/page-shell';
 import { DemoActions, DemoMeta } from '@/components/demo-card';
@@ -8,6 +8,7 @@ import { Icon } from '@/components/icon';
 import { demos, getDemo } from '@/engine/registry';
 import type { Demo } from '@/engine/types';
 import { paths } from '@/lib/paths';
+import { applyHead, isPromptPath } from '@/seo/routes';
 import { NotFound } from '@/routes/not-found';
 
 function Neighbour({ demo, dir }: { demo?: Demo; dir: 'prev' | 'next' }) {
@@ -35,9 +36,16 @@ export function DemoPage() {
   const demo = getDemo(slug);
   const stage = useRef<DemoStageHandle>(null);
 
+  const { pathname } = useLocation();
   useEffect(() => {
-    if (demo) document.title = `${demo.title} · ${demo.group} · Streaming UI`;
-  }, [demo]);
+    if (!demo) return;
+    applyHead({
+      title: `${demo.title} · ${demo.group} · Streaming UI`,
+      description: demo.desc,
+      path: paths.demo(demo.slug),
+      robots: isPromptPath(pathname) ? 'noindex, follow' : 'index, follow',
+    });
+  }, [demo, pathname]);
 
   if (!demo) return <NotFound />;
   const i = demo.index - 1;

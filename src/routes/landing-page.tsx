@@ -12,6 +12,7 @@ import { Icon } from '@/components/icon';
 import { demos, getDemo, libraries } from '@/engine/registry';
 import type { Demo } from '@/engine/types';
 import { paths } from '@/lib/paths';
+import { HOME, applyHead } from '@/seo/routes';
 import { cn } from '@/lib/utils';
 
 const pick = (slugs: string[]) => slugs.map(getDemo).filter((d): d is Demo => Boolean(d));
@@ -360,7 +361,10 @@ function Footer() {
           <Logo className="size-6" />
           <span className="text-body-semibold text-text-primary">Streaming UI</span>
         </div>
-        <p className="text-body-2-regular text-text-tertiary">Thinking, streaming and agent states, rebuilt as live React components.</p>
+        <p className="text-body-2-regular text-text-tertiary">
+          Thinking, streaming and agent states, rebuilt as live React components. Free and open source,{' '}
+          <a href="https://github.com/MakFly/streaming-ui/blob/main/LICENSE" className="underline underline-offset-2 hover:text-text-primary">MIT license</a>.
+        </p>
         <nav aria-label="Footer" className="flex gap-4 sm:ms-auto">
           <Link to={paths.gallery()} className="text-body-2-medium text-text-secondary hover:text-text-primary">Responses</Link>
           <Link to="/#libraries" className="text-body-2-medium text-text-secondary hover:text-text-primary">Collections</Link>
@@ -376,7 +380,7 @@ export function LandingPage() {
   const { hash } = useLocation();
 
   useEffect(() => {
-    document.title = 'Streaming UI — every way an AI response can arrive';
+    applyHead(HOME);
   }, []);
 
   // In-page anchors (/#libraries, /#prompts): the router does not scroll to hashes on its own.

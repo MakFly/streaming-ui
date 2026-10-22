@@ -5,6 +5,7 @@ import { getTemplate } from '@/templates/registry';
 import { ErrorScreen } from '@/routes/not-found';
 import { ComposerVariantProvider } from '@/templates/kit/composer-variant';
 import { paths } from '@/lib/paths';
+import { applyHead } from '@/seo/routes';
 import { cn } from '@/lib/utils';
 
 /** True when this document is the top window (Live preview), false inside the gallery / page iframes. */
@@ -96,7 +97,13 @@ export function TemplatePreview() {
   const [top] = useState(isTopWindow);
 
   useEffect(() => {
-    if (t) document.title = `${t.name} · Live preview`;
+    if (!t) return;
+    applyHead({
+      title: `${t.name} · Live preview`,
+      description: t.description,
+      path: `/preview/${t.slug}`,
+      robots: 'noindex, nofollow',
+    });
   }, [t]);
 
   // A preview never shows a scrollbar (styles/scrollbars.css): it reads as the app, not as a page.

@@ -1,5 +1,5 @@
 import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, Outlet, useNavigationType, useParams, useSearchParams } from 'react-router';
+import { Link, Outlet, useLocation, useNavigationType, useParams, useSearchParams } from 'react-router';
 import { SiteHeader } from '@/components/site-header';
 import { PageShell } from '@/components/page-shell';
 import { LibraryChips } from '@/components/library-chips';
@@ -11,6 +11,7 @@ import { Icon } from '@/components/icon';
 import { demos, getLibrary, libraries, searchText } from '@/engine/registry';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { paths, type GalleryView } from '@/lib/paths';
+import { RESPONSES, applyHead, isPromptPath } from '@/seo/routes';
 import { cn } from '@/lib/utils';
 import { NotFound } from '@/routes/not-found';
 
@@ -56,9 +57,18 @@ export function GalleryPage() {
   const view: GalleryView = (params.get('view') ?? storage.get(STORAGE_KEYS.view, 'grid')) === 'list' ? 'list' : 'grid';
 
   useEffect(() => storage.set(STORAGE_KEYS.view, view), [view]);
+  const { pathname } = useLocation();
   useEffect(() => {
-    document.title = library ? `${library.name} · Streaming UI` : 'Responses · Streaming UI';
-  }, [library]);
+    if (librarySlug && !library) return;
+    applyHead({
+      title: library ? `${library.name} · Streaming UI` : RESPONSES.title,
+      description: library
+        ? `${library.count} streaming responses in the ${library.name} collection, each playing live in its own theme.`
+        : RESPONSES.description,
+      path: library ? `/responses/library/${library.slug}` : '/responses',
+      robots: isPromptPath(pathname) ? 'noindex, follow' : 'index, follow',
+    });
+  }, [library, librarySlug, pathname]);
 
   const visible = useMemo(
     () =>

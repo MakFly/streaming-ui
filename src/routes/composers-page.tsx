@@ -8,6 +8,7 @@ import { InstallButton } from '@/components/composers/install-button';
 import { Icon } from '@/components/icon';
 import { COMPOSER_VARIANTS, ComposerVariantProvider, useComposerChoice, type ComposerVariant } from '@/templates/kit/composer-variant';
 import { paths } from '@/lib/paths';
+import { COMPOSERS, applyHead } from '@/seo/routes';
 import { cn } from '@/lib/utils';
 
 /* `/composers` — the five interchangeable composers of the chat templates, each typing into its own live
@@ -174,7 +175,7 @@ function Content() {
 /** `/composers` — wrapped in the shared choice so "Use in every template" reaches the templates. */
 export function ComposersPage() {
   useEffect(() => {
-    document.title = 'Composers · Streaming UI';
+    applyHead(COMPOSERS);
   }, []);
   return (
     <ComposerVariantProvider>

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, isRouteErrorResponse, useLocation, useNavigate, useRouteError } from 'react-router';
 import { ArrowLeft, Check, ChevronDown, Copy, FileQuestion, LayoutTemplate, RotateCw, ServerCrash, ShieldX, TriangleAlert } from 'lucide-react';
 import { SiteNav } from '@/components/site-nav';
 import { cn } from '@/lib/utils';
+import { applyHead } from '@/seo/routes';
 
 /* One error screen for every failure: 404, 401/403, other 4xx, and 5xx or a crash while rendering.
  * Inside the site it sits under the navbar; on /preview (template iframes and Live preview) it stands alone. */
@@ -52,6 +53,15 @@ export function ErrorScreen({ status, details, bare }: { status: number | null; 
   const inTemplates = pathname.startsWith('/preview') || pathname.startsWith('/templates');
   const Icon = k.icon;
   const btn = 'flex h-9 items-center justify-center gap-1.5 rounded-xl px-3.5 text-body-2-medium shadow-xs transition-[background-color,scale] active:scale-[0.98] [&_svg]:size-4';
+
+  useEffect(() => {
+    applyHead({
+      title: `${k.title} · Streaming UI`,
+      description: k.body,
+      path: pathname,
+      robots: 'noindex, nofollow',
+    });
+  }, [k.title, k.body, pathname]);
 
   return (
     <main className={cn('flex w-full flex-1 items-center justify-center px-6', bare ? 'min-h-dvh bg-background-full py-10 text-text-primary' : 'py-20 sm:py-28')}>

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Link, Outlet, useNavigate, useParams } from 'react-router';
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Code, Copy, Download, ExternalLink, Eye, FileText, Maximize2, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { BrowserFrame, type Device } from '@/components/browser-frame';
 import { getTemplate, templates } from '@/templates/registry';
 import { paths } from '@/lib/paths';
+import { applyHead, isPromptPath } from '@/seo/routes';
 import { NotFound } from '@/routes/not-found';
 
 const TemplateCode = lazy(() => import('@/components/template-code'));
@@ -37,8 +38,17 @@ export function TemplatePage() {
   const [device, setDevice] = useState<Device>('desktop');
   const [copied, setCopied] = useState(false);
 
+  const { pathname } = useLocation();
   useEffect(() => {
-    if (t) document.title = `${t.name} · Chat templates`;
+    if (!t) return;
+    applyHead({
+      title: `${t.name} · Streaming UI`,
+      description: t.description,
+      path: paths.template(t.slug),
+      robots: isPromptPath(pathname) ? 'noindex, follow' : 'index, follow',
+    });
+  }, [t, pathname]);
+  useEffect(() => {
     setTab('preview');
   }, [t]);
 

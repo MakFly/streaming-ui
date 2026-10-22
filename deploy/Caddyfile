@@ -37,12 +37,21 @@
 		file_server
 	}
 
+	# Bare template iframes are duplicates of /templates/:slug. Tell crawlers before any HTML.
+	handle /preview/* {
+		header X-Robots-Tag "noindex, nofollow"
+		header Cache-Control "no-cache"
+		try_files {path} {path}/index.html /index.html
+		file_server
+	}
+
 	# Everything else is a client-side route (createBrowserRouter): fall back to index.html.
+	# {path}/index.html is the pre-rendered head for /templates, /responses and the rest.
 	handle {
 		# The shell must be revalidated, or a browser keeps pointing at hashed assets a later deploy removed.
 		# (A path matcher would not work here: header runs before try_files rewrites the path.)
 		header Cache-Control "no-cache"
-		try_files {path} /index.html
+		try_files {path} {path}/index.html /index.html
 		file_server
 	}
 }
