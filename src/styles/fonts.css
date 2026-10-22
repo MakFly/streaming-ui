@@ -1,0 +1,5 @@
+/* Font variables — Inter and JetBrains Mono, as the design system expects them.
+ * Moved verbatim from the vanilla gallery (legacy/index.html). */
+
+/* Fonts: the theme reads Inter / JetBrains Mono through these two variables. */
+:root { --font-inter: "Inter", "Inter Fallback"; --font-mono-source: "JetBrains Mono", "JetBrains Mono Fallback"; }

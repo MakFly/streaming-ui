@@ -1,0 +1,338 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "streaming-ui",
+  "homepage": "http://localhost:5173",
+  "items": [
+    {
+      "name": "composer-theme",
+      "type": "registry:file",
+      "title": "Streaming UI tokens",
+      "description": "Colors, radii, shadows, type scale and keyframes the composers are drawn with. Import styles/streaming-ui.css after Tailwind.",
+      "files": [
+        {
+          "path": "registry/streaming-ui.css",
+          "type": "registry:file",
+          "target": "styles/streaming-ui.css"
+        }
+      ]
+    },
+    {
+      "name": "composer-kit",
+      "type": "registry:component",
+      "title": "Composer kit",
+      "description": "What every composer shares: the props contract, field behaviour, buttons, dictation, the status line with the context ring, the Composer Loader rim and the Composer Attachments strip.",
+      "dependencies": [
+        "lucide-react",
+        "radix-ui"
+      ],
+      "registryDependencies": [
+        "utils",
+        "http://localhost:5173/r/composer-theme.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/composer-kit.tsx",
+          "type": "registry:component",
+          "target": "components/composer/composer-kit.tsx"
+        },
+        {
+          "path": "src/templates/kit/primitives.tsx",
+          "type": "registry:component",
+          "target": "components/composer/primitives.tsx"
+        },
+        {
+          "path": "src/templates/kit/attachments.tsx",
+          "type": "registry:component",
+          "target": "components/composer/attachments.tsx"
+        },
+        {
+          "path": "src/templates/kit/attachments-assets.ts",
+          "type": "registry:component",
+          "target": "components/composer/attachments-assets.ts"
+        },
+        {
+          "path": "src/templates/kit/agent-limits.tsx",
+          "type": "registry:component",
+          "target": "components/composer/agent-limits.tsx"
+        },
+        {
+          "path": "src/templates/kit/icon.tsx",
+          "type": "registry:component",
+          "target": "components/composer/icon.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-pill",
+      "type": "registry:component",
+      "title": "Pill composer",
+      "description": "Single row: one 52px row with add, input, model, mic and send.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/pill.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/pill.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-box",
+      "type": "registry:component",
+      "title": "Box composer",
+      "description": "Textarea: a growing textarea over an action row.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/box.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/box.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-panel",
+      "type": "registry:component",
+      "title": "Panel composer",
+      "description": "Rail: branch, project and context on a rail, permission modes.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json",
+        "dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/panel.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/panel.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-dock",
+      "type": "registry:component",
+      "title": "Dock composer",
+      "description": "Floating toolbar: a floating glass toolbar with grouped tools.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/dock.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/dock.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-command",
+      "type": "registry:component",
+      "title": "Command composer",
+      "description": "Terminal: monospace prompt, slash commands, key hints.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/command.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/command.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-inline",
+      "type": "registry:component",
+      "title": "Inline composer",
+      "description": "Selection bar: a compact bar on a selection, edit or ask.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/inline.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/inline.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-voice",
+      "type": "registry:component",
+      "title": "Voice composer",
+      "description": "Voice orb: push-to-talk orb with a live transcript.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/voice.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/voice.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-halo",
+      "type": "registry:component",
+      "title": "Halo composer",
+      "description": "Glow rim: glowing rim, typed example prompts, enhance, vanish on send.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/halo.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/halo.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-media",
+      "type": "registry:component",
+      "title": "Media composer",
+      "description": "Image prompt: prompt with aspect ratio, sliders, style and batch.",
+      "dependencies": [
+        "lucide-react",
+        "radix-ui"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/media.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/media.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-palette",
+      "type": "registry:component",
+      "title": "Palette composer",
+      "description": "Command palette: a command palette that hands the query to AI on Tab.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/palette.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/palette.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer-mention",
+      "type": "registry:component",
+      "title": "Mention composer",
+      "description": "Mentions: @ chips for files, people and sources.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/variants/mention.tsx",
+          "type": "registry:component",
+          "target": "components/composer/variants/mention.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composer",
+      "type": "registry:component",
+      "title": "Composer (all variants)",
+      "description": "The eleven composers behind one <Composer variant=\"…\" /> switch, with a provider that lets a picker swap them everywhere.",
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-pill.json",
+        "http://localhost:5173/r/composer-box.json",
+        "http://localhost:5173/r/composer-panel.json",
+        "http://localhost:5173/r/composer-dock.json",
+        "http://localhost:5173/r/composer-command.json",
+        "http://localhost:5173/r/composer-inline.json",
+        "http://localhost:5173/r/composer-voice.json",
+        "http://localhost:5173/r/composer-halo.json",
+        "http://localhost:5173/r/composer-media.json",
+        "http://localhost:5173/r/composer-palette.json",
+        "http://localhost:5173/r/composer-mention.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/composers.tsx",
+          "type": "registry:component",
+          "target": "components/composer/composers.tsx"
+        },
+        {
+          "path": "src/templates/kit/composer-variant.tsx",
+          "type": "registry:component",
+          "target": "components/composer/composer-variant.tsx"
+        },
+        {
+          "path": "src/lib/storage.ts",
+          "type": "registry:lib",
+          "target": "lib/storage.ts"
+        }
+      ]
+    },
+    {
+      "name": "model-picker",
+      "type": "registry:component",
+      "title": "Model picker",
+      "description": "Multi-agent model picker: providers, effort slider with the Max jet effect, fast mode.",
+      "dependencies": [
+        "lucide-react",
+        "radix-ui"
+      ],
+      "registryDependencies": [
+        "http://localhost:5173/r/composer-kit.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/model-picker.tsx",
+          "type": "registry:component",
+          "target": "components/composer/model-picker.tsx"
+        },
+        {
+          "path": "src/templates/kit/max-effort-fx.tsx",
+          "type": "registry:component",
+          "target": "components/composer/max-effort-fx.tsx"
+        }
+      ]
+    }
+  ]
+}

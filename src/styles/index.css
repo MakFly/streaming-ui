@@ -1,0 +1,28 @@
+/* Entry stylesheet. Sources are limited to src/: the registry cache in public/sources
+ * and the legacy/ build contain thousands of unrelated class names. */
+@import "tailwindcss" source("..");
+@import "tw-animate-css";
+
+@import "./fonts.css";
+@import "./theme.css";
+@import "./palettes.css";
+@import "./typography.css";
+@import "./globals.css";
+@import "./library-scopes.css";
+@import "./shadcn.css";
+@import "./scrollbars.css";
+@import "./highlight.css";
+@import "./gallery.css";
+@import "./landing.css";
+@import "./templates.css";
+@import "./safelist.css";
+
+/* Tailwind v4 dropped the pointer cursor on buttons; bring it back for everything clickable. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+}

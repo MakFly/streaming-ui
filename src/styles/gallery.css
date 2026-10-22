@@ -1,0 +1,37 @@
+/* Gallery additions shared by the demos (caret, word/token entrances, skeleton, glass).
+ * Moved verbatim from the vanilla gallery (legacy/index.html). */
+
+/* ------------------------------------------------------------------------
+ * Clone-specific additions
+ * ---------------------------------------------------------------------- */
+@property --sui-reveal-fade { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
+html, body { height: 100%; }
+body { background-color: var(--color-background-full); color: var(--color-text-primary); font-family: var(--font-sans); }
+
+/* Caret for the typewriter + code demos. */
+@keyframes sui-caret { 50% { opacity: 0; } }
+.sui-caret { animation: sui-caret 1s steps(2) infinite; }
+
+/* Word-level entrances (classic patterns). */
+@keyframes sui-word-in { to { opacity: 1; } }
+.sui-word { opacity: 0; animation: sui-word-in .4s ease forwards; }
+@keyframes sui-tok-in { to { opacity: 1; filter: blur(0); transform: none; } }
+.sui-tok { display: inline-block; opacity: 0; filter: blur(5px); transform: translateY(4px); animation: sui-tok-in .42s cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+
+/* Skeleton sweep reuses the badge shimmer travel. */
+.sui-skeleton { position: relative; overflow: hidden; }
+.sui-skeleton::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-background-primary-default) 70%, transparent), transparent); animation: sui-badge-shimmer 1.6s ease-in-out infinite; }
+
+/* Table rows arriving (Storage table entrance, content slide only). */
+@keyframes sui-row-in { from { opacity: 0; transform: translateX(-8px); } }
+.sui-row { animation: sui-row-in .4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Liquid-glass treatment the Pro composer applies to its controls while the agent works. */
+.sui-glass { position: relative; isolation: isolate; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background-color: color-mix(in srgb, var(--color-background-primary-default) 42%, transparent) !important; border-color: transparent !important; box-shadow: none !important; }
+.sui-glass::after { content: ""; pointer-events: none; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; background: conic-gradient(from 0deg, rgb(255 255 255 / 0.9) 0deg, rgb(0 0 0 / 0.14) 70deg, rgb(255 255 255 / 0.1) 140deg, rgb(255 255 255 / 0.55) 180deg, rgb(255 255 255 / 0.1) 220deg, rgb(0 0 0 / 0.14) 290deg, rgb(255 255 255 / 0.9) 360deg); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-word, .sui-tok { animation: none; opacity: 1; filter: none; transform: none; }
+  .sui-skeleton::after, .sui-caret, .sui-row { animation: none; }
+}

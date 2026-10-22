@@ -1,0 +1,29 @@
+/* Scrollbars — Tailwind utilities applied to every scroll container.
+ * Moved verbatim from the vanilla gallery (legacy/index.html). */
+
+/* ------------------------------------------------------------------------
+ * Scrollbars — Tailwind utilities, applied to every scroll container
+ * ---------------------------------------------------------------------- */
+@utility scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--sb-thumb) var(--sb-track); }
+@utility scrollbar-none { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+@utility scrollbar-thumb-* { --sb-thumb: --value(--color-*, [color]); }
+@utility scrollbar-track-* { --sb-track: --value(--color-*, [color]); }
+@layer base {
+  :root { --sb-thumb: color-mix(in srgb, var(--color-text-primary) 22%, transparent); --sb-thumb-hover: color-mix(in srgb, var(--color-text-primary) 38%, transparent); --sb-track: transparent; }
+  * { scrollbar-width: thin; scrollbar-color: var(--sb-thumb) var(--sb-track); }
+  html { scrollbar-gutter: stable; }
+}
+
+/* Template previews (html.no-scrollbars, set by /preview/:slug): no visible scrollbar anywhere — panes still
+ * scroll by wheel, trackpad and touch, and the thread keeps its scroll-to-bottom button. Code wraps instead of
+ * scrolling sideways, so nothing hides past a bar you can't see. Unlayered, so it wins over the scrollbar-thin,
+ * whitespace-pre and min-w-fit utilities. */
+html.no-scrollbars { scrollbar-gutter: auto; }
+html.no-scrollbars,
+html.no-scrollbars * { scrollbar-width: none !important; }
+html.no-scrollbars ::-webkit-scrollbar { display: none !important; }
+html.no-scrollbars pre,
+html.no-scrollbars pre code,
+html.no-scrollbars pre .whitespace-pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+html.no-scrollbars pre code,
+html.no-scrollbars pre .whitespace-pre { min-width: 0; }

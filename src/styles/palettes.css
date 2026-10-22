@@ -1,0 +1,89 @@
+/* Palettes — html[data-palette], set by ThemeProvider (and index.html before first paint).
+ *
+ * Every semantic token in theme.css (backgrounds, borders, text, buttons, focus ring…) is built from two
+ * primitive scales: --color-neutral-* and --color-accent-*. A palette swaps those two scales and nothing else,
+ * so it re-colours the whole app in light and dark alike. The default palette (no attribute) is theme.css as is.
+ *
+ *   graphite  default: true greys, blue accent
+ *   dusk      deep flat greys, raised cards, emerald accent (dashboards at night)
+ *   slate     cool blue-grey, indigo accent
+ *   sand      warm stone, amber accent
+ */
+
+html[data-palette='dusk'] {
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f4;
+  --color-neutral-200: #e7e7e7;
+  --color-neutral-300: #cfcfcf;
+  --color-neutral-400: #a6a6a6;
+  --color-neutral-500: #858585;
+  --color-neutral-600: #5a5a5a;
+  --color-neutral-700: #2f2f2f;
+  --color-neutral-800: #1f1f1f;
+  --color-neutral-900: #161616;
+  --color-neutral-925: #101010;
+  --color-neutral-950: #0b0b0b;
+  --color-accent-50: var(--color-emerald-50);
+  --color-accent-100: var(--color-emerald-100);
+  --color-accent-200: var(--color-emerald-200);
+  --color-accent-300: var(--color-emerald-300);
+  --color-accent-400: var(--color-emerald-400);
+  --color-accent-500: var(--color-emerald-500);
+  --color-accent-600: var(--color-emerald-600);
+  --color-accent-700: var(--color-emerald-700);
+  --color-accent-800: var(--color-emerald-800);
+  --color-accent-900: var(--color-emerald-900);
+  --color-accent-950: var(--color-emerald-950);
+}
+
+html[data-palette='slate'] {
+  --color-neutral-50: var(--color-slate-50);
+  --color-neutral-100: #f3f5f9;
+  --color-neutral-200: #e4e8ef;
+  --color-neutral-300: var(--color-slate-300);
+  --color-neutral-400: var(--color-slate-400);
+  --color-neutral-500: var(--color-slate-500);
+  --color-neutral-600: var(--color-slate-600);
+  --color-neutral-700: var(--color-slate-700);
+  --color-neutral-800: var(--color-slate-800);
+  --color-neutral-900: var(--color-slate-900);
+  --color-neutral-925: color-mix(in oklab, var(--color-slate-900) 50%, var(--color-slate-950));
+  --color-neutral-950: var(--color-slate-950);
+  --color-accent-50: var(--color-indigo-50);
+  --color-accent-100: var(--color-indigo-100);
+  --color-accent-200: var(--color-indigo-200);
+  --color-accent-300: var(--color-indigo-300);
+  --color-accent-400: var(--color-indigo-400);
+  --color-accent-500: var(--color-indigo-500);
+  --color-accent-600: var(--color-indigo-600);
+  --color-accent-700: var(--color-indigo-700);
+  --color-accent-800: var(--color-indigo-800);
+  --color-accent-900: var(--color-indigo-900);
+  --color-accent-950: var(--color-indigo-950);
+}
+
+html[data-palette='sand'] {
+  --color-neutral-50: var(--color-stone-50);
+  --color-neutral-100: #f6f4f2;
+  --color-neutral-200: #e9e5e1;
+  --color-neutral-300: var(--color-stone-300);
+  --color-neutral-400: var(--color-stone-400);
+  --color-neutral-500: var(--color-stone-500);
+  --color-neutral-600: var(--color-stone-600);
+  --color-neutral-700: var(--color-stone-700);
+  --color-neutral-800: var(--color-stone-800);
+  --color-neutral-900: var(--color-stone-900);
+  --color-neutral-925: color-mix(in oklab, var(--color-stone-900) 50%, var(--color-stone-950));
+  --color-neutral-950: var(--color-stone-950);
+  --color-accent-50: var(--color-amber-50);
+  --color-accent-100: var(--color-amber-100);
+  --color-accent-200: var(--color-amber-200);
+  --color-accent-300: var(--color-amber-300);
+  --color-accent-400: var(--color-amber-400);
+  --color-accent-500: var(--color-amber-500);
+  --color-accent-600: var(--color-amber-600);
+  --color-accent-700: var(--color-amber-700);
+  --color-accent-800: var(--color-amber-800);
+  --color-accent-900: var(--color-amber-900);
+  --color-accent-950: var(--color-amber-950);
+}

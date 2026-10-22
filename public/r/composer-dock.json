@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "composer-dock",
+  "title": "Dock composer",
+  "description": "Floating toolbar: a floating glass toolbar with grouped tools.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "http://localhost:5173/r/composer-kit.json"
+  ],
+  "files": [
+    {
+      "path": "src/templates/kit/variants/dock.tsx",
+      "content": "import { useState } from 'react';\nimport { AtSign, Globe, Plus } from 'lucide-react';\nimport { cn } from '@/lib/utils';\nimport { ComposerLoader } from '../primitives';\nimport { AttachmentStrip } from '../attachments';\nimport { withAttachments, Field, SendButton, Status, useField, type VariantProps } from '../composer-kit';\n\n/* Dock (Floating toolbar): a floating glass toolbar with grouped tools and an accent send.\n * Use <DockComposer> on its own, or the view inside a switcher that owns the attachments. */\n\nexport function DockComposerView(p: VariantProps) {\n  const field = useField(p);\n  const [web, setWeb] = useState(false);\n  const tool = 'grid size-8 shrink-0 place-items-center rounded-[10px] text-foreground-icon-secondary transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary [&_svg]:size-[18px]';\n  return (\n    // A container, not a viewport, query: the same dock sits in full-width threads and 400px side panels.\n    <div className={cn('@container flex w-full flex-col items-stretch gap-1', p.className)}>\n      <ComposerLoader active={!!p.busy} radius={18} surfaceClassName=\"bg-background-primary-default/85 shadow-dropdown backdrop-blur-xl\">\n        <AttachmentStrip attachments={p.att.files} onRemove={p.att.remove} className=\"px-2 pt-2\" />\n        <form\n          onSubmit={(e) => {\n            e.preventDefault();\n            field.submit();\n          }}\n          className=\"flex min-h-12 w-full items-end gap-1 p-1.5\"\n        >\n          <div className=\"flex shrink-0 items-center gap-0.5 rounded-xl bg-background-tertiary-default/70 p-0.5\">\n            <button type=\"button\" aria-label=\"Add attachment\" onClick={p.att.add} className={tool}>\n              <Plus />\n            </button>\n            <button\n              type=\"button\"\n              aria-label=\"Mention\"\n              onClick={() => {\n                p.onChange(p.value && !/s$/.test(p.value) ? `${p.value} @` : `${p.value}@`);\n                field.ref.current?.focus();\n              }}\n              className={cn(tool, 'hidden @md:grid')}\n            >\n              <AtSign />\n            </button>\n            <button type=\"button\" aria-label=\"Search the web\" aria-pressed={web} onClick={() => setWeb((w) => !w)} className={cn(tool, web && 'bg-accent-500/15 text-accent-500 hover:bg-accent-500/20 hover:text-accent-500')}>\n              <Globe />\n            </button>\n          </div>\n          <Field field={field} value={p.value} onChange={p.onChange} placeholder={p.placeholder} className=\"min-h-9 px-2.5 py-1.5 text-body-2-regular leading-6\" />\n          {p.tools && <span className=\"hidden shrink-0 items-center gap-1 self-center @2xl:flex\">{p.tools}</span>}\n          <span className=\"flex shrink-0 items-center self-center\">{p.model}</span>\n          <SendButton busy={p.busy} onStop={p.onStop} disabled={!p.value.trim()} className=\"size-9 rounded-xl bg-accent-500 text-white\" stopClassName=\"size-9 rounded-xl\" />\n        </form>\n      </ComposerLoader>\n      {p.tools && <div className=\"flex flex-wrap items-center justify-center gap-1.5 pt-1 @2xl:hidden\">{p.tools}</div>}\n      <Status context={p.context} className=\"h-6 justify-center gap-5 text-caption-1-medium\">{p.status}</Status>\n    </div>\n  );\n}\n\nexport const DockComposer = withAttachments(DockComposerView);\n",
+      "type": "registry:component",
+      "target": "components/composer/variants/dock.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

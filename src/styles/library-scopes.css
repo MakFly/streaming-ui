@@ -1,0 +1,90 @@
+/* Collection scopes — each collection's own tokens, applied by .lib-* wrappers.
+ * Moved verbatim from the vanilla gallery (legacy/index.html). */
+
+/* ------------------------------------------------------------------------
+ * Collection scopes — one token set per collection
+ * ---------------------------------------------------------------------- */
+@theme inline {
+  --color-background: var(--background); --color-foreground: var(--foreground);
+  --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border); --color-ring: var(--ring);
+  --color-secondary: var(--secondary); --color-secondary-foreground: var(--secondary-foreground);
+  --color-ink: var(--ink); --color-ink-2: var(--ink-2); --color-ink-3: var(--ink-3);
+  --color-surface: var(--surface); --color-inset: var(--inset); --color-hover: var(--hover); --color-hover-2: var(--hover-2);
+  --color-field: var(--field); --color-line: var(--line); --color-line-strong: var(--line-strong);
+  --color-accent-tint: var(--accent-tint); --color-accent-ink: var(--accent-ink);
+  --color-green: var(--green); --color-green-tint: var(--green-tint); --color-red: var(--red); --color-red-tint: var(--red-tint);
+}
+
+/* Stream — :root / .dark, Geist */
+.lib-stream { --background:#fcfcfc; --foreground:#0b0b0b; --card:#f5f5f5; --muted:#f5f5f5; --muted-foreground:#636363; --border:#0b0b0b0f; --ring:#0b0b0b1f; --primary:#0285f7;
+  font-family:"Geist","Geist Fallback",ui-sans-serif,system-ui,sans-serif; background:var(--background); color:var(--foreground); box-shadow:inset 0 0 0 1px var(--border); }
+.dark .lib-stream { --background:#151515; --foreground:#f2f2f2; --card:#1c1c1c; --muted:#1c1c1c; --muted-foreground:#868686; --border:#ffffff0d; --ring:#ffffff1a; }
+.lib-stream .font-mono, .lib-stream code, .lib-stream pre { font-family:"Geist Mono",ui-monospace,monospace; }
+@keyframes stream-text-shimmer { from { background-position:200% 0 } to { background-position:-200% 0 } }
+.stream-text-shimmer { background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+  background-image:linear-gradient(110deg,var(--muted-foreground) 30%,var(--foreground) 50%,var(--muted-foreground) 70%); }
+.stream-prose a { font-weight:500; text-decoration:underline; text-underline-offset:4px; }
+.stream-prose code { border-radius:4px; background:var(--muted); padding:2px 4px; font-size:.9em; }
+.stream-prose p + p { margin-top:12px; }
+.stream-prose ul { margin:12px 0; list-style:disc; padding-left:20px; } .stream-prose ul > li + li { margin-top:4px; }
+.stream-prose pre { margin:12px 0; overflow-x:auto; border-radius:12px; border:1px solid var(--border); background:color-mix(in srgb,var(--muted) 45%,transparent); padding:12px; }
+.stream-prose pre code { background:transparent; padding:0; }
+.scrollbar-hide { scrollbar-width:none; } .scrollbar-hide::-webkit-scrollbar { display:none; }
+
+/* Chat — foundation tokens, Inter cv11/ss01 */
+.lib-chat { --page:oklch(0.985 0.001 286.376); --canvas:oklch(0.961 0.002 247.84); --surface:oklch(1 0 0); --inset:oklch(0.979 0.002 247.839); --hover:oklch(0.97 0.002 247.839); --hover-2:oklch(0.933 0.003 247.86);
+  --ink:oklch(0.247 0.006 258.361); --ink-2:oklch(0.506 0.01 264.477); --ink-3:oklch(0.695 0.009 264.505);
+  --line:oklch(0.946 0.003 264.542); --line-strong:oklch(0.912 0.005 258.326); --field:oklch(0.961 0.001 286.375); --stripe:oklch(0.405 0 0 / 0.075); --stripe-bg:oklch(0.97 0 0);
+  --accent:oklch(0.626 0.205 254.947); --accent-ink:oklch(0.556 0.187 255.617); --accent-tint:oklch(0.96 0.019 252.878);
+  --green:oklch(0.603 0.155 150.883); --green-tint:oklch(0.958 0.017 159.118); --orange:oklch(0.689 0.179 49.902); --red:oklch(0.621 0.192 23.042); --red-tint:oklch(0.956 0.017 17.462);
+  --chat-shadow-btn:0 0 0 1px var(--line-strong), 0 1px 2px oklch(0 0 0 / 0.05);
+  --chat-shadow-card:0 0 0 1px var(--line), 0 1px 2px oklch(0 0 0 / 0.04), 0 2px 6px oklch(0 0 0 / 0.04);
+  --chat-shadow-overlay:0 0 0 1px var(--line), 0 8px 28px oklch(0 0 0 / 0.12);
+  font-family:"Inter",ui-sans-serif,system-ui,sans-serif; font-feature-settings:"cv11","ss01"; font-size:14px; letter-spacing:-0.01em; line-height:1.5; color:var(--ink); }
+.dark .lib-chat { --page:oklch(0.209 0.004 264.477); --canvas:oklch(0.231 0.004 264.487); --surface:oklch(0.26 0.006 271.191); --inset:oklch(0.243 0.004 264.492); --hover:oklch(0.289 0.006 271.22); --hover-2:oklch(0.318 0.007 274.747);
+  --ink:oklch(0.964 0.002 247.839); --ink-2:oklch(0.731 0.008 260.731); --ink-3:oklch(0.541 0.01 264.484);
+  --line:oklch(0.308 0.006 258.354); --line-strong:oklch(0.356 0.007 264.474); --field:oklch(0.293 0.006 271.223); --stripe:oklch(1 0 0 / 0.055); --stripe-bg:oklch(0.226 0.004 264.485);
+  --accent:oklch(0.68 0.173 253.301); --accent-ink:oklch(0.788 0.113 248.33); --accent-tint:oklch(0.68 0.173 253.301 / 0.16);
+  --green:oklch(0.705 0.154 153.814); --green-tint:oklch(0.705 0.154 153.814 / 0.14); --orange:oklch(0.746 0.156 55.642); --red:oklch(0.666 0.18 21.433); --red-tint:oklch(0.666 0.18 21.433 / 0.14);
+  --chat-shadow-btn:0 0 0 1px oklch(1 0 0 / 0.1), 0 1px 2px oklch(0 0 0 / 0.3);
+  --chat-shadow-card:0 0 0 1px oklch(1 0 0 / 0.11), 0 1px 2px oklch(0 0 0 / 0.2), 0 2px 6px oklch(0 0 0 / 0.2);
+  --chat-shadow-overlay:0 0 0 1px oklch(1 0 0 / 0.15), 0 8px 28px oklch(0 0 0 / 0.34); }
+.lib-chat .font-mono { font-family:"JetBrains Mono",ui-monospace,"SF Mono",monospace; }
+.chat-stripes { background-color:var(--stripe-bg); background-image:repeating-linear-gradient(-45deg,transparent 0,transparent 7px,var(--stripe) 7px,var(--stripe) 8px); }
+.chat-card { box-shadow:var(--chat-shadow-card); }
+.chat-hairline { box-shadow:0 0 0 1px var(--line); }
+.chat-btn-shadow { box-shadow:var(--chat-shadow-btn); }
+.chat-overlay-shadow { box-shadow:var(--chat-shadow-overlay); }
+.chat-source-avatar { box-shadow:0 0 0 1px oklch(0.21 0.034 263.436 / 0.1); } .dark .chat-source-avatar { box-shadow:0 0 0 1px oklch(1 0 0 / 0.08); }
+.chat-underline { position:relative; display:inline-block; }
+.chat-underline::after { position:absolute; right:0; bottom:-1px; left:0; height:1px; content:""; background:currentColor; transform:scaleX(0); transform-origin:left center; transition:transform 280ms cubic-bezier(0.16,1,0.3,1); }
+a:hover .chat-underline::after, a:hover.chat-underline::after { transform:scaleX(1); }
+@keyframes chat-shimmer-text { from { background-position:150% center } to { background-position:-50% center } }
+@keyframes chat-fade-up { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+@keyframes chat-fade-in { from { opacity:0 } to { opacity:1 } }
+@keyframes chat-pop-in { from { opacity:0; transform:scale(0.95) } to { opacity:1; transform:scale(1) } }
+@keyframes chat-spin { to { transform:rotate(360deg) } }
+.stream-tail { filter:blur(1.6px); -webkit-mask-image:linear-gradient(to right, oklch(0 0 0) 20%, oklch(0 0 0 / 0.2)); mask-image:linear-gradient(to right, oklch(0 0 0) 20%, oklch(0 0 0 / 0.2)); }
+.stream-caret { display:inline-block; width:2px; height:1.05em; margin-left:1.5px; translate:0 -0.5px; border-radius:1px; background:var(--ink); vertical-align:text-bottom; animation:chat-caret-blink 1s step-end infinite; }
+.stream-caret.is-streaming { animation:none; }
+@keyframes chat-caret-blink { 0%,100% { opacity:1 } 50% { opacity:0 } }
+
+/* Assist — shadcn neutral tokens, Geist */
+.lib-assist { --background:oklch(1 0 0); --foreground:oklch(0.145 0 0); --secondary:oklch(0.97 0 0); --secondary-foreground:oklch(0.205 0 0); --muted:oklch(0.97 0 0); --muted-foreground:oklch(0.556 0 0); --border:oklch(0.922 0 0); --ring:oklch(0.708 0 0);
+  font-family:"Geist",ui-sans-serif,system-ui,sans-serif; background:var(--background); color:var(--foreground); box-shadow:inset 0 0 0 1px var(--border); }
+.dark .lib-assist { --background:oklch(0.145 0 0); --foreground:oklch(0.985 0 0); --secondary:oklch(0.269 0 0); --secondary-foreground:oklch(0.985 0 0); --muted:oklch(0.269 0 0); --muted-foreground:oklch(0.708 0 0); --border:oklch(1 0 0 / 10%); --ring:oklch(0.556 0 0); }
+.lib-assist .font-mono, .lib-assist pre { font-family:"Geist Mono",ui-monospace,monospace; }
+
+/* Motion — zinc on white / zinc-950 */
+.lib-motion { background:#fff; font-family:"Inter",ui-sans-serif,system-ui,sans-serif; box-shadow:inset 0 0 0 1px #e4e4e7; }
+.dark .lib-motion { background:#09090b; box-shadow:inset 0 0 0 1px #27272a; }
+
+/* Dots — loader tokens */
+.lib-dots { background:#fafafa; color:#171717; font-family:"Geist",ui-sans-serif,system-ui,sans-serif; box-shadow:inset 0 0 0 1px #e5e5e5; }
+.dark .lib-dots { background:#0a0a0a; color:#f5f5f5; box-shadow:inset 0 0 0 1px #262626; }
+.dots-root { display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; --dots-opacity-base:0.16; --dots-opacity-mid:0.32; --dots-opacity-peak:1; }
+.dots-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); grid-template-rows:repeat(5,minmax(0,1fr)); }
+.dots-dot { border-radius:999px; display:block; background:currentColor; opacity:calc(0.5 * (var(--dots-opacity-base) + var(--dots-opacity-mid))); will-change:opacity; }
+.dots-diagonal-alt-sweep { animation-name:dots-diagonal-alt-sweep; animation-timing-function:linear; animation-iteration-count:infinite; }
+@keyframes dots-diagonal-alt-sweep { 0%,100% { opacity:calc(0.5 * var(--dots-opacity-base)) } 14% { opacity:var(--dots-opacity-peak) } 30% { opacity:calc(0.75 * var(--dots-opacity-base)) } }

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "composer-box",
+  "title": "Box composer",
+  "description": "Textarea: a growing textarea over an action row.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "http://localhost:5173/r/composer-kit.json"
+  ],
+  "files": [
+    {
+      "path": "src/templates/kit/variants/box.tsx",
+      "content": "import { cn } from '@/lib/utils';\nimport { ComposerLoader } from '../primitives';\nimport { AttachmentStrip } from '../attachments';\nimport { withAttachments, AddButton, Field, MicButton, SendButton, Status, useField, type VariantProps } from '../composer-kit';\n\n/* Box (Textarea): a growing textarea over an action row.\n * Use <BoxComposer> on its own, or the view inside a switcher that owns the attachments. */\n\nexport function BoxComposerView(p: VariantProps) {\n  const field = useField(p);\n  return (\n    <div className={cn('flex w-full flex-col gap-1.5', p.className)}>\n      <ComposerLoader active={!!p.busy} radius={22}>\n        <form\n          onSubmit={(e) => {\n            e.preventDefault();\n            field.submit();\n          }}\n          onClick={(e) => e.target === e.currentTarget && field.ref.current?.focus()}\n          className=\"flex w-full cursor-text flex-col gap-1 p-2\"\n        >\n          <AttachmentStrip attachments={p.att.files} onRemove={p.att.remove} className=\"px-1 pt-1\" />\n          <Field field={field} value={p.value} onChange={p.onChange} placeholder={p.placeholder} className=\"min-h-10 px-2.5 pt-2 pb-1\" />\n          <div className=\"flex items-center gap-1.5\">\n            <AddButton onClick={p.att.add} />\n            {p.tools}\n            <span className=\"ms-auto flex items-center gap-1\">\n              {p.model}\n              <MicButton value={p.value} onChange={p.onChange} />\n              <SendButton busy={p.busy} onStop={p.onStop} disabled={!p.value.trim()} />\n            </span>\n          </div>\n        </form>\n      </ComposerLoader>\n      <Status context={p.context}>{p.status}</Status>\n    </div>\n  );\n}\n\nexport const BoxComposer = withAttachments(BoxComposerView);\n",
+      "type": "registry:component",
+      "target": "components/composer/variants/box.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

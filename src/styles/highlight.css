@@ -1,0 +1,25 @@
+/* highlight.js tokens for the Prompt dialog (GitHub light / dark palettes).
+ * Moved verbatim from the vanilla gallery (legacy/index.html). */
+
+/* ------------------------------------------------------------------------
+ * Code dialog — highlight.js tokens (GitHub light / dark palettes)
+ * ---------------------------------------------------------------------- */
+.hljs { color:#1f2328; background:transparent; }
+.hljs-comment, .hljs-quote { color:#59636e; font-style:italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-type, .hljs-meta .hljs-keyword { color:#cf222e; }
+.hljs-string, .hljs-regexp, .hljs-meta .hljs-string { color:#0a3069; }
+.hljs-number, .hljs-built_in, .hljs-symbol, .hljs-variable.language_ { color:#0550ae; }
+.hljs-title, .hljs-title.function_, .hljs-section { color:#6639ba; }
+.hljs-title.class_, .hljs-attr, .hljs-attribute, .hljs-property { color:#953800; }
+.hljs-name, .hljs-tag, .hljs-selector-class, .hljs-selector-id { color:#116329; }
+.hljs-bullet, .hljs-code { color:#0550ae; } .hljs-emphasis { font-style:italic; } .hljs-strong { font-weight:600; }
+.hljs-link { color:#0a3069; text-decoration:underline; } .hljs-addition { color:#116329; background:#dafbe1; } .hljs-deletion { color:#82071e; background:#ffebe9; }
+.dark .hljs { color:#e6edf3; }
+.dark .hljs-comment, .dark .hljs-quote { color:#8b949e; }
+.dark .hljs-keyword, .dark .hljs-selector-tag, .dark .hljs-literal, .dark .hljs-type, .dark .hljs-meta .hljs-keyword { color:#ff7b72; }
+.dark .hljs-string, .dark .hljs-regexp, .dark .hljs-meta .hljs-string { color:#a5d6ff; }
+.dark .hljs-number, .dark .hljs-built_in, .dark .hljs-symbol, .dark .hljs-variable.language_, .dark .hljs-bullet, .dark .hljs-code { color:#79c0ff; }
+.dark .hljs-title, .dark .hljs-title.function_, .dark .hljs-section { color:#d2a8ff; }
+.dark .hljs-title.class_, .dark .hljs-attr, .dark .hljs-attribute, .dark .hljs-property { color:#ffa657; }
+.dark .hljs-name, .dark .hljs-tag, .dark .hljs-selector-class, .dark .hljs-selector-id { color:#7ee787; }
+.dark .hljs-link { color:#a5d6ff; } .dark .hljs-addition { color:#aff5b4; background:#033a16; } .dark .hljs-deletion { color:#ffdcd7; background:#67060c; }

@@ -1,0 +1,1239 @@
+{
+ "Agent::Agent Thinking · Dot wave": {
+  "items": [
+   "agent-thinking"
+  ]
+ },
+ "Agent::Agent Thinking · Dot spin": {
+  "items": [
+   "agent-thinking"
+  ]
+ },
+ "Agent::Agent Thinking · Stars": {
+  "items": [
+   "agent-thinking"
+  ]
+ },
+ "Agent::Agent Thinking · Infinity": {
+  "items": [
+   "agent-thinking"
+  ]
+ },
+ "Agent::Composer Loader": {
+  "items": [
+   "composer-loader"
+  ]
+ },
+ "Agent::Agent Progress": {
+  "items": [],
+  "note": "Pro component — its source is license-gated and not included"
+ },
+ "Agent::Task List": {
+  "items": [],
+  "note": "Pro component — its source is license-gated and not included"
+ },
+ "Agent::Web Search": {
+  "items": [],
+  "note": "Pro component — its source is license-gated and not included"
+ },
+ "Stream::Streaming Response": {
+  "items": [
+   "streaming-response"
+  ]
+ },
+ "Stream::Reasoning Text": {
+  "items": [
+   "reasoning-text"
+  ]
+ },
+ "Stream::Agent Activity": {
+  "items": [
+   "agent-activity"
+  ]
+ },
+ "Stream::Tool Result": {
+  "items": [
+   "tool-result"
+  ]
+ },
+ "Chat::Streaming Text": {
+  "items": [
+   "streaming-text"
+  ]
+ },
+ "Chat::Thinking State": {
+  "items": [
+   "thinking-state"
+  ]
+ },
+ "Chat::Tool Chips": {
+  "items": [
+   "tool-chips"
+  ]
+ },
+ "Chat::Stream Text": {
+  "items": [
+   "stream-text"
+  ]
+ },
+ "Assist::Reasoning & Tool": {
+  "items": [
+   "reasoning",
+   "tool"
+  ]
+ },
+ "Motion::Text Effect": {
+  "items": [
+   "text-effect"
+  ]
+ },
+ "Motion::Text Shimmer Wave": {
+  "items": [
+   "text-shimmer-wave"
+  ]
+ },
+ "Dots::Dots Loaders": {
+  "items": [
+   "dotm-square-1",
+   "dotm-circular-5"
+  ]
+ },
+ "Stream::Thinking Shimmer": {
+  "items": [
+   "thinking-shimmer"
+  ]
+ },
+ "Stream::Agent Progress": {
+  "items": [
+   "agent-progress"
+  ]
+ },
+ "Stream::Citations": {
+  "items": [
+   "citations"
+  ]
+ },
+ "Stream::Tool Approval": {
+  "items": [
+   "tool-approval"
+  ]
+ },
+ "Stream::Approval Card — Questions": {
+  "items": [
+   "approval-card"
+  ]
+ },
+ "Stream::Approval Card — Review": {
+  "items": [
+   "approval-card"
+  ]
+ },
+ "Stream::Todo List": {
+  "items": [
+   "todo-list"
+  ]
+ },
+ "Stream::Image Generation": {
+  "items": [
+   "image-generation"
+  ]
+ },
+ "Stream::Code Block": {
+  "items": [
+   "code-block"
+  ]
+ },
+ "Stream::File Diff": {
+  "items": [
+   "file-diff"
+  ]
+ },
+ "Stream::Message": {
+  "items": [
+   "message"
+  ]
+ },
+ "Stream::Message Bubble": {
+  "items": [
+   "message-bubble"
+  ]
+ },
+ "Stream::Prompt Input": {
+  "items": [
+   "prompt-input"
+  ]
+ },
+ "Stream::Loader — Shapes": {
+  "items": [
+   "loader"
+  ]
+ },
+ "Stream::Loader — Text & ASCII": {
+  "items": [
+   "loader"
+  ]
+ },
+ "Stream::Text Reveal": {
+  "items": [
+   "text-reveal"
+  ]
+ },
+ "Stream::Text Cascade": {
+  "items": [
+   "text-cascade"
+  ]
+ },
+ "Stream::Text Scramble": {
+  "items": [
+   "text-scramble"
+  ]
+ },
+ "Stream::Text Shimmer": {
+  "items": [
+   "text-shimmer"
+  ]
+ },
+ "Stream::Voice Orb": {
+  "items": [
+   "voice-orb"
+  ]
+ },
+ "Chat::Context Cards": {
+  "items": [
+   "context-cards"
+  ]
+ },
+ "Chat::Chat Composer": {
+  "items": [
+   "chat-composer"
+  ]
+ },
+ "Chat::Shimmer": {
+  "items": [
+   "shimmer"
+  ]
+ },
+ "Chat::Loading State": {
+  "items": [
+   "loading-state"
+  ]
+ },
+ "Chat::Approval Card": {
+  "items": [
+   "approval-card"
+  ]
+ },
+ "Chat::Task Rows": {
+  "items": [
+   "task-rows"
+  ]
+ },
+ "Chat::Selection Actions": {
+  "items": [
+   "selection-actions"
+  ]
+ },
+ "Chat::Prompt Bar": {
+  "items": [
+   "prompt-bar"
+  ]
+ },
+ "Chat::Recommendation Card": {
+  "items": [
+   "recommendation-card"
+  ]
+ },
+ "Assist::Worked": {
+  "items": [
+   "worked"
+  ]
+ },
+ "Assist::Chat Input": {
+  "items": [
+   "chat-input"
+  ]
+ },
+ "Assist::Plan Markers & Approval": {
+  "items": [
+   "chat-page"
+  ]
+ },
+ "Assist::Chat Side Panel": {
+  "items": [
+   "chat-page"
+  ]
+ },
+ "Transitions::Thinking States": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Transitions::Agent Reasoning Stream": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Transitions::Streaming Text": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Transitions::Matrix Dot Loader": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Tool cards::Approval Card": {
+  "items": [
+   "approval-card"
+  ]
+ },
+ "Tool cards::Message Draft": {
+  "items": [
+   "message-draft"
+  ]
+ },
+ "Tool cards::Plan": {
+  "items": [
+   "plan"
+  ]
+ },
+ "Tool cards::Progress Tracker": {
+  "items": [
+   "progress-tracker"
+  ]
+ },
+ "Tool cards::Terminal": {
+  "items": [
+   "terminal"
+  ]
+ },
+ "Tool cards::Code Block": {
+  "items": [
+   "code-block"
+  ]
+ },
+ "Tool cards::Code Diff": {
+  "items": [
+   "code-diff"
+  ]
+ },
+ "Tool cards::Citation": {
+  "items": [
+   "citation"
+  ]
+ },
+ "Tool cards::Link Preview": {
+  "items": [
+   "link-preview"
+  ]
+ },
+ "Tool cards::Option List": {
+  "items": [
+   "option-list"
+  ]
+ },
+ "Tool cards::Question Flow": {
+  "items": [
+   "question-flow"
+  ]
+ },
+ "Tool cards::Order Summary": {
+  "items": [
+   "order-summary"
+  ]
+ },
+ "Tool cards::Stats Display": {
+  "items": [
+   "stats-display"
+  ]
+ },
+ "Tool cards::Parameter Slider": {
+  "items": [
+   "parameter-slider"
+  ]
+ },
+ "Tool cards::Preferences Panel": {
+  "items": [
+   "preferences-panel"
+  ]
+ },
+ "Tool cards::Image": {
+  "items": [
+   "image"
+  ]
+ },
+ "Tool cards::Image Gallery": {
+  "items": [
+   "image-gallery"
+  ]
+ },
+ "Tool cards::Item Carousel": {
+  "items": [
+   "item-carousel"
+  ]
+ },
+ "Tool cards::Social Posts": {
+  "items": [
+   "x-post"
+  ]
+ },
+ "Tool cards::Audio": {
+  "items": [
+   "audio"
+  ]
+ },
+ "Tool cards::Video": {
+  "items": [
+   "video"
+  ]
+ },
+ "Tool cards::Chart": {
+  "items": [
+   "chart"
+  ]
+ },
+ "Tool cards::Data Table": {
+  "items": [
+   "data-table"
+  ]
+ },
+ "Tool cards::Weather Widget": {
+  "items": [
+   "weather-widget"
+  ]
+ },
+ "Motion::Text Effect · Presets": {
+  "items": [
+   "text-effect"
+  ]
+ },
+ "Motion::Text Effect · Per line": {
+  "items": [
+   "text-effect"
+  ]
+ },
+ "Motion::Text Effect · Exit & trigger": {
+  "items": [
+   "text-effect"
+  ]
+ },
+ "Motion::Text Effect · Custom delay": {
+  "items": [
+   "text-effect"
+  ]
+ },
+ "Motion::Text Shimmer": {
+  "items": [
+   "text-shimmer"
+  ]
+ },
+ "Motion::Text Scramble": {
+  "items": [
+   "text-scramble"
+  ]
+ },
+ "Motion::Text Morph": {
+  "items": [
+   "text-morph"
+  ]
+ },
+ "Motion::Text Loop": {
+  "items": [
+   "text-loop"
+  ]
+ },
+ "Motion::Text Roll": {
+  "items": [
+   "text-roll"
+  ]
+ },
+ "Motion::Animated Number": {
+  "items": [
+   "animated-number"
+  ]
+ },
+ "Motion::Sliding Number": {
+  "items": [
+   "sliding-number"
+  ]
+ },
+ "Motion::Glow Effect": {
+  "items": [
+   "glow-effect"
+  ]
+ },
+ "Motion::Border Trail": {
+  "items": [
+   "border-trail"
+  ]
+ },
+ "Motion::Progressive Blur": {
+  "items": [
+   "progressive-blur"
+  ]
+ },
+ "Kit::Spinner": {
+  "items": [
+   "spinner"
+  ]
+ },
+ "Kit::Code Block": {
+  "items": [
+   "code-block"
+  ]
+ },
+ "Kit::Snippet": {
+  "items": [
+   "snippet"
+  ]
+ },
+ "Kit::Status": {
+  "items": [
+   "status"
+  ]
+ },
+ "Research::Two-Sided Conversation": {
+  "items": [
+   "c-message-1"
+  ]
+ },
+ "Research::Avatars and Presence": {
+  "items": [
+   "c-message-2"
+  ]
+ },
+ "Research::Header and Footer Metadata": {
+  "items": [
+   "c-message-3"
+  ]
+ },
+ "Research::Reply Toolbar with Regenerate": {
+  "items": [
+   "c-message-4"
+  ]
+ },
+ "Research::Attachments in a Thread": {
+  "items": [
+   "c-message-5"
+  ]
+ },
+ "Research::Grouped Run, One Portrait": {
+  "items": [
+   "c-message-6"
+  ]
+ },
+ "Research::Streaming Reply with Replay": {
+  "items": [
+   "c-message-7"
+  ]
+ },
+ "Research::Chat Skeleton to Live Thread": {
+  "items": [
+   "c-skeleton-10",
+   "c-skeleton-3"
+  ]
+ },
+ "Research::Spinner States": {
+  "items": [
+   "c-spinner-1",
+   "c-spinner-2",
+   "c-spinner-3",
+   "c-spinner-6",
+   "c-spinner-9",
+   "c-spinner-10",
+   "c-spinner-12"
+  ]
+ },
+ "Research::Loading Overlays": {
+  "items": [
+   "c-spinner-4",
+   "c-spinner-7",
+   "c-spinner-8",
+   "c-spinner-11"
+  ]
+ },
+ "Research::Transcript with Jump to Latest": {
+  "items": [
+   "c-message-scroller-1"
+  ]
+ },
+ "Research::Live Run with Auto-Scroll": {
+  "items": [
+   "c-message-scroller-2"
+  ]
+ },
+ "Research::Anchored Turns with a Composer": {
+  "items": [
+   "c-message-scroller-3"
+  ]
+ },
+ "Research::Default Scroll Position": {
+  "items": [
+   "c-message-scroller-4"
+  ]
+ },
+ "Research::Load Earlier, Keep Your Place": {
+  "items": [
+   "c-message-scroller-5"
+  ]
+ },
+ "Research::Turn Navigator": {
+  "items": [
+   "c-message-scroller-6"
+  ]
+ },
+ "Research::Coding Run Trace": {
+  "items": [
+   "c-trace-1"
+  ]
+ },
+ "Research::Live Run with Stop": {
+  "items": [
+   "c-trace-2"
+  ]
+ },
+ "Research::Worked-For Summary in a Reply": {
+  "items": [
+   "c-trace-3"
+  ]
+ },
+ "Research::Subagents with Retry": {
+  "items": [
+   "c-trace-4"
+  ]
+ },
+ "Research::Plan, Approve, Apply": {
+  "items": [
+   "c-trace-5"
+  ]
+ },
+ "Research::Web Research with Citations": {
+  "items": [
+   "c-trace-6"
+  ]
+ },
+ "Research::Lookups Before a Draft": {
+  "items": [
+   "c-trace-7"
+  ]
+ },
+ "Research::Registry Install Log": {
+  "items": [
+   "c-trace-8"
+  ]
+ },
+ "Research::CI Jobs with Re-run": {
+  "items": [
+   "c-trace-9"
+  ]
+ },
+ "Research::Request Span Tree": {
+  "items": [
+   "c-trace-10"
+  ]
+ },
+ "Research::Breadcrumbs to Stack Trace": {
+  "items": [
+   "c-trace-11"
+  ]
+ },
+ "Research::Query Plan with Hot Node": {
+  "items": [
+   "c-trace-12"
+  ]
+ },
+ "Research::Model Build with a Failing Test": {
+  "items": [
+   "c-trace-13"
+  ]
+ },
+ "Research::Webhook Delivery Attempts": {
+  "items": [
+   "c-trace-14"
+  ]
+ },
+ "Research::CSV Import Progress": {
+  "items": [
+   "c-trace-15"
+  ]
+ },
+ "Research::Dependency Audit Fixes": {
+  "items": [
+   "c-trace-16"
+  ]
+ },
+ "Research::Review Comments in a Sheet": {
+  "items": [
+   "c-trace-17"
+  ]
+ },
+ "Research::Eval Run with Failures Filter": {
+  "items": [
+   "c-trace-18"
+  ]
+ },
+ "Research::Access Check Rules": {
+  "items": [
+   "c-trace-19"
+  ]
+ },
+ "Research::Identity Check Needs a Document": {
+  "items": [
+   "c-trace-20"
+  ]
+ },
+ "Research::DNS Verification": {
+  "items": [
+   "c-trace-21"
+  ]
+ },
+ "Research::Video Encode Pipeline": {
+  "items": [
+   "c-trace-22"
+  ]
+ },
+ "Research::Agent Run with Approval Gates": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Live Agent Run Feed": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Research Timeline": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::MCP Call Table": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Run Outcome Report": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Copilot Chat Shell": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Docked Assistant with Insert": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Prompt Starter Welcome": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Reply to a Quoted Sentence": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Connected Apps Set the Scope": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Agentic Panel: Brief, Plan, Run": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Two-Model Comparison": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Voice Turn to Approval Plan": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Branching Reply Versions": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Scoped Sources, Structured Answer": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Framed Answer Receipts": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Docs Assistant Shows Its Reading": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Corner Chat Popup": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Agent Run Step Trace": {
+  "items": [],
+  "note": "Pro block — its source is license-gated and not included"
+ },
+ "Research::Long Reply with Show More": {
+  "items": [
+   "c-bubble-5"
+  ]
+ },
+ "Research::Formatted Assistant Answer": {
+  "items": [
+   "c-bubble-7"
+  ]
+ },
+ "Research::Tool Call Log with Icon Markers": {
+  "items": [
+   "c-marker-2"
+  ]
+ },
+ "Research::Run Status Markers with a Live Step": {
+  "items": [
+   "c-marker-3"
+  ]
+ },
+ "Research::Run Log Grouped by Phase": {
+  "items": [
+   "c-marker-4"
+  ]
+ },
+ "Research::File Attachment in a Reply": {
+  "items": [
+   "c-attachment-1"
+  ]
+ },
+ "Research::Upload Queue in Five States": {
+  "items": [
+   "c-attachment-5"
+  ]
+ },
+ "Dots::Dots — Square": {
+  "items": [
+   "dotm-square-2",
+   "dotm-square-1",
+   "dotm-square-3",
+   "dotm-square-4",
+   "dotm-square-5",
+   "dotm-square-6",
+   "dotm-square-7",
+   "dotm-square-8",
+   "dotm-square-9",
+   "dotm-square-10",
+   "dotm-square-11",
+   "dotm-square-12",
+   "dotm-square-13",
+   "dotm-square-14",
+   "dotm-square-15",
+   "dotm-square-16",
+   "dotm-square-17",
+   "dotm-square-18",
+   "dotm-square-19",
+   "dotm-square-20"
+  ]
+ },
+ "Dots::Dots — Circular": {
+  "items": [
+   "dotm-circular-1",
+   "dotm-circular-2",
+   "dotm-circular-3",
+   "dotm-circular-4",
+   "dotm-circular-5",
+   "dotm-circular-6",
+   "dotm-circular-7",
+   "dotm-circular-8",
+   "dotm-circular-9",
+   "dotm-circular-10",
+   "dotm-circular-11",
+   "dotm-circular-12",
+   "dotm-circular-13",
+   "dotm-circular-14",
+   "dotm-circular-15",
+   "dotm-circular-16",
+   "dotm-circular-17",
+   "dotm-circular-18",
+   "dotm-circular-19",
+   "dotm-circular-20"
+  ]
+ },
+ "Dots::Dots — Triangle": {
+  "items": [
+   "dotm-triangle-1",
+   "dotm-triangle-2",
+   "dotm-triangle-3",
+   "dotm-triangle-4",
+   "dotm-triangle-5",
+   "dotm-triangle-6",
+   "dotm-triangle-7",
+   "dotm-triangle-8",
+   "dotm-triangle-9",
+   "dotm-triangle-10",
+   "dotm-triangle-11",
+   "dotm-triangle-12",
+   "dotm-triangle-13",
+   "dotm-triangle-14",
+   "dotm-triangle-15",
+   "dotm-triangle-16",
+   "dotm-triangle-17",
+   "dotm-triangle-18",
+   "dotm-triangle-19",
+   "dotm-triangle-20"
+  ]
+ },
+ "Dots::Dots — Hex": {
+  "items": [
+   "dotm-hex-1",
+   "dotm-hex-2",
+   "dotm-hex-3",
+   "dotm-hex-4",
+   "dotm-hex-5",
+   "dotm-hex-6",
+   "dotm-hex-7",
+   "dotm-hex-8",
+   "dotm-hex-9",
+   "dotm-hex-10"
+  ]
+ },
+ "Dots::Dots — 3×3": {
+  "items": [
+   "dotm-3x3-1",
+   "dotm-3x3-2",
+   "dotm-3x3-3",
+   "dotm-3x3-4",
+   "dotm-3x3-5",
+   "dotm-3x3-6",
+   "dotm-3x3-7",
+   "dotm-3x3-8",
+   "dotm-3x3-9",
+   "dotm-3x3-10",
+   "dotm-3x3-11",
+   "dotm-3x3-12",
+   "dotm-3x3-13",
+   "dotm-3x3-14",
+   "dotm-3x3-15",
+   "dotm-3x3-16",
+   "dotm-3x3-18",
+   "dotm-3x3-19",
+   "dotm-3x3-20",
+   "dotm-3x3-21"
+  ]
+ },
+ "Dots::Dots Inline Thinking": {
+  "items": [
+   "dotm-square-1",
+   "dotm-circular-5"
+  ]
+ },
+ "Blocks::Shiny Text + Gradient Text": {
+  "items": [
+   "animated-text-01",
+   "animated-text-02"
+  ]
+ },
+ "Blocks::Typewriter Status": {
+  "items": [
+   "animated-text-03"
+  ]
+ },
+ "Blocks::Rolling Status": {
+  "items": [
+   "animated-text-04"
+  ]
+ },
+ "Blocks::Shimmer Wave": {
+  "items": [
+   "animated-text-05"
+  ]
+ },
+ "Blocks::Text Reveal": {
+  "items": [
+   "animated-text-06"
+  ]
+ },
+ "Blocks::Text Morph": {
+  "items": [
+   "animated-text-07"
+  ]
+ },
+ "Blocks::Marker Highlight": {
+  "items": [
+   "animated-text-08"
+  ]
+ },
+ "Blocks::Display Word Statuses": {
+  "items": [
+   "animated-text-09",
+   "animated-text-10",
+   "animated-text-11",
+   "animated-text-12"
+  ]
+ },
+ "Blocks::Spinners as Agent Status": {
+  "items": [
+   "spinner-01",
+   "spinner-02",
+   "spinner-03",
+   "spinner-04",
+   "spinner-05",
+   "spinner-06",
+   "spinner-07",
+   "spinner-08",
+   "spinner-09"
+  ]
+ },
+ "Blocks::Liquid Wave Preview": {
+  "items": [
+   "spinner-10"
+  ]
+ },
+ "Blocks::Dots Typing Indicators": {
+  "items": [
+   "dots-01",
+   "dots-02",
+   "dots-03",
+   "dots-04",
+   "dots-05",
+   "dots-06",
+   "dots-07",
+   "dots-08",
+   "dots-09",
+   "dots-10",
+   "dots-11",
+   "dots-12"
+  ]
+ },
+ "Blocks::Bubble Exchange": {
+  "items": [
+   "bubble-03",
+   "bubble-02",
+   "bubble-05",
+   "bubble-07"
+  ]
+ },
+ "Blocks::Bubble Show More & Actions": {
+  "items": [
+   "bubble-06",
+   "bubble-04"
+  ]
+ },
+ "Animated::Code Block Writing": {
+  "items": [
+   "components-code-block"
+  ]
+ },
+ "Animated::Typing Text": {
+  "items": [
+   "primitives-texts-typing"
+  ]
+ },
+ "Animated::Highlight Text": {
+  "items": [
+   "primitives-texts-highlight"
+  ]
+ },
+ "Animated::Rolling Text": {
+  "items": [
+   "primitives-texts-rolling"
+  ]
+ },
+ "Animated::Sliding & Counting Numbers": {
+  "items": [
+   "primitives-texts-sliding-number",
+   "primitives-texts-counting-number"
+  ]
+ },
+ "Animated::Shimmering Text": {
+  "items": [
+   "primitives-texts-shimmering"
+  ]
+ },
+ "Animated::Splitting Text": {
+  "items": [
+   "primitives-texts-splitting"
+  ]
+ },
+ "Animated::Rotating Text": {
+  "items": [
+   "primitives-texts-rotating"
+  ]
+ },
+ "Animated::Morphing + Gradient Text": {
+  "items": [
+   "primitives-texts-morphing",
+   "primitives-texts-gradient"
+  ]
+ },
+ "Animated::Animated Icons": {
+  "items": [
+   "icons-lucide-loader-pinwheel",
+   "icons-lucide-loader-circle",
+   "icons-lucide-loader",
+   "icons-lucide-bot-message-square",
+   "icons-lucide-message-square-more",
+   "icons-lucide-message-square-dot",
+   "icons-lucide-sparkles",
+   "icons-hugeicons-loading-03"
+  ]
+ },
+ "Text::Blur Reveal": {
+  "items": [
+   "blur-reveal"
+  ]
+ },
+ "Text::Shimmer Text": {
+  "items": [
+   "shimmer-text"
+  ]
+ },
+ "Text::Words Stagger": {
+  "items": [
+   "words-stagger"
+  ]
+ },
+ "Text::Randomized Text": {
+  "items": [
+   "randomized-text"
+  ]
+ },
+ "Text::Special Text": {
+  "items": [
+   "special-text"
+  ]
+ },
+ "Text::Bars Spinner": {
+  "items": [
+   "bars-spinner"
+  ]
+ },
+ "Text::Spinner": {
+  "items": [
+   "spinner"
+  ]
+ },
+ "Text::Text Marquee": {
+  "items": [
+   "text-marquee"
+  ]
+ },
+ "Text::Gradient Wave Text": {
+  "items": [
+   "gradient-wave-text"
+  ]
+ },
+ "Text::Slide Up Text": {
+  "items": [
+   "slide-up-text"
+  ]
+ },
+ "Text::Highlighted Text": {
+  "items": [
+   "highlighted-text"
+  ]
+ },
+ "Text::Animated Checkbox": {
+  "items": [
+   "animated-checkbox"
+  ]
+ },
+ "Glow::Text Animate": {
+  "items": [
+   "text-animate"
+  ]
+ },
+ "Glow::Typewriter": {
+  "items": [
+   "typewriter"
+  ]
+ },
+ "Glow::Terminal Animation": {
+  "items": [
+   "terminal-animation"
+  ]
+ },
+ "Glow::AI Instructions": {
+  "items": [
+   "ai-instructions"
+  ]
+ },
+ "Glow::Pixel Heading (Character)": {
+  "items": [
+   "pixel-heading-character"
+  ]
+ },
+ "Glow::Pixel Heading (Word)": {
+  "items": [
+   "pixel-heading-word"
+  ]
+ },
+ "Glow::Pixel Paragraph Words": {
+  "items": [
+   "pixel-paragraph-words"
+  ]
+ },
+ "Glow::Text GIF": {
+  "items": [
+   "text-gif"
+  ]
+ },
+ "Glow::Agent Suggest Card Stack": {
+  "items": [
+   "agent-suggest-card-stack"
+  ]
+ },
+ "Glow::Fluid AI Workloads": {
+  "items": [
+   "fluid-ai-workloads"
+  ]
+ },
+ "Glow::AI Blob Warp": {
+  "items": [
+   "ai-blob-warp"
+  ]
+ },
+ "Glow::Halo Search": {
+  "items": [
+   "halo-search"
+  ]
+ },
+ "Glow::Prompt Composer": {
+  "items": [
+   "prompt-composer"
+  ]
+ },
+ "Glow::Halo Progress": {
+  "items": [
+   "halo-progress"
+  ]
+ },
+ "Glow::Halo Badge": {
+  "items": [
+   "halo-badge"
+  ]
+ },
+ "Glow::Speech Bubble": {
+  "items": [
+   "speech-bubble"
+  ]
+ },
+ "Glow::Dynamic Island": {
+  "items": [
+   "dynamic-island"
+  ]
+ },
+ "Transitions::Text States Swap": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Transitions::Number Pop-in": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Transitions::Skeleton Loader and Reveal": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Transitions::Shimmer Text": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Transitions::Texts Reveal": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ },
+ "Transitions::Banner Stacking": {
+  "items": [],
+  "note": "no registry source; the animation is rebuilt from its live demo"
+ }
+}

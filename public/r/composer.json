@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "composer",
+  "title": "Composer (all variants)",
+  "description": "The eleven composers behind one <Composer variant=\"…\" /> switch, with a provider that lets a picker swap them everywhere.",
+  "registryDependencies": [
+    "http://localhost:5173/r/composer-pill.json",
+    "http://localhost:5173/r/composer-box.json",
+    "http://localhost:5173/r/composer-panel.json",
+    "http://localhost:5173/r/composer-dock.json",
+    "http://localhost:5173/r/composer-command.json",
+    "http://localhost:5173/r/composer-inline.json",
+    "http://localhost:5173/r/composer-voice.json",
+    "http://localhost:5173/r/composer-halo.json",
+    "http://localhost:5173/r/composer-media.json",
+    "http://localhost:5173/r/composer-palette.json",
+    "http://localhost:5173/r/composer-mention.json"
+  ],
+  "files": [
+    {
+      "path": "src/templates/kit/composers.tsx",
+      "content": "import type { ComponentType } from 'react';\nimport { useComposerVariant, type ComposerVariant } from './composer-variant';\nimport { useAttachments } from './attachments';\nimport type { ComposerProps as BaseProps, VariantProps } from './composer-kit';\nimport { PillComposerView } from './variants/pill';\nimport { BoxComposerView } from './variants/box';\nimport { PanelComposerView } from './variants/panel';\nimport { DockComposerView } from './variants/dock';\nimport { CommandComposerView } from './variants/command';\nimport { InlineComposerView } from './variants/inline';\nimport { VoiceComposerView } from './variants/voice';\nimport { HaloComposerView } from './variants/halo';\nimport { MediaComposerView } from './variants/media';\nimport { PaletteComposerView } from './variants/palette';\nimport { MentionComposerView } from './variants/mention';\n\n/* The template-facing composer: one prop picks among the eleven composers in kit/variants/ (one file each, each\n * also installable alone from the registry). The attachment queue lives here so switching variant keeps the files. */\n\n/* ------------------------------------------------------------------ switch */\n\nconst VARIANTS: Record<ComposerVariant, ComponentType<VariantProps>> = {\n  pill: PillComposerView,\n  box: BoxComposerView,\n  panel: PanelComposerView,\n  dock: DockComposerView,\n  command: CommandComposerView,\n  inline: InlineComposerView,\n  voice: VoiceComposerView,\n  halo: HaloComposerView,\n  media: MediaComposerView,\n  palette: PaletteComposerView,\n  mention: MentionComposerView,\n};\n\nexport interface ComposerProps extends BaseProps {\n  /** The template's own pick, used while the global choice is `auto`. */\n  variant?: ComposerVariant;\n  /** Always render `variant`, ignoring the global choice (the /composers showcase). */\n  lock?: boolean;\n}\n\n/** Every composer behind one switch: the template's pick, or the global one from the header picker. */\nexport function Composer({ variant, lock, placeholder = 'Ask me anything', ...rest }: ComposerProps) {\n  const global = useComposerVariant(variant ?? 'pill');\n  const active = lock && variant ? variant : global;\n  const att = useAttachments();\n  const V = VARIANTS[active];\n  // Sending takes the landed files with the message, as a composer clears its strip on send.\n  const onSend = (v: string) => {\n    rest.onSend(v);\n    att.clear();\n  };\n  return <V {...rest} onSend={onSend} placeholder={placeholder} att={att} />;\n}\n",
+      "type": "registry:component",
+      "target": "components/composer/composers.tsx"
+    },
+    {
+      "path": "src/templates/kit/composer-variant.tsx",
+      "content": "import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';\nimport { storage } from '@/lib/storage';\n\n/* Which composer every template uses. `auto` keeps each template's own pick; any other value swaps the\n * composer everywhere. The choice is saved and shared like the theme: same-origin frames (the gallery's\n * live thumbnails, other tabs) follow it through the storage event, and `?composer=<id>` forces one. */\n\nexport const COMPOSER_VARIANTS = [\n  { id: 'pill', name: 'Pill', from: 'Single row', hint: 'One row: add, input, model, send' },\n  { id: 'box', name: 'Box', from: 'Textarea', hint: 'Growing textarea over an action row' },\n  { id: 'panel', name: 'Panel', from: 'Rail', hint: 'Branch, project and context on a rail; attachments, permission mode' },\n  { id: 'dock', name: 'Dock', from: 'Floating toolbar', hint: 'Floating glass toolbar with grouped tools' },\n  { id: 'command', name: 'Command', from: 'Terminal', hint: 'Monospace prompt, slash commands, key hints' },\n  { id: 'inline', name: 'Inline', from: 'Selection bar', hint: 'Compact bar on a selection; edit or ask, Tab / Esc' },\n  { id: 'voice', name: 'Voice', from: 'Voice orb', hint: 'Voice-reactive orb, push-to-talk, live transcript' },\n  { id: 'halo', name: 'Halo', from: 'Glow rim', hint: 'Glowing rim, typed example prompts, enhance, vanish on send' },\n  { id: 'media', name: 'Media', from: 'Image prompt', hint: 'Prompt with aspect, sliders, style and batch' },\n  { id: 'palette', name: 'Palette', from: 'Command palette', hint: 'Command palette that hands the query to AI on Tab' },\n  { id: 'mention', name: 'Mention', from: 'Mentions', hint: '@ chips for files, people and sources in the text' },\n] as const;\n\nexport type ComposerVariant = (typeof COMPOSER_VARIANTS)[number]['id'];\n/** The five original composers (kit/composers.tsx); the rest live in kit/variants/. */\nexport type BaseVariant = 'pill' | 'box' | 'panel' | 'dock' | 'command';\nexport type ComposerChoice = ComposerVariant | 'auto';\n\nconst KEY = 'tpl-composer';\nconst isVariant = (v: string | null): v is ComposerVariant => COMPOSER_VARIANTS.some((x) => x.id === v);\n\nconst Ctx = createContext<{ choice: ComposerChoice; setChoice: (c: ComposerChoice) => void }>({ choice: 'auto', setChoice: () => {} });\n\nexport function ComposerVariantProvider({ children }: { children: ReactNode }) {\n  const [choice, setState] = useState<ComposerChoice>(() => {\n    const forced = new URLSearchParams(window.location.search).get('composer');\n    if (isVariant(forced)) return forced;\n    const saved = storage.get(KEY, 'auto');\n    return isVariant(saved) ? saved : 'auto';\n  });\n\n  useEffect(() => {\n    const onStorage = (e: StorageEvent) => {\n      if (e.key === KEY) setState(isVariant(e.newValue) ? e.newValue : 'auto');\n    };\n    window.addEventListener('storage', onStorage);\n    return () => window.removeEventListener('storage', onStorage);\n  }, []);\n\n  const setChoice = useCallback((c: ComposerChoice) => {\n    setState(c);\n    storage.set(KEY, c);\n  }, []);\n\n  const value = useMemo(() => ({ choice, setChoice }), [choice, setChoice]);\n  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;\n}\n\nexport const useComposerChoice = () => useContext(Ctx);\n\n/** The variant a composer should render: the global pick, or the template's own default under `auto`. */\nexport function useComposerVariant(fallback: ComposerVariant = 'pill'): ComposerVariant {\n  const { choice } = useContext(Ctx);\n  return choice === 'auto' ? fallback : choice;\n}\n",
+      "type": "registry:component",
+      "target": "components/composer/composer-variant.tsx"
+    },
+    {
+      "path": "src/lib/storage.ts",
+      "content": "// localStorage can throw (private windows, blocked site data): every access goes through here.\nexport const storage = {\n  get(key: string, fallback: string): string {\n    try {\n      return localStorage.getItem(key) ?? fallback;\n    } catch {\n      return fallback;\n    }\n  },\n  set(key: string, value: string) {\n    try {\n      localStorage.setItem(key, value);\n    } catch {\n      /* not persisted */\n    }\n  },\n};\n\nexport const STORAGE_KEYS = { theme: 'sui-theme', view: 'sr-view' } as const;\n",
+      "type": "registry:lib",
+      "target": "lib/storage.ts"
+    }
+  ],
+  "type": "registry:component"
+}
