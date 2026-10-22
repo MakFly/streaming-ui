@@ -9,16 +9,31 @@
 	root * /srv
 	encode zstd gzip
 
-	respond /health 200
+	# Own handle: a catch-all handle below would swallow this and serve index.html.
+	handle /health {
+		respond 200
+	}
 
-	# Hashed Vite assets never change under the same name.
-	header /assets/* Cache-Control "public, max-age=31536000, immutable"
+	# Hashed Vite assets never change under the same name. A miss is a 404:
+	# falling back to index.html would hand HTML to a script tag.
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
 
 	# The shadcn registry and the prompt sources are plain files: a miss is a 404, never the SPA shell.
 	@static path /r/* /sources/*
 	handle @static {
 		header Cache-Control "public, max-age=300"
 		header /r/* Access-Control-Allow-Origin "*"
+		file_server
+	}
+
+	# Favicon, icons, manifest and any other real file. A missing one stays a 404.
+	# (The SPA fallback below used to answer 200 HTML, which hid a missing favicon.)
+	@file path_regexp \.(?:ico|png|svg|jpe?g|webp|gif|webmanifest|woff2?|txt|xml)$
+	handle @file {
+		header Cache-Control "public, max-age=86400"
 		file_server
 	}
 
