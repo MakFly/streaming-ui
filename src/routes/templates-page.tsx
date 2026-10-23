@@ -8,6 +8,7 @@ import { PageShell } from '@/components/page-shell';
 import { ScaledFrame } from '@/components/scaled-frame';
 import { templates, type TemplateMeta } from '@/templates/registry';
 import { paths } from '@/lib/paths';
+import { ThinkingChoice } from '@/templates/kit/thinking-style';
 import { cn } from '@/lib/utils';
 
 export function TemplateCard({ t, featured }: { t: TemplateMeta; featured?: boolean }) {
@@ -78,6 +79,7 @@ export function TemplatesPage() {
           Whole chat apps built from the streaming components: each one plays a real conversation, then answers what you type. Open one full screen, switch
           devices, or copy the prompt that rebuilds it.
         </p>
+        <ThinkingChoice />
       </header>
       <div className="grid grid-cols-1 gap-x-8 gap-y-14 pt-6 lg:grid-cols-2">
         {templates.map((t, i) => (

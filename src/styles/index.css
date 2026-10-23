@@ -15,6 +15,7 @@
 @import "./gallery.css";
 @import "./landing.css";
 @import "./templates.css";
+@import "./orbs.css";
 @import "./safelist.css";
 
 /* Tailwind v4 dropped the pointer cursor on buttons; bring it back for everything clickable. */

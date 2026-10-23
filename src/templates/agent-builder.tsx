@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useChatEngine, type ChatScriptApi } from './kit/engine';
-import { AgentThinking } from './kit/primitives';
+import { ThinkingIndicator } from './kit/thinking-style';
 import { CodeBlock } from './kit/markdown';
 import { BLOUB_NAMES, Bloub, COLORS, EXPRESSIONS, POSES, SEQUENCE, SHAPES, type StateId } from './kit/bloub';
 import sentryLogo from './kit/logos/sentry.svg';
@@ -434,7 +434,7 @@ export default function AgentBuilderTemplate() {
       <div className="flex flex-col gap-6">
         <Frame className="border-violet-500/25 bg-violet-500/[0.07]">
           <FrameHeader icon={<Wand2 className="text-violet-600! dark:text-violet-400!" />} title="Describe it, we draft the rest">
-            {generating && <AgentThinking label="Generating" small showTimer={false} />}
+            {generating && <ThinkingIndicator label="Generating" small showTimer={false} />}
           </FrameHeader>
           <FramePanel className="flex flex-col gap-2 p-2 sm:flex-row sm:items-end">
             <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={2} placeholder="What should your agent do?" className="min-h-12 flex-1 resize-none bg-transparent px-1.5 py-1 text-body-2-regular leading-6 outline-none placeholder:text-text-tertiary" />

@@ -20,6 +20,7 @@ lives here rather than in the interface. Check each project's license before red
 | Transitions | Transitions.dev | transitions.dev |
 | Animated | Animate UI | animate-ui.com |
 | Blocks | shadcnspace | shadcnspace.com |
+| Orbs (`src/components/thinking-orb`, registry items `thinking-orb` and `orb-status`) | thinking-orbs (MIT) | Jakub Antalik, made with help from Alexandr Brinza, libraries.dev/orbs |
 | Composer patterns | assistant-ui, Cursor, Raycast, Midjourney, Ideogram | interaction patterns only, no code |
 
 The original registry sources these were adapted from are kept, without their metadata, in `public/sources/`.

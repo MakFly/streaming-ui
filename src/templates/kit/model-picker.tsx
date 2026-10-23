@@ -4,14 +4,14 @@ import { RotateCcw } from 'lucide-react';
 import { Icon } from './icon';
 import { cn } from '@/lib/utils';
 import { MaxEffortFx, scatterTicks } from './max-effort-fx';
+import { PROVIDER_LOGOS } from './provider-logos';
 
 /* Model picker for the multi-agent chat: a
- * 341×282 popover over the trigger with a vertical provider rail (provider logos in ./providers),
+ * 341×282 popover over the trigger with a vertical provider rail (embedded provider logos),
  * that provider's models as radio rows, Quick Search across every provider, and an Effort badge on the selected
  * row opening a six-step Faster → Smarter slider. Class strings follow the reference design. */
 
-const logos = import.meta.glob('./providers/*.svg', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
-const logo = (file: string) => logos[`./providers/${file}.svg`];
+const logo = (file: string) => PROVIDER_LOGOS[file];
 
 type Provider = { id: string; name: string; file: string; size: 18 | 20; models: string[] };
 

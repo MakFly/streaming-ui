@@ -331,6 +331,130 @@
           "path": "src/templates/kit/max-effort-fx.tsx",
           "type": "registry:component",
           "target": "components/composer/max-effort-fx.tsx"
+        },
+        {
+          "path": "src/templates/kit/provider-logos.ts",
+          "type": "registry:component",
+          "target": "components/composer/provider-logos.ts"
+        }
+      ]
+    },
+    {
+      "name": "thinking-orb",
+      "type": "registry:component",
+      "title": "Thinking orb",
+      "author": "Jakub Antalik (libraries.dev/orbs), made with help from Alexandr Brinza. MIT, from the thinking-orbs package.",
+      "description": "Dotted thought-orb loader by Jakub Antalik: nine animated states (working, searching, solving, listening, connecting, weaving, composing, breathing, shaping), sizes 64, 32 and 20, light and dark ink, on a plain 2D canvas. <ThinkingOrb state=\"searching\" size={64} />",
+      "docs": "Thinking orbs are designed and built by Jakub Antalik (https://libraries.dev/orbs), made with help from Alexandr Brinza. MIT: keep components/thinking-orb/LICENSE with the code.",
+      "files": [
+        {
+          "path": "src/components/thinking-orb/ThinkingOrb.tsx",
+          "type": "registry:component",
+          "target": "components/thinking-orb/ThinkingOrb.tsx"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/braid.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/braid.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/core.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/core.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/index.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/index.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/lattice.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/lattice.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/morph.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/morph.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/orbits.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/orbits.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/profiles.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/profiles.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/registry.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/registry.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/ribbon.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/ribbon.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/types.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/types.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/engine/web.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/engine/web.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/gravity.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/gravity.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/index.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/index.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/presets.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/presets.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/theme.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/theme.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/types.ts",
+          "type": "registry:component",
+          "target": "components/thinking-orb/types.ts"
+        },
+        {
+          "path": "src/components/thinking-orb/LICENSE",
+          "type": "registry:file",
+          "target": "components/thinking-orb/LICENSE"
+        }
+      ]
+    },
+    {
+      "name": "orb-status",
+      "type": "registry:component",
+      "title": "Orb status",
+      "author": "Jakub Antalik (libraries.dev/orbs), made with help from Alexandr Brinza. MIT, from the thinking-orbs package.",
+      "description": "A thinking orb with its shimmering status label, as a 74px pill or a 36px chip, from the libraries.dev/orbs showcase. <OrbStatus state=\"solving\" label=\"Solving…\" variant=\"pill\" />",
+      "docs": "Status pill and chip from the libraries.dev/orbs showcase by Jakub Antalik, made with help from Alexandr Brinza.",
+      "registryDependencies": [
+        "utils",
+        "https://streaming-ui.pulseview.app/r/thinking-orb.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/thinking-orb/orb-status.tsx",
+          "type": "registry:component",
+          "target": "components/thinking-orb/orb-status.tsx"
         }
       ]
     }

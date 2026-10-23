@@ -14,6 +14,7 @@ const page = {
   template: () => import('@/routes/template-page'),
   preview: () => import('@/routes/template-preview'),
   composers: () => import('@/routes/composers-page'),
+  orbs: () => import('@/routes/orbs-page'),
 };
 const promptIn = (from: 'gallery' | 'demo' | 'template') => async () => {
   const { PromptRoute } = await page.prompt();
@@ -24,7 +25,7 @@ const promptIn = (from: 'gallery' | 'demo' | 'template') => async () => {
 export function prefetchRoutes() {
   if (window.self !== window.top || window.location.pathname.includes('/preview/')) return;
   const run = () => {
-    for (const load of [page.landing, page.gallery, page.templates, page.composers, page.demo, page.template, page.prompt]) void load();
+    for (const load of [page.landing, page.gallery, page.templates, page.composers, page.orbs, page.demo, page.template, page.prompt]) void load();
   };
   if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 3000 });
   else setTimeout(run, 1500);
@@ -42,6 +43,7 @@ export function prefetchRoutes() {
  * /templates/:slug                one template full size (device switcher)
  * /templates/:slug/prompt         template page + Prompt dialog
  * /composers                     the eleven composers, each in a live thread (#pill … #command, #compare)
+ * /orbs                          thinking-orb loaders: nine-state showcase and a playground
  * /preview/:slug                  bare template, no site chrome (what the iframes load)
  * *                               404
  *
@@ -78,6 +80,7 @@ export const router = createBrowserRouter(
           children: [{ path: 'prompt', lazy: promptIn('template') }],
         },
         { path: 'composers', lazy: async () => ({ Component: (await page.composers()).ComposersPage }) },
+        { path: 'orbs', lazy: async () => ({ Component: (await page.orbs()).OrbsPage }) },
         { path: '*', element: <NotFound /> },
       ],
     },

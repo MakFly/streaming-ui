@@ -36,6 +36,13 @@ export const COMPOSERS: PageMeta = {
     'Eleven chat composers behind one interface: pill, box, panel, dock, command, inline, voice, halo, media, palette and mention. Install any of them with the shadcn CLI.',
 };
 
+export const ORBS: PageMeta = {
+  path: '/orbs',
+  title: 'Thinking orbs · Streaming UI',
+  description:
+    'Dotted thought-orb loading indicators for AI agents: nine animated states (working, searching, solving, listening, connecting, weaving, composing, breathing, shaping) at three sizes, on a plain 2D canvas.',
+};
+
 /** Collection pages. Slugs match engine/prompt.js slug(group). */
 const LIBRARIES: { slug: string; name: string; description: string }[] = [
   { slug: 'agent', name: 'Agent', description: 'Agent thinking, a composer loader, progress, task lists and web search, playing live as the work happens.' },
@@ -61,7 +68,7 @@ export const LIBRARY_PAGES: PageMeta[] = LIBRARIES.map((l) => ({
 }));
 
 /** Routes whose HTML head is written at build time. Demo pages stay client-rendered. */
-export const STATIC_PAGES: PageMeta[] = [HOME, RESPONSES, TEMPLATES, COMPOSERS, ...LIBRARY_PAGES];
+export const STATIC_PAGES: PageMeta[] = [HOME, RESPONSES, TEMPLATES, COMPOSERS, ORBS, ...LIBRARY_PAGES];
 
 export const clip = (text: string, max = 155) => {
   const clean = text.replace(/\s+/g, ' ').trim();

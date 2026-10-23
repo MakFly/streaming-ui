@@ -13,6 +13,7 @@ const NAV = [
   { label: 'Responses', to: paths.gallery(), active: (p: string) => p.startsWith('/responses') || p.startsWith('/demo/') },
   { label: 'Templates', to: paths.templates(), active: (p: string) => p.startsWith('/templates') },
   { label: 'Composers', to: paths.composers(), active: (p: string) => p.startsWith('/composers') },
+  { label: 'Orbs', to: paths.orbs(), active: (p: string) => p.startsWith('/orbs') },
   { label: 'Collections', to: '/#libraries' },
   { label: 'Prompts', to: '/#prompts' },
 ];

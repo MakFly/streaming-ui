@@ -7,6 +7,7 @@ import { ComposerCompare, ComposerSpec } from '@/components/composers/composer-s
 import { InstallButton } from '@/components/composers/install-button';
 import { Icon } from '@/components/icon';
 import { COMPOSER_VARIANTS, ComposerVariantProvider, useComposerChoice, type ComposerVariant } from '@/templates/kit/composer-variant';
+import { ThinkingChoice } from '@/templates/kit/thinking-style';
 import { paths } from '@/lib/paths';
 import { COMPOSERS, applyHead } from '@/seo/routes';
 import { cn } from '@/lib/utils';
@@ -112,6 +113,7 @@ function Content() {
             </button>
           )}
         </p>
+        <ThinkingChoice />
         <InstallButton item="composer" label="Install all eleven" />
       </header>
 

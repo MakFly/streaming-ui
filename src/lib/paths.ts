@@ -10,6 +10,8 @@ export const paths = {
   templatePrompt: (slug: string) => `/templates/${slug}/prompt`,
   /** The five interchangeable composers, each in a live thread; `#<variant>` jumps to one. */
   composers: (variant?: string) => (variant ? `/composers#${variant}` : '/composers'),
+  /** Thinking-orb loaders: the nine states and a playground. */
+  orbs: () => '/orbs',
   /** Bare template, no site chrome: what the preview iframes load. */
   templatePreview: (slug: string) => `/preview/${slug}`,
 };

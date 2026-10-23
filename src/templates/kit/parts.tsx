@@ -5,7 +5,8 @@ import { PalettePicker } from '@/components/palette-picker';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AgentLog, AgentThinking } from './primitives';
+import { AgentLog } from './primitives';
+import { ThinkingIndicator, ThinkingPicker } from './thinking-style';
 import { COMPOSER_VARIANTS, useComposerChoice, type ComposerChoice } from './composer-variant';
 import { EXTENSIONS, isExtension } from './variants';
 import { Markdown, type Decorate } from './markdown';
@@ -384,7 +385,7 @@ export function Reasoning({ part }: { part: Extract<Part, { kind: 'thinking' }> 
           <ChevronDown className={cn('size-4 transition-transform duration-200', !open && '-rotate-90')} />
         </button>
       ) : (
-        <AgentThinking label={part.label} small className="py-1" />
+        <ThinkingIndicator label={part.label} small className="py-1" />
       )}
       {open && part.steps.length > 0 && (
         <AgentLog className="ms-[7px] mt-1">
@@ -479,7 +480,7 @@ export function AssistantMessage({
         if (p.kind === 'text') return <Markdown key={p.id} text={p.text.slice(0, p.shown)} streaming={!p.done} decorate={decorate} className={textClassName} />;
         return <div key={p.id}>{renderCustom?.(p)}</div>;
       })}
-      {message.parts.length === 0 && !message.done && <AgentThinking className="py-1" small />}
+      {message.parts.length === 0 && !message.done && <ThinkingIndicator className="py-1" small />}
       {actions && message.done && message.parts.some((p) => p.kind === 'text') && <ActionBar message={message} isLast={isLast} onRegenerate={onRegenerate} />}
     </div>
   );
@@ -588,11 +589,12 @@ export function ComposerPicker({ className }: { className?: string }) {
   );
 }
 
-/** The controls every template header ends with: composer style and theme. */
+/** The controls every template header ends with: composer style, thinking style and theme. */
 export function HeaderTools() {
   return (
     <>
       <ComposerPicker />
+      <ThinkingPicker />
       <PalettePicker className="size-8 rounded-lg" />
       <ThemeToggle />
     </>

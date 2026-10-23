@@ -3,7 +3,7 @@ import { Check, Columns3, Crown, Gauge, Plus, Timer, Trophy, X, Zap } from 'luci
 import { cn } from '@/lib/utils';
 import { useChatEngine, type ChatScriptApi } from './kit/engine';
 import { CopyButton, Markdown } from './kit/markdown';
-import { AgentThinking } from './kit/primitives';
+import { ThinkingIndicator } from './kit/thinking-style';
 import { Badge, Canvas, ChatSurface, Composer, Frame, FrameFooter, FrameHeader, FramePanel, HeaderButton, Suggestions, HeaderTools, UserMessage, Welcome, textOf } from './kit/parts';
 
 /* Model Compare — one prompt, several models streaming side by side (after Zola's multi-model chat and
@@ -78,7 +78,7 @@ function Column({ a, vote, best, onVote }: { a: Answer; vote: string | null; bes
         {won ? <Badge tone="success"><Trophy /> Preferred</Badge> : <span className="text-caption-1-regular text-text-tertiary">{m.vendor}</span>}
       </FrameHeader>
       <FramePanel className="flex min-h-48 flex-1 flex-col px-3.5 py-3">
-        {a.started ? <Markdown text={a.text.slice(0, a.shown)} streaming={!a.done} className="text-body-2-regular leading-6" /> : <AgentThinking label="Waiting for first token" small showTimer />}
+        {a.started ? <Markdown text={a.text.slice(0, a.shown)} streaming={!a.done} className="text-body-2-regular leading-6" /> : <ThinkingIndicator label="Waiting for first token" small showTimer />}
       </FramePanel>
       <FrameFooter className="flex-wrap gap-x-3 gap-y-1 text-caption-1-regular text-text-tertiary tabular-nums [&_svg]:size-3.5">
         <span className={cn('flex items-center gap-1', best.ttft === a.model && 'text-emerald-600 dark:text-emerald-400')}>
@@ -189,7 +189,7 @@ export default function ModelCompareTemplate() {
                 </UserMessage>
               );
             const part = m.parts.find((p) => p.kind === 'custom' && p.type === 'compare');
-            if (!part || part.kind !== 'custom') return <AgentThinking key={m.id} small />;
+            if (!part || part.kind !== 'custom') return <ThinkingIndicator key={m.id} small />;
             const answers = part.data.answers as Answer[];
             const started = answers.filter((a) => a.started);
             const by = (k: 'ttft' | 'tps' | 'cost', min: boolean) => started.reduce<Answer | null>((b, a) => (!b || (min ? a[k] < b[k] : a[k] > b[k]) ? a : b), null)?.model ?? '';

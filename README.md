@@ -108,6 +108,26 @@ REGISTRY_URL=https://your-site.example bun scripts/build-registry.mjs
 | `composer-theme` | The design tokens as one stylesheet (`styles/streaming-ui.css`) |
 | `model-picker` | Providers, effort slider with the Max effect, fast mode |
 
+## Install the thinking orbs
+
+The thinking orbs are by [Jakub Antalik](https://x.com/jakubantalik), made with help from [Alexandr Brinza](https://x.com/a_brinza): see [libraries.dev/orbs](https://libraries.dev/orbs) and the MIT package [thinking-orbs](https://github.com/Jakubantalik/Libraries.dev/tree/main/packages/thinking-orbs). Streaming UI redistributes the engine with its license and a credit header in every file, and adds the status pill and chip of the showcase. No tokens or CSS to import.
+
+```bash
+# the orb: nine states, sizes 64, 32 and 20
+bunx shadcn@latest add https://streaming-ui.pulseview.app/r/thinking-orb.json
+
+# the orb with its shimmering label, as a pill or a chip
+bunx shadcn@latest add https://streaming-ui.pulseview.app/r/orb-status.json
+```
+
+```tsx
+import { ThinkingOrb } from '@/components/thinking-orb';
+import { OrbStatus } from '@/components/thinking-orb/orb-status';
+
+<ThinkingOrb state="searching" size={64} />
+<OrbStatus state="solving" label="Solving…" variant="pill" />
+```
+
 ## What's inside
 
 | Route | Page |
@@ -119,6 +139,7 @@ REGISTRY_URL=https://your-site.example bun scripts/build-registry.mjs
 | `/templates` | The 10 chat templates, each thumbnail live |
 | `/templates/:slug` | Template page: preview or code, device switcher, live preview, copy prompt |
 | `/composers` | The 11 composers, each in its own live thread, with spec, comparison, Prompt and Install |
+| `/orbs` | The thinking-orb loaders: all nine states, then a playground (state, size, play/pause) with its snippet |
 | `/preview/:slug` | A bare template, full window (what the previews load) |
 
 Every page with a Prompt has a matching `…/prompt` URL that opens it directly.
@@ -129,7 +150,7 @@ Every page with a Prompt has a matching `…/prompt` URL that opens it directly.
 src/
   main.tsx                 providers (theme + palette, playback, tooltips) + router
   router.tsx               route tree, each page lazy-loaded and prefetched while idle
-  routes/                  landing, gallery, demo, templates, template, composers, preview, prompt, 404
+  routes/                  landing, gallery, demo, templates, template, composers, orbs, preview, prompt, 404
   components/              site chrome, demo stage, prompt dialog, palette picker, install button, shadcn ui/
   engine/                  the 227 response demos (imperative DOM choreographies) and their registry
   templates/               the 10 chat templates

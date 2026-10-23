@@ -7,7 +7,9 @@
 // Items that depend on each other reference their JSON by URL, so REGISTRY_URL must be where public/r is served.
 // There is no default: a silent localhost fallback once shipped a registry that only worked on the author's machine.
 import { execSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { posix } from 'node:path';
+import ts from 'typescript';
 
 if (!process.env.REGISTRY_URL) {
   console.error('REGISTRY_URL is not set: give the public origin that serves public/r (see package.json registry:build).');
@@ -34,6 +36,15 @@ writeFileSync(
 );
 
 const file = (path, type = 'registry:component') => ({ path: `${KIT}/${path}`, type, target: `${TARGET}/${path}` });
+
+// Thinking orbs (Jakub Antalik, MIT): the engine ships with its LICENSE, and every file carries the credit header.
+const ORB = 'src/components/thinking-orb';
+const ORB_CREDIT = 'Jakub Antalik (libraries.dev/orbs), made with help from Alexandr Brinza. MIT, from the thinking-orbs package.';
+const orbFile = (path, type = 'registry:component') => ({ path: `${ORB}/${path}`, type, target: `components/thinking-orb/${path}` });
+const ORB_ENGINE = readdirSync(ORB, { recursive: true })
+  .map(String)
+  .filter((f) => /\.tsx?$/.test(f) && f !== 'orb-status.tsx')
+  .sort();
 
 const COMPOSERS = [
   ['pill', 'Pill', 'Single row: one 52px row with add, input, model, mic and send.', []],
@@ -94,10 +105,130 @@ const registry = {
       description: 'Multi-agent model picker: providers, effort slider with the Max jet effect, fast mode.',
       dependencies: ['lucide-react', 'radix-ui'],
       registryDependencies: [url('composer-kit')],
-      files: [file('model-picker.tsx'), file('max-effort-fx.tsx')],
+      files: [file('model-picker.tsx'), file('max-effort-fx.tsx'), file('provider-logos.ts')],
+    },
+    {
+      name: 'thinking-orb',
+      type: 'registry:component',
+      title: 'Thinking orb',
+      author: ORB_CREDIT,
+      description:
+        'Dotted thought-orb loader by Jakub Antalik: nine animated states (working, searching, solving, listening, connecting, weaving, composing, breathing, shaping), sizes 64, 32 and 20, light and dark ink, on a plain 2D canvas. <ThinkingOrb state="searching" size={64} />',
+      docs: `Thinking orbs are designed and built by Jakub Antalik (https://libraries.dev/orbs), made with help from Alexandr Brinza. MIT: keep components/thinking-orb/LICENSE with the code.`,
+      files: [...ORB_ENGINE.map((f) => orbFile(f)), orbFile('LICENSE', 'registry:file')],
+    },
+    {
+      name: 'orb-status',
+      type: 'registry:component',
+      title: 'Orb status',
+      author: ORB_CREDIT,
+      description: 'A thinking orb with its shimmering status label, as a 74px pill or a 36px chip, from the libraries.dev/orbs showcase. <OrbStatus state="solving" label="Solving…" variant="pill" />',
+      docs: 'Status pill and chip from the libraries.dev/orbs showcase by Jakub Antalik, made with help from Alexandr Brinza.',
+      registryDependencies: ['utils', url('thinking-orb')],
+      files: [orbFile('orb-status.tsx')],
     },
   ],
 };
+
+const localItemsByUrl = new Map(registry.items.map((item) => [url(item.name), item]));
+const moduleCandidates = (path) => {
+  const normalized = posix.normalize(path);
+  const extension = posix.extname(normalized);
+  const extensions = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.json', '.css', '.svg', '.png', '.jpg', '.jpeg', '.webp'];
+  if (extension) {
+    const stem = normalized.slice(0, -extension.length);
+    return [normalized, ...extensions.map((ext) => `${stem}${ext}`)];
+  }
+  return [normalized, ...extensions.map((ext) => `${normalized}${ext}`), ...extensions.map((ext) => `${normalized}/index${ext}`)];
+};
+const importSpecifiers = (sourceFile) => {
+  const imports = [];
+  const addString = (node) => {
+    if (node && ts.isStringLiteralLike(node)) imports.push(node.text);
+  };
+  const visit = (node) => {
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) addString(node.moduleSpecifier);
+    if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) addString(node.argument.literal);
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      if (node.arguments[0] && ts.isStringLiteralLike(node.arguments[0])) imports.push(node.arguments[0].text);
+      else imports.push('<dynamic import>');
+    }
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'require') {
+      if (node.arguments[0] && ts.isStringLiteralLike(node.arguments[0])) imports.push(node.arguments[0].text);
+      else imports.push('<dynamic require>');
+    }
+    if (ts.isPropertyAccessExpression(node) && ['glob', 'env'].includes(node.name.text)) {
+      const meta = node.expression;
+      if (ts.isMetaProperty(meta) && meta.keywordToken === ts.SyntaxKind.ImportKeyword && meta.name.text === 'meta') {
+        imports.push(`import.meta.${node.name.text}`);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return imports;
+};
+
+const installErrors = [];
+for (const item of registry.items) {
+  const files = item.files.filter((entry) => /\.tsx?$/.test(entry.path));
+  if (!files.length) continue;
+
+  const shippedTargets = new Set();
+  const dependencyNames = new Set();
+  const visitedItems = new Set();
+  const visitDependency = (dependencyItem) => {
+    if (visitedItems.has(dependencyItem.name)) return;
+    visitedItems.add(dependencyItem.name);
+    for (const entry of dependencyItem.files) shippedTargets.add(posix.normalize(entry.target));
+    for (const dependency of dependencyItem.registryDependencies ?? []) {
+      if (typeof dependency !== 'string') continue;
+      const localItem = localItemsByUrl.get(dependency);
+      if (localItem) visitDependency(localItem);
+      else dependencyNames.add(dependency);
+    }
+  };
+  visitDependency(item);
+
+  const externalDependencies = new Set(item.dependencies ?? []);
+  for (const entry of files) {
+    const content = readFileSync(entry.path, 'utf8');
+    const sourceFile = ts.createSourceFile(entry.path, content, ts.ScriptTarget.Latest, true, entry.path.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+    for (const specifier of importSpecifiers(sourceFile)) {
+      if (specifier === 'import.meta.glob' || specifier === 'import.meta.env') {
+        installErrors.push(`${item.name}: ${entry.target} uses unsupported ${specifier}`);
+        continue;
+      }
+
+      if (specifier.startsWith('./') || specifier.startsWith('../')) {
+        const target = posix.join(posix.dirname(entry.target), specifier);
+        if (!moduleCandidates(target).some((candidate) => shippedTargets.has(candidate))) {
+          installErrors.push(`${item.name}: ${entry.target} import "${specifier}" does not resolve to a shipped file`);
+        }
+        continue;
+      }
+
+      if (specifier.startsWith('@/')) {
+        const target = specifier.slice(2);
+        if (moduleCandidates(target).some((candidate) => shippedTargets.has(candidate))) continue;
+        if (target === 'lib/utils' && dependencyNames.has('utils')) continue;
+        const uiDependency = target.match(/^components\/ui\/([^/]+)$/)?.[1];
+        if (uiDependency && dependencyNames.has(uiDependency)) continue;
+        installErrors.push(`${item.name}: ${entry.target} import "${specifier}" does not resolve to a shipped file or registry dependency`);
+        continue;
+      }
+
+      const packageName = specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0];
+      if (packageName !== 'react' && packageName !== 'react-dom' && !externalDependencies.has(packageName)) {
+        installErrors.push(`${item.name}: ${entry.target} import "${specifier}" is missing from dependencies`);
+      }
+    }
+  }
+}
+if (installErrors.length) {
+  console.error(`Registry installability validation failed:\n${installErrors.map((error) => `  ${error}`).join('\n')}`);
+  process.exit(1);
+}
 
 writeFileSync('registry.json', `${JSON.stringify(registry, null, 2)}\n`);
 execSync(`bunx ${SHADCN} build registry.json --output public/r`, { stdio: 'inherit' });
