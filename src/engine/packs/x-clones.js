@@ -12,6 +12,7 @@
  *   Deploy Status — Charles Postiaux (@PostiauxCharles), https://x.com/PostiauxCharles/status/2109606436527366235
  *     (three still images: the motion that plays them is ours)
  *   Logs Explorer — Léo (@sinequanonh), https://x.com/sinequanonh/status/2108225806954799155 (stills; motion is ours)
+ *   Assistant Chat States — Maxim Kuznetsov (@disarto_max), https://x.com/disarto_max/status/2100625465937424873 (first video)
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -87,6 +88,17 @@ export default function pack(h) {
     chevronUp: '<path d="M6.5 14.5L12 9l5.5 5.5"/>',
     dots: '<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
     minus: '<path d="M6 12h12"/>',
+    thumbUp: '<path d="M8 10.5v9H5v-9zM8 10.5l3.5-6a2 2 0 0 1 2.3 2.4L13 10h5a2 2 0 0 1 2 2.3l-1 5.5a2 2 0 0 1-2 1.7H8"/>',
+    thumbDown: '<path d="M8 13.5v-9H5v9zM8 13.5l3.5 6a2 2 0 0 0 2.3-2.4L13 14h5a2 2 0 0 0 2-2.3l-1-5.5a2 2 0 0 0-2-1.7H8"/>',
+    command: '<path d="M9 6.5V17.5M15 6.5V17.5M6.5 9H17.5M6.5 15H17.5"/><path d="M9 9H7a2.5 2.5 0 1 1 2-2.5M15 9h2a2.5 2.5 0 1 0-2-2.5M9 15H7a2.5 2.5 0 1 0 2 2.5M15 15h2a2.5 2.5 0 1 1-2 2.5"/>',
+    sliders: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+    globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.7 2.5 14.3 0 17M12 3.5c-2.5 2.7-2.5 14.3 0 17"/>',
+    bulb: '<path d="M9 18h6M10 21h4M12 3.5a6 6 0 0 0-3.5 10.9V16h7v-1.6A6 6 0 0 0 12 3.5z"/>',
+    diamond: '<path d="M12 4l8 8-8 8-8-8z"/>',
+    chart: '<path d="M4 20V10M10 20V5M16 20v-7M21 20H3"/>',
+    pen: '<path d="M5 19l1-4.2L15.8 5a2 2 0 0 1 2.9 0l.3.3a2 2 0 0 1 0 2.9L9.2 18z"/>',
+    calendar: '<rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/>',
+    pdf: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
     star: '<path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/>',
     panel: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M14 5v14"/>',
     copy: '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/>',
@@ -894,6 +906,146 @@ export default function pack(h) {
   // Histogram buckets [info, warn, error] in pixels, with the incident around buckets 18–23.
   const XLG_BARS = [26, 22, 28, 30, 24, 20, 28, 30, 25, 25, 28, 24, 26, 28, 27, 25, 29, 24, 12, 10, 14, 13, 16, 12, 28, 26, 27, 30, 26, 28, 24, 29, 22, 27, 26, 27].map((info, i) => [info, [0, 3, 5, 9, 14, 27, 31, 33].includes(i) ? 4 : (i >= 18 && i <= 23 ? 5 : 0), i >= 18 && i <= 23 ? 18 + (i % 3) * 5 : 0]);
 
+  /* -------------------------------------------------- Assistant Chat States */
+  const XCH_CSS = `
+.xch { --xch-ease:cubic-bezier(0.22,1,0.36,1); --xch-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary)); --xch-dim:var(--xch-muted); --xch-line:var(--color-border-button-default);
+  --xch-hot:var(--color-status-orange-text); --xch-ok:var(--color-chart-7-active); --xch-err:var(--color-status-rose-text); --xch-blue:var(--color-chart-6-active);
+  --xch-panel:var(--color-background-secondary-default);
+  container-type:inline-size; position:relative; width:440px; max-width:100%; color:var(--color-text-primary); font-family:var(--font-sans); font-size:12.5px; line-height:19px; text-align:start; }
+.dark .xch { --xch-err:var(--color-notification-error-foreground); }
+:where(.xch) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+.xch button:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:1px; }
+.xch svg { flex:none; width:13px; height:13px; }
+.xch-mono { font-family:var(--font-mono); font-size:10.5px; letter-spacing:.04em; }
+.xch-win { display:flex; flex-direction:column; height:480px; overflow:hidden; border-radius:16px; border:1px solid var(--xch-line); background:var(--color-background-primary-default);
+  box-shadow:0 26px 60px -30px color-mix(in srgb, var(--color-text-primary) 50%, transparent); transform-origin:50% 50%; transition:opacity .35s var(--xch-ease), transform .45s var(--xch-ease); }
+.xch.is-min .xch-win { opacity:0; transform:scale(.6) translateY(20px); pointer-events:none; }
+.xch-head { display:flex; align-items:center; gap:9px; height:42px; padding:0 10px 0 12px; flex:none; }
+.xch-head b { flex:1; font-weight:500; }
+.xch-hb { display:grid; place-items:center; width:24px; height:24px; border-radius:6px; color:var(--xch-muted); }
+.xch-hb:hover { background:var(--xch-panel); color:var(--color-text-primary); }
+.xch-orb { position:relative; flex:none; width:18px; height:18px; border-radius:999px; border:1.5px solid var(--xch-blue); background:radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--xch-blue) 40%, transparent), transparent 70%); }
+.xch-orb.is-err { border-color:var(--xch-err); background:radial-gradient(circle, color-mix(in srgb, var(--xch-err) 35%, transparent), transparent 70%); }
+.xch-orb.is-big { width:46px; height:46px; border-width:2px; box-shadow:0 0 24px color-mix(in srgb, var(--xch-blue) 45%, transparent), inset 0 0 12px color-mix(in srgb, var(--xch-blue) 50%, transparent); animation:xch-breathe 3s ease-in-out infinite; }
+.xch-feed { flex:1; min-height:0; overflow:hidden auto; display:flex; flex-direction:column; gap:14px; margin:0 6px; padding:6px 8px 12px; border-radius:12px; background:color-mix(in srgb, var(--xch-panel) 55%, transparent); }
+.xch-empty { margin:auto; display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; animation:xch-in .4s var(--xch-ease) both; }
+.xch-empty h4 { margin-top:12px; font-size:15px; font-weight:600; } .xch-empty p { color:var(--xch-muted); font-size:11.5px; }
+.xch-sugs { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; max-width:330px; margin-top:12px; }
+.xch-sug { display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 10px; border-radius:999px; border:1px solid var(--xch-line); font-size:11.5px; color:var(--xch-muted); }
+.xch-sug:hover { color:var(--color-text-primary); background:var(--xch-panel); }
+.xch-sug svg { width:12px; height:12px; color:var(--xch-hot); }
+.xch-user { align-self:flex-end; display:flex; flex-direction:column; align-items:flex-end; gap:6px; max-width:82%; animation:xch-in .35s var(--xch-ease) both; }
+.xch-user p { padding:6px 11px; border-radius:10px; background:var(--color-background-tertiary-default); }
+.xch-bot { display:grid; grid-template-columns:18px minmax(0,1fr); column-gap:10px; animation:xch-in .35s var(--xch-ease) both; }
+.xch-bot > .xch-orb { margin-top:1px; }
+.xch-body { display:flex; flex-direction:column; gap:9px; min-width:0; }
+.xch-work { display:flex; align-items:center; gap:7px; color:var(--xch-muted); }
+.xch-work b { font-weight:400; background:linear-gradient(90deg, var(--xch-muted) 0%, var(--xch-muted) 35%, var(--color-text-primary) 50%, var(--xch-muted) 65%, var(--xch-muted) 100%); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:xch-shimmer 2s linear infinite; }
+.xch-steps { display:flex; flex-direction:column; gap:3px; margin:-3px 0 0 20px; font-size:11.5px; color:var(--xch-muted); }
+.xch-steps > div { display:flex; align-items:center; gap:7px; animation:xch-in .3s var(--xch-ease) both; }
+.xch-steps svg { width:11px; height:11px; color:var(--xch-ok); stroke-width:2.4; }
+.xch-spin { flex:none; width:11px; height:11px; border-radius:999px; border:1.5px solid color-mix(in srgb, var(--xch-hot) 25%, transparent); border-top-color:var(--xch-hot); animation:xch-spin .8s linear infinite; }
+.xch-thought { display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--xch-dim); }
+.xch-thought svg { width:11px; height:11px; }
+.xch-cite { display:inline-grid; place-items:center; min-width:14px; height:14px; margin:0 1px; padding:0 3px; border-radius:4px; vertical-align:1px; background:var(--color-background-tertiary-default); color:var(--xch-muted); font-size:9.5px; font-weight:600; }
+.xch-srcs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.xch-src { display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; border:1px solid var(--xch-line); text-align:start; animation:xch-in .3s var(--xch-ease) both; transition:border-color .2s; }
+.xch-src:hover { border-color:var(--xch-hot); }
+.xch-src > i { display:grid; place-items:center; width:22px; height:22px; border-radius:6px; font-style:normal; font-size:9px; font-weight:700; }
+.xch-src b { display:block; font-weight:500; font-size:11.5px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.xch-src span { display:block; font-size:10.5px; color:var(--xch-dim); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.xch-src em { font-style:normal; font-size:10.5px; color:var(--xch-dim); }
+.xch-acts { display:flex; gap:10px; color:var(--xch-dim); } .xch-acts svg { width:12px; height:12px; }
+.xch-card { overflow:hidden; border-radius:10px; border:1px solid var(--xch-line); background:var(--color-background-primary-default); animation:xch-in .35s var(--xch-ease) both; }
+.xch-ch { display:flex; align-items:center; gap:8px; height:32px; padding:0 10px; border-bottom:1px solid var(--xch-line); font-weight:500; }
+.xch-ch .grow { flex:1; } .xch-ch .xch-mono { color:var(--xch-dim); font-weight:400; }
+.xch-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; padding:10px 10px 0; }
+.xch-stats span { display:block; color:var(--xch-dim); } .xch-stats b { font-size:13px; font-weight:500; font-variant-numeric:tabular-nums; } .xch-stats b.up { color:color-mix(in oklab, var(--xch-ok) 70%, var(--color-text-primary)); }
+.xch-bars { display:flex; align-items:flex-end; gap:3px; height:60px; padding:10px 10px 0; }
+.xch-bars i { flex:1; border-radius:3px 3px 0 0; background:color-mix(in srgb, var(--xch-hot) 65%, var(--color-background-primary-default)); transform:scaleY(0); transform-origin:bottom; transition:transform .45s var(--xch-ease); }
+.xch-bars i:last-child { background:var(--xch-hot); }
+.xch-axis { display:flex; justify-content:space-between; padding:5px 10px 8px; color:var(--xch-dim); }
+.xch-chips { display:flex; gap:6px; }
+.xch-chip { height:22px; padding:0 9px; border-radius:6px; border:1px solid var(--xch-line); color:var(--xch-muted); }
+.xch-chip[aria-pressed=true] { border-color:color-mix(in srgb, var(--xch-hot) 45%, transparent); background:color-mix(in srgb, var(--xch-hot) 14%, transparent); color:color-mix(in oklab, var(--xch-hot) 75%, var(--color-text-primary)); }
+.xch-doc { padding:10px 12px; display:flex; flex-direction:column; gap:8px; font-size:12px; }
+.xch-doc p:first-child { font-weight:500; } .xch-doc p.sig { color:var(--xch-muted); }
+.xch-file { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 8px 0 6px; border-radius:7px; border:1px solid var(--xch-line); background:var(--color-background-primary-default); font-size:11.5px; }
+.xch-file > i { display:grid; place-items:center; width:15px; height:15px; border-radius:4px; background:var(--xch-err); color:var(--color-background-primary-default); }
+.xch-file > i svg { width:10px; height:10px; }
+.xch-risk { display:grid; grid-template-columns:14px minmax(0,1fr) auto; align-items:center; gap:8px; height:28px; padding:0 10px; animation:xch-in .3s var(--xch-ease) both; }
+.xch-risk + .xch-risk { border-top:1px solid var(--xch-line); }
+.xch-risk span:nth-child(2) { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.xch-risk em { font-style:normal; font-size:10.5px; color:var(--xch-dim); }
+.xch-sev { display:flex; align-items:flex-end; gap:1.5px; height:10px; } .xch-sev i { width:2.5px; border-radius:1px; background:var(--color-background-tertiary-default); }
+.xch-sev[data-s="3"] i { background:var(--xch-err); } .xch-sev[data-s="2"] i:nth-child(-n+2) { background:var(--xch-hot); } .xch-sev[data-s="1"] i:first-child { background:var(--xch-dim); }
+.xch-code { padding:8px 0; font-family:var(--font-mono); font-size:10.5px; line-height:16px; overflow:hidden; }
+.xch-code div { display:grid; grid-template-columns:26px minmax(0,1fr); white-space:pre; animation:xch-in .2s var(--xch-ease) both; }
+.xch-code div > span:first-child { padding-right:8px; text-align:right; color:var(--xch-dim); }
+.xch-code .k { color:color-mix(in oklab, var(--color-chart-5-active) 75%, var(--color-text-primary)); } .xch-code .f { color:color-mix(in oklab, var(--xch-blue) 75%, var(--color-text-primary)); }
+.xch-code .s { color:color-mix(in oklab, var(--xch-ok) 70%, var(--color-text-primary)); } .xch-code .n { color:var(--xch-hot); } .xch-code .c { color:var(--xch-dim); }
+.xch-lang { display:grid; place-items:center; height:16px; padding:0 4px; border-radius:4px; background:color-mix(in srgb, var(--xch-blue) 18%, transparent); color:color-mix(in oklab, var(--xch-blue) 55%, var(--color-text-primary)); font-family:var(--font-mono); font-size:9px; font-weight:700; }
+.xch-stripe { height:6px; margin:10px 10px 4px; border-radius:2px; background:repeating-linear-gradient(90deg, var(--xch-hot) 0 2px, transparent 2px 4px); clip-path:inset(0 calc(100% - var(--p, 0%)) 0 0); transition:clip-path .5s var(--xch-ease); }
+.xch-task { display:flex; align-items:center; gap:8px; height:24px; padding:0 10px; color:var(--xch-muted); }
+.xch-task:last-child { margin-bottom:6px; }
+.xch-task > i { display:grid; place-items:center; width:14px; height:14px; border-radius:999px; border:1.5px solid var(--xch-line); }
+.xch-task.is-done { color:var(--color-text-primary); } .xch-task.is-done > i { border-color:var(--xch-ok); background:var(--xch-ok); color:var(--color-background-primary-default); }
+.xch-task > i svg { width:9px; height:9px; stroke-width:3; }
+.xch-error { display:flex; align-items:center; gap:8px; padding:8px 8px 8px 10px; border-radius:9px; border:1px solid color-mix(in srgb, var(--xch-err) 40%, transparent); background:color-mix(in srgb, var(--xch-err) 9%, transparent); color:var(--xch-err); animation:xch-in .3s var(--xch-ease) both; }
+.xch-error span { flex:1; } .xch-error button { display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:6px; border:1px solid var(--xch-line); color:var(--color-text-primary); }
+.xch-compose { flex:none; margin:8px 8px 0; padding:8px; border-radius:12px; border:1px solid var(--xch-line); background:var(--color-background-primary-default); }
+.xch-input { display:flex; align-items:center; flex-wrap:wrap; gap:6px; min-height:22px; padding:0 4px; }
+.xch-input .ph { color:var(--xch-dim); } .xch-input .caret { display:inline-block; width:1.5px; height:14px; margin-left:1px; vertical-align:-3px; background:var(--xch-hot); animation:xch-blink 1s step-end infinite; }
+.xch-tools { display:flex; align-items:center; gap:6px; margin-top:8px; }
+.xch-tool { display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 9px; border-radius:999px; border:1px solid var(--xch-line); color:var(--xch-muted); font-size:11.5px; transition:background-color .2s, color .2s, border-color .2s; }
+.xch-tool.is-round { width:26px; padding:0; justify-content:center; }
+.xch-tool[aria-pressed=true] { border-color:color-mix(in srgb, var(--xch-hot) 45%, transparent); background:color-mix(in srgb, var(--xch-hot) 14%, transparent); color:color-mix(in oklab, var(--xch-hot) 75%, var(--color-text-primary)); }
+.xch-tool .dm { color:var(--xch-err); }
+.xch-send { display:grid; place-items:center; width:28px; height:28px; margin-left:auto; border-radius:999px; background:var(--color-text-primary); color:var(--color-background-primary-default); transition:box-shadow .2s; }
+.xch-send[data-busy] { box-shadow:0 0 0 2px var(--xch-hot); }
+.xch-send svg { stroke-width:2.4; }
+.xch-foot { display:flex; align-items:center; gap:8px; height:30px; padding:0 12px; flex:none; color:var(--xch-dim); }
+.xch-foot .dot { width:6px; height:6px; border-radius:999px; background:var(--xch-ok); }
+.xch-foot[data-tone=run] .dot { background:var(--xch-hot); } .xch-foot[data-tone=err] .dot { background:var(--xch-err); }
+.xch-foot .st { min-width:0; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.xch-kbd { padding:0 4px; border-radius:3px; border:1px solid var(--xch-line); }
+.xch-keys { display:flex; align-items:center; gap:8px; flex:none; }
+@container (max-width:380px) { .xch-model, .xch-keys { display:none } }
+.xch-pill { position:absolute; left:50%; top:50%; display:flex; align-items:center; gap:10px; height:46px; padding:0 8px 0 10px; border-radius:999px; border:1px solid var(--xch-line); background:var(--color-background-primary-default);
+  box-shadow:0 18px 40px -20px color-mix(in srgb, var(--color-text-primary) 45%, transparent); transform:translate(-50%,-50%) scale(.8); opacity:0; pointer-events:none; transition:opacity .35s var(--xch-ease), transform .45s var(--xch-ease); }
+.xch.is-min .xch-pill { opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+.xch-pill .xch-orb { width:26px; height:26px; }
+.xch-pill b { display:block; font-weight:500; } .xch-pill .xch-mono { color:var(--xch-dim); }
+.xch-pill button { height:22px; padding:0 8px; border-radius:6px; background:color-mix(in srgb, var(--xch-hot) 16%, transparent); color:var(--xch-hot); font-size:10.5px; font-weight:600; }
+@keyframes xch-in { from { opacity:0; transform:translateY(5px) } }
+@keyframes xch-spin { to { transform:rotate(360deg) } }
+@keyframes xch-blink { 50% { opacity:0 } }
+@keyframes xch-breathe { 50% { box-shadow:0 0 34px color-mix(in srgb, var(--xch-blue) 60%, transparent), inset 0 0 16px color-mix(in srgb, var(--xch-blue) 60%, transparent) } }
+@keyframes xch-shimmer { from { background-position:100% 0 } to { background-position:0% 0 } }
+@media (prefers-reduced-motion: reduce) { .xch, .xch * { animation:none !important; transition:none !important; } }`;
+
+  // The seven auto-played turns: the question, a toggle, the work steps and the answer's parts.
+  const XCH_SOURCES = [['EU', 'AI Act implementation timeline', 'digital-strategy.ec.europa.eu', 'blue'], ['IA', 'GPAI code of practice: what the final text says', 'iapp.org', 'green'], ['EA', 'Member states name market surveillance authorities', 'euractiv.com', 'orange'], ['LF', 'High-risk obligations: a practical guide', 'lawfaremedia.org', 'purple']];
+  // W27–W39: 13,009 signups, average 1,001, the last week 53.2% above the first, one dip in W33.
+  const XCH_WEEKS = [812, 862, 896, 921, 947, 956, 918, 981, 1021, 1105, 1149, 1197, 1244];
+  const XCH_RISKS = [[3, 'Two enterprise renewals slipped to Q4 (≈ $410k ARR)', 'p. 12'], [3, 'Support hiring paused while ticket volume is up 22%', 'p. 18'], [2, 'EU data residency ask from three prospects', 'p. 9'], [2, 'Infra cost per seat up 6% after region expansion', 'p. 26'], [1, 'SOC 2 renewal audit lands in the same month as launch', 'p. 23']];
+  const XCH_CODE = [
+    '<span class="k">import</span> { useEffect, useState } <span class="k">from</span> <span class="s">\'react\'</span>;',
+    '',
+    '<span class="k">export function</span> <span class="f">useDebounce</span>&lt;T&gt;(value: T, delay = <span class="n">300</span>): T {',
+    '  <span class="k">const</span> [debounced, setDebounced] = <span class="f">useState</span>(value);',
+    '',
+    '  <span class="f">useEffect</span>(() =&gt; {',
+    '    <span class="c">// re-arm on every change; cancel on unmount</span>',
+    '    <span class="k">const</span> id = window.<span class="f">setTimeout</span>(() =&gt; <span class="f">setDebounced</span>(value), delay);',
+    '    <span class="k">return</span> () =&gt; window.<span class="f">clearTimeout</span>(id);',
+    '  }, [value, delay]);',
+    '',
+    '  <span class="k">return</span> debounced;',
+    '}',
+  ];
+  const XCH_DIGEST = ['Create saved query for the three metrics', 'Schedule for Mondays at 09:00', 'Render the chart as an image', 'Post to #product via Slack'];
+
   /* ---------------------------------------------------------------- demos */
   return [
     { group: G, title: 'Agent Status', kind: 'scene',
@@ -1642,6 +1794,131 @@ export default function pack(h) {
         }
         await xcWait(t, 900);
         selected.click();
+      } },
+
+    { group: G, title: 'Assistant Chat States', kind: 'scene',
+      desc: 'Assistant window by Maxim Kuznetsov (@disarto_max, https://x.com/disarto_max/status/2100625465937424873, first video), cloned with permission: seven auto-played turns walk the chat states, from the empty greeting through cited search, a chart, a drafted email, a PDF read, a code block and a scheduled digest to an over-capacity error and its retry, with a minimise-to-pill along the way.',
+      async run(root, t) {
+        xcStyle('x-assistant-states-css', XCH_CSS);
+        const el = mk('section', 'xch'); el.setAttribute('aria-label', 'Assistant');
+        el.innerHTML = `<div class="xch-win"><div class="xch-head"><span class="xch-orb" aria-hidden="true"></span><b>Assistant</b><button type="button" class="xch-hb" aria-label="New chat">${xcIcon('bubble')}</button><button type="button" class="xch-hb" aria-label="Commands">${xcIcon('command')}</button><button type="button" class="xch-hb" aria-label="Settings">${xcIcon('sliders')}</button><button type="button" class="xch-hb" data-min aria-label="Minimise">${xcIcon('minus')}</button></div>
+<div class="xch-feed" aria-live="polite"><div class="xch-empty"><span class="xch-orb is-big" aria-hidden="true"></span><h4>Good evening</h4><p>What are we working on?</p><div class="xch-sugs">${[['globe', 'What changed in the EU AI Act?'], ['chart', 'How did signups trend this quarter?'], ['code', 'Write a debounce hook'], ['calendar', 'Set up a weekly digest']].map(([i, l]) => `<button type="button" class="xch-sug">${xcIcon(i)}${l}</button>`).join('')}</div></div></div>
+<div class="xch-compose"><div class="xch-input"><span class="ph">Ask anything...</span></div><div class="xch-tools"><span class="xch-tool is-round" aria-hidden="true">${xcIcon('plus')}</span><button type="button" class="xch-tool" data-tg="search" aria-pressed="false">${xcIcon('globe')}Search</button><button type="button" class="xch-tool" data-tg="think" aria-pressed="false">${xcIcon('bulb')}Think</button><span class="xch-tool xch-model"><span class="dm">${xcIcon('diamond')}</span>Nova Pro${xcIcon('chevronDown')}</span><span style="margin-left:auto;color:var(--xch-muted)">${xcIcon('mic')}</span><span class="xch-send" style="margin-left:8px" aria-hidden="true">${xcIcon('arrowUp')}</span></div></div>
+<div class="xch-foot xch-mono" data-tone="ok" role="status"><span class="dot" aria-hidden="true"></span><span class="st">AUTO-PLAY · READY</span><span class="xch-keys"><span>1×</span>${xcIcon('pause')}<span class="xch-kbd">⌘K</span><span>COMMANDS</span><span class="xch-kbd">⌘\\</span><span>PANEL</span></span></div></div>
+<div class="xch-pill"><span class="xch-orb" aria-hidden="true"></span><div><b>Assistant</b><span class="xch-mono xch-pst"></span></div><button type="button" data-open>OPEN</button></div>`;
+        root.append(el);
+        const feed = $('.xch-feed', el), input = $('.xch-input', el), send = $('.xch-send', el), foot = $('.xch-foot', el);
+        $('[data-min]', el).onclick = () => el.classList.add('is-min');
+        $('[data-open]', el).onclick = () => el.classList.remove('is-min');
+        for (const b of el.querySelectorAll('[data-tg]')) b.onclick = () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+        const follow = () => { feed.scrollTop = feed.scrollHeight; };
+        const setFoot = (tone, n, status) => { foot.dataset.tone = tone; const s = `AUTO-PLAY · ${n}/7 · ${status}`; $('.st', foot).textContent = s; $('.xch-pst', el).textContent = s; };
+        const toggle = (k, v) => { const b = $(`[data-tg=${k}]`, el); if (b) b.setAttribute('aria-pressed', String(v)); };
+        const cite = (s) => s.replace(/\{(\d)\}/g, '<span class="xch-cite">$1</span>');
+        const stream = async (node, text, ms = 32) => { for (const w of text.split(' ')) { node.insertAdjacentHTML('beforeend', `${cite(w)} `); follow(); await xcWait(t, ms); } };
+        const para = (body, text) => { const p = mk('p'); body.append(p); return stream(p, text); };
+        const card = (body, head, inner) => { const c = mk('div', 'xch-card'); c.innerHTML = `<div class="xch-ch">${head}</div>${inner}`; body.append(c); follow(); return c; };
+        const acts = (body) => body.insertAdjacentHTML('beforeend', `<div class="xch-acts" aria-hidden="true">${xcIcon('copy')}${xcIcon('thumbUp')}${xcIcon('thumbDown')}${xcIcon('rotate')}</div>`);
+
+        // One turn: type, send, show the work, then hand the answer body to `answer`.
+        const turn = async (n, q, { tg, file, steps, thought }, answer) => {
+          setFoot('run', n, 'TYPING');
+          if (tg) toggle(tg, true);
+          input.innerHTML = `${file ? `<span class="xch-file"><i>${xcIcon('pdf')}</i>${file}</span>` : ''}<span class="tx"></span><span class="caret" aria-hidden="true"></span>`;
+          const tx = $('.tx', input);
+          for (const ch of q) { tx.textContent += ch; await xcWait(t, 22); }
+          await xcWait(t, 250);
+          $('.xch-empty', feed)?.remove();
+          input.innerHTML = '<span class="ph">Ask anything...</span>';
+          const u = mk('div', 'xch-user'); u.innerHTML = `${file ? `<span class="xch-file"><i>${xcIcon('pdf')}</i>${file}</span>` : ''}<p></p>`; $('p', u).textContent = q; feed.append(u);
+          send.dataset.busy = ''; send.innerHTML = xcIcon('stop'); setFoot('run', n, 'SENDING'); follow();
+          await xcWait(t, 400);
+          const bot = mk('div', 'xch-bot'); bot.innerHTML = '<span class="xch-orb" aria-hidden="true"></span><div class="xch-body"></div>'; feed.append(bot);
+          const body = $('.xch-body', bot);
+          const work = mk('div'); work.innerHTML = `<div class="xch-work"><span class="xch-spin" aria-hidden="true"></span><b></b></div><div class="xch-steps"></div>`; body.append(work);
+          for (const s of steps) {
+            $('b', work).textContent = `${s}...`; setFoot('run', n, s.toUpperCase());
+            const row = mk('div'); row.innerHTML = `<span class="xch-spin" aria-hidden="true"></span>${esc(s)}`; $('.xch-steps', work).append(row); follow();
+            await xcWait(t, 900);
+            row.firstElementChild.outerHTML = xcIcon('check');
+          }
+          await xcWait(t, 250);
+          work.outerHTML = `<div class="xch-thought">${xcIcon('chevronRight')}Thought for ${thought}</div>`;
+          setFoot('run', n, 'STREAMING');
+          await answer(body, bot);
+          acts(body); follow();
+          send.removeAttribute('data-busy'); send.innerHTML = xcIcon('arrowUp'); if (tg) toggle(tg, false);
+          setFoot('ok', n, 'DONE');
+          await xcWait(t, 900);
+        };
+
+        await xcWait(t, 1200);
+        await turn(1, 'What changed in the EU AI Act timeline this month?', { tg: 'search', steps: ['Searching the web', 'Reading 4 sources', 'Cross-checking dates'], thought: '3.6s' }, async (body) => {
+          await para(body, 'Two things moved. The Commission confirmed that general-purpose model obligations apply from 2 August, with the code of practice now final{1}{2}. Separately, eleven member states published their market surveillance authorities ahead of the deadline, so enforcement contacts now exist in most of the EU{3}.');
+          const grid = mk('div', 'xch-srcs'); body.append(grid);
+          for (const [i, [ab, title, domain, tone]] of XCH_SOURCES.entries()) {
+            const c = { blue: 'var(--xch-blue)', green: 'var(--xch-ok)', orange: 'var(--xch-hot)', purple: 'var(--color-chart-5-active)' }[tone];
+            grid.insertAdjacentHTML('beforeend', `<button type="button" class="xch-src"><i style="background:color-mix(in srgb, ${c} 18%, transparent);color:color-mix(in oklab, ${c} 50%, var(--color-text-primary))">${ab}</i><span><b>${esc(title)}</b><span>${domain}</span></span><em>${i + 1}</em></button>`);
+            follow(); await xcWait(t, 140);
+          }
+          await para(body, 'High-risk system obligations are unchanged and still land in August next year{4}.');
+        });
+        await turn(2, 'How did weekly signups trend this quarter?', { tg: 'think', steps: ['Querying analytics', 'Aggregating 13 weeks'], thought: '2.1s' }, async (body) => {
+          await para(body, 'Signups grew steadily through the quarter, finishing 53% above the first week. The only dip was W33, which tracks a paused campaign.');
+          const max = Math.max(...XCH_WEEKS);
+          const c = card(body, `${xcIcon('chart')}<span class="grow">Weekly signups</span>`, `<div class="xch-stats xch-mono"><div><span>TOTAL</span><b>13,009</b></div><div><span>VS FIRST WEEK</span><b class="up">+53.2%</b></div><div><span>AVERAGE</span><b>1,001</b></div><div><span>PEAK · W39</span><b>1,244</b></div></div><div class="xch-bars">${XCH_WEEKS.map((v, i) => `<i style="height:${(v / max) * 100}%" title="W${27 + i}: ${v.toLocaleString('en-US')} signups"></i>`).join('')}</div><div class="xch-axis xch-mono"><span>W27</span><span>13,009 SIGNUPS</span><span>W39</span></div>`);
+          for (const b of c.querySelectorAll('.xch-bars i')) { b.style.transform = 'none'; await xcWait(t, 45); }
+          await para(body, 'Hover the bars for exact counts. Want this broken down by acquisition channel?');
+        });
+        await turn(3, 'Draft a launch announcement for the new dashboard', { steps: ['Checking project notes'], thought: '1.9s' }, async (body) => {
+          await para(body, 'Which channel is this for? I\'ll match the tone and length.');
+          const chips = mk('div', 'xch-chips xch-mono'); chips.innerHTML = ['EMAIL', 'BLOG POST', 'SOCIAL THREAD'].map((l) => `<button type="button" class="xch-chip" aria-pressed="false">${l}</button>`).join(''); body.append(chips);
+          await xcWait(t, 700); chips.firstElementChild.setAttribute('aria-pressed', 'true');
+          for (const b of chips.children) b.onclick = () => { for (const x of chips.children) x.setAttribute('aria-pressed', String(x === b)); };
+          const c = card(body, `${xcIcon('fileText')}<span class="grow">Launch announcement</span><span class="xch-mono">EMAIL · 80 WORDS</span>${xcIcon('copy')}${xcIcon('pen')}`, '<div class="xch-doc"></div>');
+          const doc = $('.xch-doc', c);
+          for (const line of ['Subject: Your new dashboard is live', 'Hi there,', 'Today we\'re rolling out the redesigned dashboard to every workspace. It puts your monitors, usage and spend on one screen, loads twice as fast, and finally works on mobile.', 'Nothing changes about your data or alerts. Open it from the sidebar, or reply to this email if anything looks off — we read every message.']) await para(doc, line);
+          doc.insertAdjacentHTML('beforeend', '<p class="sig">— The team</p>');
+          await para(body, 'Want a shorter version for the in-app banner as well?');
+        });
+        // The video folds the window into its pill between turns, then opens it again.
+        el.classList.add('is-min'); setFoot('ok', 3, 'MINIMISED');
+        await xcWait(t, 1800);
+        el.classList.remove('is-min');
+        await xcWait(t, 500);
+        await turn(4, 'Summarize the risks flagged in this deck', { tg: 'think', file: 'q3-board-deck.pdf', steps: ['Reading 24 pages', 'Extracting risk items'], thought: '2.8s' }, async (body) => {
+          await para(body, 'The deck flags five risks. Two are rated high and both relate to Q4 renewals, so I\'d start there.');
+          const c = card(body, `<span class="xch-file" style="border:0;padding:0;height:auto"><i>${xcIcon('pdf')}</i></span><span class="grow">Risks in q3-board-deck.pdf</span>`, '');
+          for (const [s, text, page] of XCH_RISKS) {
+            c.insertAdjacentHTML('beforeend', `<div class="xch-risk"><span class="xch-sev" data-s="${s}" aria-label="${['', 'Low', 'Medium', 'High'][s]} severity"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px"></i></span><span>${esc(text)}</span><em class="xch-mono">${page}</em></div>`);
+            follow(); await xcWait(t, 220);
+          }
+        });
+        await turn(5, 'Write a debounce hook', { steps: ['Writing useDebounce.ts'], thought: '1.4s' }, async (body) => {
+          await para(body, 'Here\'s a typed hook: it waits until the value stops changing for the delay, then updates, and cancels the pending timer on unmount.');
+          const c = card(body, `<span class="xch-lang">TS</span><span class="grow">useDebounce.ts</span>${xcIcon('copy')}`, '<div class="xch-code"></div>');
+          const code = $('.xch-code', c);
+          for (const [i, line] of XCH_CODE.entries()) { code.insertAdjacentHTML('beforeend', `<div><span>${i + 1}</span><span>${line || ' '}</span></div>`); follow(); await xcWait(t, 90); }
+          await para(body, 'Pair it with a controlled input and pass the debounced value to your fetch.');
+        });
+        await turn(6, 'Set up a weekly digest of these metrics for the team', { steps: ['Checking connected apps'], thought: '1.7s' }, async (body) => {
+          await para(body, 'I\'ll schedule a Monday 9:00 digest with signups, activation and open incidents.');
+          const c = card(body, `${xcIcon('calendar')}<span class="grow">Weekly metrics digest</span><span class="xch-mono xch-n">0/4</span>`, `<div class="xch-stripe" aria-hidden="true"></div>${XCH_DIGEST.map((d) => `<div class="xch-task"><i aria-hidden="true"></i>${esc(d)}</div>`).join('')}`);
+          for (const [i, task] of [...c.querySelectorAll('.xch-task')].entries()) {
+            await xcWait(t, 650);
+            task.classList.add('is-done'); task.firstElementChild.innerHTML = xcIcon('check');
+            $('.xch-n', c).textContent = `${i + 1}/4`; $('.xch-stripe', c).style.setProperty('--p', `${((i + 1) / 4) * 100}%`);
+          }
+        });
+        await turn(7, 'Translate the digest into German and Japanese', { steps: ['Translating 2 versions'], thought: '5.5s' }, async (body, bot) => {
+          // First attempt fails: the orb turns red, the error offers Retry, then the answer streams.
+          const orb = $('.xch-orb', bot); orb.classList.add('is-err');
+          const err = mk('div', 'xch-error'); err.innerHTML = `${xcIcon('alert')}<span>The model is over capacity right now. Nothing was sent.</span><button type="button">${xcIcon('rotate')}Retry</button>`;
+          body.prepend(err); setFoot('err', 7, 'ERROR'); follow();
+          await new Promise((resolve) => { let done = false; const go = () => { if (!done) { done = true; resolve(); } }; $('button', err).onclick = go; xcWait(t, 1800).then(go); });
+          err.remove(); orb.classList.remove('is-err'); setFoot('run', 7, 'STREAMING');
+          await para(body, 'Done — both translations are attached to the digest as alternate versions. German keeps the numbers in the original format; Japanese uses full-width digits to match the team\'s convention.');
+        });
       } },
   ];
 }
