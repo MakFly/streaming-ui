@@ -78,7 +78,7 @@ export function GalleryPage() {
     [library, deferredQuery],
   );
 
-  // Router navigations render in a transition, so the previous page stays on screen until all 246 cards have
+  // Router navigations render in a transition, so the previous page stays on screen until all 247 cards have
   // rendered (most of a second in dev). Render the first screenful with the navigation, then the rest in the
   // background once it has painted. Back/forward renders everything at once so ScrollRestoration has the full height.
   const navigationType = useNavigationType();
