@@ -13,6 +13,8 @@
  *       https://x.com/startupvisuals/status/2100519773914427610 (one still)
  *   Deploy Status — Charles Postiaux (@PostiauxCharles), https://x.com/PostiauxCharles/status/2109606436527366235
  *     (three still images: the motion that plays them is ours)
+ *   Stepper Run — Bob (@bobganiev), https://x.com/bobganiev/status/2106396667398533125 (one still; motion is ours),
+ *     the vertical stepper of ReUI (reui.io, MIT): the layout and indicators follow its demo, redrawn in vanilla JS
  *   Logs Explorer — Léo (@sinequanonh), https://x.com/sinequanonh/status/2108225806954799155 (stills; motion is ours)
  *   Assistant Chat States — Maxim Kuznetsov (@disarto_max), https://x.com/disarto_max/status/2100625465937424873 (first video;
  *     adapted: drawn with the app's own chat parts rather than as a pixel clone)
@@ -1255,6 +1257,44 @@ export default function pack(h) {
     for (let idle = 0; idle < 3000; idle += 200) { await t.sleep(200); if (!auto) await new Promise(() => {}); }
   }
 
+  /* ------------------------------------------------------------ Stepper Run */
+  const XST_CSS = `
+.xst { --xst-ease:cubic-bezier(0.22,1,0.36,1); --xst-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary)); --xst-dim:var(--color-text-tertiary);
+  --xst-ok:var(--color-chart-7-active); --xst-run:var(--color-chart-6-active); --xst-line:var(--color-border-button-default);
+  display:flex; flex-direction:column; align-items:flex-end; width:300px; max-width:100%; color:var(--color-text-primary); font-family:var(--font-sans); text-align:end; }
+.dark .xst { --xst-dim:var(--color-text-secondary); }
+.xst-step { position:relative; display:grid; grid-template-columns:minmax(0,1fr) 22px; column-gap:10px; width:100%; }
+.xst-step:not(:last-child)::after { content:""; position:absolute; right:10.5px; top:24px; bottom:-6px; width:1px; background:var(--xst-line); }
+.xst-head { padding-top:2px; padding-bottom:22px; }
+.xst-title { font-size:14px; line-height:18px; font-weight:500; color:var(--xst-muted); transition:color .3s var(--xst-ease); }
+.xst-n { margin-top:2px; font-size:11px; line-height:14px; color:var(--xst-dim); }
+.xst-step[data-state=run] .xst-title { color:var(--color-text-primary); }
+.xst-step[data-state=pending] .xst-title { color:var(--xst-dim); }
+.xst-ind { position:relative; display:grid; place-items:center; width:22px; height:22px; margin-top:0; border-radius:999px; }
+.xst-ind svg { width:100%; height:100%; overflow:visible; }
+.xst-ind circle { fill:none; stroke-width:1.4; }
+[data-state=pending] > .xst-ind circle { stroke:var(--xst-dim); stroke-dasharray:2.4 2.6; }
+[data-state=run] > .xst-ind circle.track { stroke:var(--xst-line); }
+[data-state=run] > .xst-ind circle.arc { stroke:var(--xst-run); stroke-linecap:round; stroke-dasharray:14 60; transform-origin:50% 50%; animation:xst-spin 1s linear infinite; }
+[data-state=done] > .xst-ind circle { stroke:var(--xst-ok); }
+[data-state=done] > .xst-ind path { fill:none; stroke:var(--xst-ok); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; animation:xst-pop .3s var(--xst-ease) both; }
+.xst-subs { grid-column:1 / span 2; display:grid; grid-template-rows:0fr; transition:grid-template-rows .45s var(--xst-ease); }
+.xst-subs.is-open { grid-template-rows:1fr; }
+.xst-subs > div { min-height:0; overflow:hidden; }
+.xst-sub { position:relative; display:grid; grid-template-columns:minmax(0,1fr) 14px; align-items:center; column-gap:8px; height:29px; margin-right:24px; font-size:12.5px; color:var(--xst-muted); transition:color .3s; }
+.xst-sub:not(:last-child)::after { content:""; position:absolute; right:6.5px; top:21px; height:16px; width:1px; background:var(--xst-line); }
+.xst-sub[data-state=run] { color:var(--color-text-primary); }
+.xst-sub[data-state=pending] { color:var(--xst-dim); }
+.xst-sub > .xst-ind { width:14px; height:14px; }
+.xst-sub:last-child { margin-bottom:12px; }
+@keyframes xst-spin { to { transform:rotate(360deg) } }
+@keyframes xst-pop { from { opacity:0; transform:scale(.5) } }
+@media (prefers-reduced-motion: reduce) { .xst, .xst * { animation:none !important; transition:none !important; } }`;
+  const XST_STEPS = ['Resolution Planning', 'Scope Alignment', 'Implementation', 'Outcome Verification', 'Final Summary'];
+  const XST_SUBS = ['Configure Solution', 'Connect Systems', 'Apply Changes', 'Run Workflow', 'Prepare Output'];
+  // One indicator, three looks: dashed ring (pending), spinning arc (running), ring with a check (done).
+  const xstInd = (state) => `<span class="xst-ind" aria-hidden="true"><svg viewBox="0 0 22 22">${state === 'run' ? '<circle class="track" cx="11" cy="11" r="9.5"/><circle class="arc" cx="11" cy="11" r="9.5"/>' : '<circle cx="11" cy="11" r="9.5"/>'}${state === 'done' ? '<path d="M7.2 11.3l2.5 2.5 5-5.3"/>' : ''}</svg></span>`;
+
   /* ---------------------------------------------------------------- demos */
   return [
     { group: G, title: 'Agent Status', kind: 'scene',
@@ -1964,6 +2004,31 @@ export default function pack(h) {
         const big = $('.xds-big', end);
         for (let v = 0; v <= XDS_TOTAL; v += 3) { big.textContent = `${v}s`; await xcWait(t, 30); }
         big.textContent = `${XDS_TOTAL}s`;
+      } },
+
+    { group: G, title: 'Stepper Run', kind: 'scene',
+      desc: 'Open-source stepper by Bob (@bobganiev, https://x.com/bobganiev/status/2106396667398533125), built on ReUI\'s MIT stepper (reui.io) and cloned with permission from its still: an agent run walks five right-aligned steps, the running one spins in blue and unfolds its five sub-steps, and each lands as a green check.',
+      async run(root, t) {
+        xcStyle('x-stepper-run-css', XST_CSS);
+        const el = mk('ol', 'xst'); el.setAttribute('aria-label', 'Agent run steps');
+        el.innerHTML = XST_STEPS.map((s, i) => `<li class="xst-step" data-state="pending"><div class="xst-head"><div class="xst-title">${s}</div><div class="xst-n">Step ${i + 1}</div></div>${xstInd('pending')}${i === 2 ? `<div class="xst-subs"><div>${XST_SUBS.map((x) => `<div class="xst-sub" data-state="pending"><span>${x}</span>${xstInd('pending')}</div>`).join('')}</div></div>` : ''}</li>`).join('');
+        const live = mk('p', 'sr-only'); live.setAttribute('role', 'status'); live.setAttribute('aria-live', 'polite');
+        root.append(el, live);
+        const steps = [...el.children];
+        // Swaps a row's state and redraws its indicator.
+        const set = (row, state) => { row.dataset.state = state; $(':scope > .xst-ind', row).outerHTML = xstInd(state); };
+        await xcWait(t, 600);
+        for (const [i, step] of steps.entries()) {
+          set(step, 'run'); live.textContent = `${XST_STEPS[i]}, running`;
+          const subs = $('.xst-subs', step);
+          if (subs) {
+            await xcWait(t, 300); subs.classList.add('is-open');
+            for (const sub of subs.querySelectorAll('.xst-sub')) { await xcWait(t, 250); set(sub, 'run'); await xcWait(t, 900); set(sub, 'done'); }
+            await xcWait(t, 500); subs.classList.remove('is-open');
+          } else await xcWait(t, 1300);
+          set(step, 'done'); live.textContent = `${XST_STEPS[i]}, done`;
+          await xcWait(t, 250);
+        }
       } },
 
     { group: G, title: 'Logs Explorer', kind: 'scene',
