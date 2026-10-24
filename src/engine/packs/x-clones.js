@@ -5,6 +5,7 @@
  *   Release Pipeline Card — Akash (@a1x45h), https://x.com/a1x45h/status/2112964394825187349
  *   Parallel Research Run — Akash (@a1x45h), https://x.com/a1x45h/status/2113708491907215460
  *   Merge Conflicts — Phil Pitus (@pitus_), https://x.com/pitus_/status/2111519352503873866
+ *   Merge Conflicts · One-shot v1 — Phil Pitus (@pitus_), https://x.com/pitus_/status/2111887566907802073
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -527,6 +528,64 @@ export default function pack(h) {
     svg.innerHTML = out.join('');
   }
 
+  /* ------------------------------------------ Merge Conflicts · One-shot v1 */
+  // The first, one-shot take: same thread, but a horizontal branch graph and a summary block under it.
+  const XMV_CSS = `
+.xmv-card { overflow:hidden; border-radius:14px; border:1px solid var(--color-border-button-default); background:var(--color-background-primary-default); }
+.xmv-head { display:flex; align-items:flex-start; gap:10px; padding:14px 14px 6px; }
+.xmv-head > svg { flex:none; width:15px; height:15px; margin-top:2px; color:var(--xmc-ink-green); }
+.xmv-card[data-state=merged] .xmv-head > svg { color:var(--xmc-ink-purple); }
+.xmv-title { min-width:0; flex:1; }
+.xmv-title b { display:block; font-weight:600; } .xmv-title b span { font-weight:400; color:var(--xmc-muted); }
+.xmv-sub { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:4px; font-size:12px; color:var(--xmc-muted); }
+.xmv-pill { flex:none; display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:7px; border:1px solid color-mix(in srgb, var(--xmc-green) 35%, transparent); color:var(--xmc-ink-green); font-size:12px; font-weight:500; }
+.xmv-pill svg { width:12px; height:12px; }
+.xmv-pill[data-tone=purple] { border-color:color-mix(in srgb, var(--xmc-purple) 35%, transparent); background:color-mix(in srgb, var(--xmc-purple) 10%, transparent); color:var(--xmc-ink-purple); }
+.xmv-graph { margin:6px 0 0; padding:6px 0 10px; background:color-mix(in srgb, var(--color-background-secondary-default) 55%, transparent); border-block:1px solid var(--color-border-button-default); }
+.xmv-graph svg { display:block; width:100%; height:auto; overflow:visible; }
+.xmv-graph path { fill:none; stroke-width:1.5; }
+.xmv-graph text { font-family:var(--font-mono); font-size:10px; }
+.xmv-graph .xmv-dash { stroke-dasharray:3 3; animation:xmv-dash 1s linear infinite; }
+@keyframes xmv-dash { to { stroke-dashoffset:-12 } }
+.xmv-sum { display:flex; align-items:center; gap:12px; padding:12px 14px; }
+.xmv-sum > svg { flex:none; width:15px; height:15px; align-self:flex-start; margin-top:2px; }
+.xmv-sum[data-tone=orange] > svg { color:var(--xmc-orange); } .xmv-sum[data-tone=green] > svg { color:var(--xmc-ink-green); } .xmv-sum[data-tone=purple] > svg { color:var(--xmc-ink-purple); }
+.xmv-sum-t { min-width:0; flex:1; }
+.xmv-sum-t b { display:block; font-weight:500; }
+.xmv-sum-t > span { font-size:12px; color:var(--xmc-muted); }
+.xmv-files { display:flex; gap:6px; margin-top:6px; }
+.xmv-file { display:inline-flex; align-items:center; gap:5px; height:22px; padding:0 7px; border-radius:6px; border:1px solid var(--color-border-button-default); font-family:var(--font-mono); font-size:11px; }
+.xmv-file i { font-style:normal; font-size:9px; font-weight:700; color:var(--xmc-ink-blue); }
+.xmv-file em { font-style:normal; color:var(--xmc-orange); font-weight:600; }
+.xmv-file svg { width:11px; height:11px; color:var(--xmc-ink-green); stroke-width:2.4; }
+.xmv-btn { flex:none; display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 14px; border-radius:999px; background:var(--color-text-primary); color:var(--color-background-primary-default); font-size:12px; font-weight:500; }
+.xmv-btn[disabled] { background:var(--color-background-secondary-default); color:var(--xmc-muted); border:1px solid var(--color-border-button-default); cursor:default; }
+.xmv-dark { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 12px; border-radius:999px; background:var(--color-text-primary); color:var(--color-background-primary-default); font-size:12px; font-weight:500; animation:xmc-in .3s var(--xmc-ease) both; }
+.xmv-dark > i { width:6px; height:6px; border-radius:999px; background:var(--xmc-orange); }
+.xmv-dark[data-tone=purple] > i { background:var(--xmc-purple); }
+@media (prefers-reduced-motion: reduce) { .xmv-card, .xmv-card * { animation:none !important; } }`;
+
+  /** The v1 graph: main on top, the branch below, and the link back to main for the PR's current state. */
+  function xmvGraph(state) {
+    const blue = state === 'merged' ? 'var(--xmc-purple)' : 'var(--xmc-blue)', gray = 'var(--xmc-gray)';
+    const dot = (x, y, c, r = 3.5) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`;
+    const label = (x, y, text, c, anchor = 'middle') => `<text x="${x}" y="${y}" fill="${c}" text-anchor="${anchor}">${text}</text>`;
+    const moved = state !== 'open';
+    const out = [
+      `<rect x="10" y="8" width="34" height="15" rx="4" fill="var(--color-background-tertiary-default)"/>`, label(27, 19, 'main', 'var(--xmc-muted)'),
+      `<path d="M20 34 H${moved ? 420 : 140}" stroke="${gray}"/>`, dot(20, 34, gray), dot(80, 34, gray),
+      `<path d="M80 34 C110 34 110 74 140 74 H${state === 'open' || state === 'conflicts' ? 270 : 330}" stroke="${blue}"/>`,
+      dot(140, 74, blue), dot(205, 74, blue), dot(270, 74, blue), label(205, 92, 'feat/session-refresh', state === 'merged' ? 'var(--xmc-ink-purple)' : 'var(--xmc-ink-blue)'),
+    ];
+    if (moved) out.push(dot(240, 34, gray), dot(300, 34, gray));
+    if (state === 'open') out.push(`<path class="xmv-dash" d="M270 74 H330" stroke="${blue}"/>`);
+    if (state === 'conflicts') out.push(`<path class="xmv-dash" d="M270 74 C340 74 370 34 420 34" stroke="var(--xmc-orange)"/>`, dot(420, 34, 'var(--xmc-orange)', 5), label(420, 18, '3 conflicts', 'var(--xmc-orange)'));
+    if (state === 'resolved' || state === 'merged') out.push(`<path d="M300 34 C320 34 315 74 330 74" stroke="${gray}"/>`, `<circle cx="330" cy="74" r="4.5" fill="var(--color-background-primary-default)" stroke="${blue}" stroke-width="1.5"/>`);
+    if (state === 'resolved') out.push(`<path class="xmv-dash" d="M335 74 C370 74 390 34 420 34" stroke="var(--xmc-orange)"/>`, dot(420, 34, 'var(--xmc-orange)', 5), label(420, 18, 'Resolved', 'var(--xmc-muted)'));
+    if (state === 'merged') out.push(`<path d="M335 74 C375 74 385 34 420 34" stroke="${blue}"/>`, dot(420, 34, 'var(--xmc-purple)', 5), `<rect x="392" y="6" width="56" height="16" rx="8" fill="color-mix(in srgb, var(--xmc-purple) 14%, transparent)"/>`, label(420, 18, 'Merged', 'var(--xmc-ink-purple)'));
+    return `<svg viewBox="0 0 460 100" aria-hidden="true">${out.join('')}</svg>`;
+  }
+
   /* ---------------------------------------------------------------- demos */
   return [
     { group: G, title: 'Agent Status', kind: 'scene',
@@ -991,6 +1050,67 @@ export default function pack(h) {
         foot(`${xcIcon('merge')}<span>Merged into main</span>`, 'purple');
         action(`${xcIcon('github')}GitHub`, { plain: true });
         setChips({ tone: 'purple', icon: xcIcon('merge'), pr: true, text: 'Merged', diff: false });
+      } },
+
+    { group: G, title: 'Merge Conflicts · One-shot v1', kind: 'scene',
+      desc: 'The one-shot first version of Phil Pitus\'s merge conflict component (@pitus_, https://x.com/pitus_/status/2111887566907802073), cloned with permission: the same thread with a horizontal branch graph whose dashed link to main turns orange on conflicts, resolves and merges in purple.',
+      async run(root, t) {
+        xcStyle('x-merge-conflicts-css', XMC_CSS);
+        xcStyle('x-merge-v1-css', XMV_CSS);
+        const el = mk('section', 'xmc'); el.setAttribute('aria-label', 'Fix and open a pull request');
+        el.innerHTML = `<div class="xmc-thread" style="display:flex;flex-direction:column;gap:12px"></div><div class="xmc-chips" style="justify-content:flex-end" role="status" aria-live="polite"></div>
+<div class="xmc-compose" aria-hidden="true"><div class="xmc-ph">Ask anything, or type / for skills</div><div class="xmc-bar"><span class="xmc-tool is-round">${xcIcon('plus')}</span><span class="xmc-tool">${xcIcon('folder')}acme-webapp</span><span class="xmc-tool">${xcIcon('laptop')}Local</span><span class="xmc-tool is-round">${xcIcon('cloud')}</span><span style="flex:1"></span><span class="xmc-tool" style="background:none">${xcIcon('signal')}Medium</span><span class="xmc-tool is-round" style="background:none">${xcIcon('mic')}</span><span class="xmc-send">${xcIcon('arrowUp')}</span></div></div>`;
+        root.append(el);
+        const thread = $('.xmc-thread', el), chips = $('.xmc-chips', el);
+        const spin = '<span class="xmc-spin" aria-hidden="true"></span>';
+        const say = (cls, html) => { const n = mk('div', `${cls} xmc-in`); n.innerHTML = html; thread.append(n); return n; };
+        const files = '<span class="xmc-pill">' + xcIcon('fileText') + '4 files <span class="xmc-diff"><span class="a">+128</span><span class="d">−36</span><span class="bars"><i></i><i></i><i></i><i></i><i class="r"></i></span></span></span>';
+        const setChips = (html, tone = '') => { chips.innerHTML = `${files}<span class="xmv-dark" data-tone="${tone}">${html}</span>`; };
+        const think = (text, run = true) => say(`xmc-think${run ? ' is-run' : ''}`, `${xcIcon('chevronRight')}<b>${text}</b><span class="xmc-sec"></span>`);
+        const stream = async (node, html) => { for (const w of html.split(' ')) { node.insertAdjacentHTML('beforeend', `${w} `); await xcWait(t, 35); } };
+
+        say('xmc-user', 'Sessions keep expiring mid-checkout. Can you fix that?');
+        await xcWait(t, 500);
+        think('Thought for 14s', false);
+        await stream(say('xmc-say', ''), 'Done. Sessions now refresh in the middleware when they\'re within five minutes of expiring, so checkout no longer drops you mid-payment. I added tests for both paths.');
+        await xcWait(t, 600);
+        say('xmc-user', 'Create PR');
+        setChips(`${spin}Creating PR`);
+        const opening = think('Opening the pull request');
+        await xcWait(t, 1200);
+        opening.classList.remove('is-run'); $('b', opening).textContent = 'Worked for 5s';
+
+        const card = say('xmv-card', `<div class="xmv-head">${xcIcon('merge')}<div class="xmv-title"><b>Refresh sessions in the auth middleware</b><div class="xmv-sub"><span class="xmc-chip">feat/session-refresh</span>→<span class="xmc-chip">main</span><span class="xmv-commits">3 commits</span><span class="xmc-diff"><span class="a">+128</span><span class="d">−36</span></span></div></div><span class="xmv-pill" hidden>${xcIcon('merge')}<span>Open</span></span></div><div class="xmv-graph"></div><div class="xmv-sum"></div>`);
+        const graph = $('.xmv-graph', card), sum = $('.xmv-sum', card), pill = $('.xmv-pill', card);
+        const setSum = (tone, icon, title, sub, filesHtml, btn) => { sum.dataset.tone = tone; sum.innerHTML = `${xcIcon(icon)}<div class="xmv-sum-t"><b>${title}</b><span>${sub}</span>${filesHtml ? `<div class="xmv-files">${filesHtml}</div>` : ''}</div>${btn || ''}`; };
+        graph.innerHTML = xmvGraph('open');
+        setSum('', 'clock', 'Opening #128', 'Pushing 3 commits to origin');
+        await xcWait(t, 1400);
+
+        $('.xmv-title b', card).innerHTML = 'Refresh sessions in the auth middleware <span>#128</span>';
+        pill.hidden = false;
+        graph.innerHTML = xmvGraph('conflicts');
+        setSum('orange', 'alert', '3 conflicts with main', 'Lena Park changed the same lines in main', '<span class="xmv-file"><i>TS</i>middleware.ts <em>1</em></span><span class="xmv-file"><i>TS</i>auth.ts <em>2</em></span>', '<button type="button" class="xmv-btn">Resolve conflicts</button>');
+        setChips('<i></i>#128 3 conflicts');
+        await stream(say('xmc-say', ''), XMC_SAY);
+        const btn = $('.xmv-btn', sum);
+        await new Promise((resolve) => { let done = false; const go = () => { if (!done) { done = true; resolve(); } }; btn.onclick = go; xcWait(t, 1800).then(go); });
+
+        say('xmc-user', 'Resolve conflicts');
+        $('.xmv-commits', card).textContent = '4 commits';
+        graph.innerHTML = xmvGraph('resolved');
+        setSum('green', 'checkCircle', 'Conflicts resolved', 'Lena Park changed the same lines in main', `<span class="xmv-file"><i>TS</i>middleware.ts ${xcIcon('check')}</span><span class="xmv-file"><i>TS</i>auth.ts ${xcIcon('check')}</span>`, `<button type="button" class="xmv-btn" disabled>${spin}Resolving</button>`);
+        setChips(`${spin}#128 Resolving`);
+        const tests = think('Running 0 of 42 tests');
+        for (let n = 6; n <= 42; n += 6) { $('b', tests).textContent = `Running ${n} of 42 tests`; await xcWait(t, 260); }
+        tests.classList.remove('is-run'); $('b', tests).textContent = 'Worked for 5s';
+        await xcWait(t, 500);
+
+        card.dataset.state = 'merged';
+        pill.dataset.tone = 'purple'; $('span', pill).textContent = 'Merged';
+        graph.innerHTML = xmvGraph('merged');
+        setSum('purple', 'merge', 'Merged into main', '<code style="font-family:var(--font-mono);font-size:11px">feat/session-refresh</code> was deleted · just now');
+        setChips(`${xcIcon('merge')}#128 Merged`, 'purple');
       } },
   ];
 }
