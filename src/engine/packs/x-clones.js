@@ -4,6 +4,7 @@
  *   RAG Pipeline — Jeet (@jeetnirnejak), https://x.com/jeetnirnejak/status/2095507715556831429
  *   Release Pipeline Card — Akash (@a1x45h), https://x.com/a1x45h/status/2112964394825187349
  *   Parallel Research Run — Akash (@a1x45h), https://x.com/a1x45h/status/2113708491907215460
+ *   Merge Conflicts — Phil Pitus (@pitus_), https://x.com/pitus_/status/2111519352503873866
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -62,6 +63,14 @@ export default function pack(h) {
     tag: '<path d="M4 4.5h7l8.5 8.5-7 7L4 11.5z"/><circle cx="8" cy="8.5" r="1.2"/>',
     chevronRight: '<path d="M9.5 6.5L15 12l-5.5 5.5"/>',
     research: '<circle cx="14" cy="10" r="4.5"/><path d="M17.3 13.3L20.5 16.5M3.5 7h4M3.5 11h3M3.5 15h6"/>',
+    merge: '<circle cx="6.5" cy="5.5" r="2"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="12" r="2"/><path d="M6.5 7.5v9M6.5 7.5c0 3 3 4.5 9 4.5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    laptop: '<rect x="5" y="5.5" width="14" height="9.5" rx="1.5"/><path d="M3 18.5h18"/>',
+    mic: '<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/>',
+    arrowUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+    github: '<path d="M9 19c-4 1.3-4-2-5.5-2.5M14.5 21v-3.4a3 3 0 0 0-.8-2.2c2.8-.3 5.8-1.4 5.8-6.2a4.8 4.8 0 0 0-1.3-3.3 4.5 4.5 0 0 0-.1-3.3s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6.2 0C6.1 1.3 5.1 1.6 5.1 1.6a4.5 4.5 0 0 0-.1 3.3 4.8 4.8 0 0 0-1.3 3.3c0 4.8 3 5.9 5.8 6.2a3 3 0 0 0-.8 2.2V21"/>',
+    chevronDown: '<path d="M6.5 9.5L12 15l5.5-5.5"/>',
+    signal: '<path d="M5 18v-3M10 18v-6M15 18v-9M20 18V6"/>',
   };
   const xcIcon = (name, cls = '') => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="${cls}">${XC_ICONS[name] || ''}</svg>`;
 
@@ -385,6 +394,138 @@ export default function pack(h) {
     { name: 'Find prices and warranty terms', secs: 4.3, sum: 'Best price $1,849', steps: [['search', 'Searching 5 retailers', 900], ['tag', 'Comparing prices', 1000], ['checkCircle', 'Reading warranty terms', 1000]] },
   ];
   const XPR_ANSWER = { lead: 'The Vela Trail fits best:', points: ['Its 85 Nm mid-drive handles the climbs', 'The battery covers the 30 km round trip with charge to spare', 'It costs $1,849 with a 2-year warranty'] };
+
+  /* -------------------------------------------------------- Merge Conflicts */
+  const XMC_CSS = `
+.xmc { --xmc-ease:cubic-bezier(0.22,1,0.36,1); --xmc-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary));
+  --xmc-blue:var(--color-chart-6-active); --xmc-teal:var(--color-chart-1-active); --xmc-gray:var(--color-text-tertiary); --xmc-orange:var(--color-status-orange-text);
+  --xmc-green:var(--color-chart-7-active); --xmc-purple:var(--color-chart-5-active);
+  --xmc-ink-blue:color-mix(in oklab, var(--xmc-blue) 70%, var(--color-text-primary)); --xmc-ink-teal:color-mix(in oklab, var(--xmc-teal) 55%, var(--color-text-primary));
+  --xmc-ink-green:color-mix(in oklab, var(--xmc-green) 62%, var(--color-text-primary)); --xmc-ink-purple:color-mix(in oklab, var(--xmc-purple) 72%, var(--color-text-primary));
+  display:flex; flex-direction:column; gap:12px; width:540px; max-width:100%; color:var(--color-text-primary); font-family:var(--font-sans); font-size:13px; line-height:18px; text-align:start; }
+.dark .xmc { --xmc-gray:var(--color-text-secondary); }
+:where(.xmc) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+.xmc button:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:2px; }
+.xmc-in { animation:xmc-in .4s var(--xmc-ease) both; }
+.xmc-user { align-self:flex-end; padding:8px 14px; border-radius:999px; background:var(--color-background-secondary-default); }
+.xmc-think { display:flex; align-items:center; gap:8px; color:var(--xmc-muted); }
+.xmc-think svg { width:12px; height:12px; }
+.xmc-think.is-run b { font-weight:400; background:linear-gradient(90deg, var(--xmc-muted) 0%, var(--xmc-muted) 35%, var(--color-text-primary) 50%, var(--xmc-muted) 65%, var(--xmc-muted) 100%); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:xmc-shimmer 2s linear infinite; }
+.xmc-think b { font-weight:400; }
+.xmc-card { overflow:hidden; border-radius:12px; border:1px solid var(--color-border-button-default); background:var(--color-background-primary-default); box-shadow:0 1px 2px color-mix(in srgb, var(--color-text-primary) 6%, transparent); }
+.xmc-chead { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px 8px; }
+.xmc-chead b { font-weight:600; } .xmc-chead b span { font-weight:400; color:var(--xmc-muted); }
+.xmc-state { flex:none; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:var(--xmc-ink-green); }
+.xmc-state::before { content:""; width:6px; height:6px; border-radius:999px; background:currentColor; }
+.xmc-state[data-tone=purple] { color:var(--xmc-ink-purple); }
+.xmc-graph { position:relative; padding:0 14px; }
+.xmc-graph svg { position:absolute; left:14px; top:0; width:44px; overflow:visible; pointer-events:none; }
+.xmc-graph svg path { fill:none; stroke-width:1.5; transition:stroke .3s; }
+.xmc-row { display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; height:26px; column-gap:6px; }
+.xmc-row.is-new { animation:xmc-row .9s var(--xmc-ease) both; }
+.xmc-row.is-dim .xmc-msg { color:var(--xmc-muted); }
+.xmc-row.is-conflict .xmc-msg { color:var(--xmc-orange); }
+.xmc-msg { display:flex; align-items:center; gap:6px; min-width:0; }
+.xmc-msg > span:first-child { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.xmc-chip { flex:none; padding:1px 5px; border-radius:4px; font-family:var(--font-mono); font-size:10.5px; line-height:15px; background:var(--color-background-secondary-default); color:var(--xmc-muted); }
+.xmc-chip[data-tone=blue] { background:color-mix(in srgb, var(--xmc-blue) 12%, transparent); color:var(--xmc-ink-blue); }
+.xmc-chip[data-tone=teal] { background:color-mix(in srgb, var(--xmc-teal) 14%, transparent); color:var(--xmc-ink-teal); }
+.xmc-chip[data-tone=purple] { background:color-mix(in srgb, var(--xmc-purple) 12%, transparent); color:var(--xmc-ink-purple); }
+.xmc-n { flex:none; display:grid; place-items:center; min-width:15px; height:15px; padding:0 4px; border-radius:4px; background:var(--color-status-orange-background); color:var(--xmc-orange); font-size:10.5px; font-weight:600; animation:xmc-pop .3s var(--xmc-ease) both; }
+.xmc-meta { white-space:nowrap; font-size:11.5px; color:var(--xmc-muted); }
+.xmc-meta code { margin-right:6px; font-family:var(--font-mono); font-size:10.5px; }
+.xmc-top { color:var(--xmc-muted); }
+.xmc-top .xmc-st { justify-self:start; display:grid; place-items:center; width:15px; height:15px; margin-left:0; border-radius:999px; }
+.xmc-top .xmc-st svg { width:15px; height:15px; animation:xmc-pop .3s var(--xmc-ease) both; }
+.xmc-top .xmc-right { font-size:12px; font-weight:500; }
+.xmc-top[data-tone=orange] .xmc-st, .xmc-top[data-tone=orange] .xmc-right { color:var(--xmc-orange); }
+.xmc-top[data-tone=green] .xmc-st, .xmc-top[data-tone=green] .xmc-right { color:var(--xmc-ink-green); }
+.xmc-top[data-tone=purple] .xmc-st, .xmc-top[data-tone=purple] .xmc-right { color:var(--xmc-ink-purple); }
+.xmc-checks { display:flex; flex-wrap:wrap; gap:6px; padding:8px 14px 0; }
+.xmc-check { position:relative; display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:999px; border:1px solid var(--color-border-button-default); font-size:12px; color:var(--xmc-muted); animation:xmc-in .3s var(--xmc-ease) both; }
+.xmc-check b { font-weight:500; color:var(--color-text-primary); }
+.xmc-check svg { width:11px; height:11px; color:var(--xmc-ink-green); stroke-width:2.4; }
+.xmc-check[data-tip]:hover::after, .xmc-check[data-tip]:focus-visible::after { content:attr(data-tip); position:absolute; left:50%; bottom:calc(100% + 6px); transform:translateX(-50%); z-index:2; padding:4px 8px; border-radius:6px; background:var(--color-text-primary); color:var(--color-background-primary-default); font-size:11.5px; white-space:nowrap; }
+.xmc-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:44px; padding:6px 10px 6px 14px; }
+.xmc-fstat { display:flex; align-items:center; gap:8px; min-width:0; }
+.xmc-fstat svg { flex:none; width:14px; height:14px; }
+.xmc-fstat[data-tone=orange] { color:var(--xmc-orange); } .xmc-fstat[data-tone=purple] svg { color:var(--xmc-ink-purple); }
+.xmc-fstat > span { animation:xmc-in .3s var(--xmc-ease) both; }
+.xmc-act { flex:none; display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 12px; border-radius:999px; font-size:12px; font-weight:500; background:color-mix(in srgb, var(--xmc-blue) 12%, transparent); color:var(--xmc-ink-blue); transition:background-color .2s, opacity .2s; }
+.xmc-act:hover { background:color-mix(in srgb, var(--xmc-blue) 20%, transparent); }
+.xmc-act[disabled] { cursor:default; background:var(--color-background-secondary-default); color:var(--xmc-muted); }
+.xmc-act.is-plain { background:var(--color-background-secondary-default); color:var(--color-text-primary); }
+.xmc-act svg { width:13px; height:13px; }
+.xmc-spin { flex:none; width:12px; height:12px; border-radius:999px; border:1.5px solid color-mix(in srgb, currentColor 25%, transparent); border-top-color:currentColor; animation:xmc-spin .8s linear infinite; }
+.xmc-say { line-height:21px; }
+.xmc-say code { padding:1px 4px; border-radius:4px; background:var(--color-background-secondary-default); font-family:var(--font-mono); font-size:11.5px; }
+.xmc-say b { font-weight:600; }
+.xmc-chips { display:flex; align-items:center; gap:6px; }
+.xmc-pill { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px; border-radius:999px; border:1px solid var(--color-border-button-default); font-size:12px; color:var(--xmc-muted); animation:xmc-in .3s var(--xmc-ease) both; }
+.xmc-pill b { font-weight:500; color:var(--color-text-primary); }
+.xmc-pill[data-tone=orange] span { color:var(--xmc-orange); } .xmc-pill[data-tone=green] span { color:var(--xmc-ink-green); } .xmc-pill[data-tone=purple] span { color:var(--xmc-ink-purple); }
+.xmc-pill > i { width:6px; height:6px; border-radius:999px; background:currentColor; }
+.xmc-pill svg { width:12px; height:12px; }
+.xmc-diff { display:inline-flex; align-items:center; gap:4px; font-family:var(--font-mono); font-size:11.5px; }
+.xmc-diff .a { color:var(--xmc-ink-green); } .xmc-diff .d { color:var(--color-status-rose-text); }
+.xmc-diff .bars { display:inline-flex; gap:1px; margin-left:2px; } .xmc-diff .bars i { width:5px; height:5px; border-radius:1px; background:var(--xmc-green); } .xmc-diff .bars i.r { background:var(--color-status-rose-text); } .xmc-diff .bars i.o { background:var(--color-background-tertiary-default); }
+.xmc-compose { border-radius:16px; border:1px solid var(--color-border-button-default); background:var(--color-background-primary-default); box-shadow:0 1px 3px color-mix(in srgb, var(--color-text-primary) 6%, transparent); }
+.xmc-ph { padding:12px 14px 8px; color:var(--color-text-tertiary); }
+.xmc-bar { display:flex; align-items:center; gap:6px; padding:6px 10px 10px; color:var(--xmc-muted); font-size:12px; }
+.xmc-bar svg { width:13px; height:13px; }
+.xmc-tool { display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 9px; border-radius:999px; background:var(--color-background-secondary-default); }
+.xmc-tool.is-round { width:28px; padding:0; justify-content:center; }
+.xmc-send { display:grid; place-items:center; width:28px; height:28px; border-radius:999px; background:var(--color-accent-500); color:var(--color-background-primary-default); }
+.xmc-send svg { stroke-width:2.2; }
+@keyframes xmc-in { from { opacity:0; transform:translateY(5px) } }
+@keyframes xmc-row { 0% { opacity:0; background:var(--color-status-orange-background) } 25% { opacity:1; background:var(--color-status-orange-background) } 100% { background:transparent } }
+@keyframes xmc-pop { from { opacity:0; transform:scale(.5) } }
+@keyframes xmc-spin { to { transform:rotate(360deg) } }
+@keyframes xmc-shimmer { from { background-position:100% 0 } to { background-position:0% 0 } }
+@media (prefers-reduced-motion: reduce) { .xmc, .xmc * { animation:none !important; transition:none !important; } }`;
+
+  // Commits by id: message, optional branch chip [label, tone], hash, author and age, lane.
+  const XMC_COMMITS = {
+    merge: { text: 'Merge main into feat/session-refresh', chip: ['feat/session-refresh', 'blue'], hash: '7e0c3b', by: 'You · now', lane: 'feat', ring: true },
+    tests: { text: 'Add session refresh tests', chip: ['feat/session-refresh', 'blue'], hash: 'd29f50', by: 'You · now', lane: 'feat' },
+    read: { text: 'Read sessions with the current key', chip: ['main', ''], hash: '5be27d', by: 'Lena · 6m', lane: 'main' },
+    rotate: { text: 'Rotate session keys', hash: 'a3f9c1', by: 'Lena · 18m', lane: 'main' },
+    refresh: { text: 'Refresh sessions near expiry', hash: 'c70a92', by: 'You · 25m', lane: 'feat' },
+    consent: { text: 'Add analytics consent banner', chip: ['feat/checkout-analytics', 'teal'], hash: 'e83c51', by: 'Sam · 32m', lane: 'ana' },
+    expiry: { text: 'Read session expiry from the token', hash: '1f8e3b', by: 'You · 40m', lane: 'feat' },
+    funnel: { text: 'Track checkout funnel events', hash: '62b8e4', by: 'Sam · 2h', lane: 'ana' },
+    bump: { text: 'Bump next to 16.3', chip: ['main', ''], hash: '9c2d4a', by: 'Sam · 3h', lane: 'main' },
+  };
+  const XMC_ROW = 26, XMC_LANES = { main: 7, feat: 19, ana: 31 };
+  const XMC_SAY = 'PR <b>#128</b> is open, but <code>main</code> moved on while we worked: Lena\'s session key rotation changed the same lines in <code>auth.ts</code> and <code>middleware.ts</code>. I can merge <code>main</code> in and resolve them.';
+
+  /** Draws the commit graph for the rows shown: one rail per lane, curves where branches fork and merge. */
+  function xmcGraph(svg, rows, merged, conflicts) {
+    const y = (i) => i * XMC_ROW + XMC_ROW / 2, x = (lane) => XMC_LANES[lane];
+    const at = (id) => rows.indexOf(id), laneRows = (lane) => rows.map((id, i) => [id, i]).filter(([id]) => (id === 'top' ? lane === 'main' : XMC_COMMITS[id].lane === lane)).map(([, i]) => i);
+    const col = { main: 'var(--xmc-gray)', feat: merged ? 'var(--xmc-purple)' : 'var(--xmc-blue)', ana: 'var(--xmc-teal)' };
+    const curve = (l1, i1, l2, i2) => `M${x(l1)} ${y(i1)} C${x(l1)} ${y(i1) - XMC_ROW * 0.6} ${x(l2)} ${y(i2) + XMC_ROW * 0.6} ${x(l2)} ${y(i2)}`;
+    const out = [];
+    for (const lane of ['main', 'ana', 'feat']) {
+      const r = laneRows(lane); if (!r.length) continue;
+      out.push(`<path d="M${x(lane)} ${y(Math.min(...r))} V${y(Math.max(...r))}" stroke="${col[lane]}"/>`);
+    }
+    // Fork and join curves only once both ends are on screen (rows arrive one by one).
+    const bump = at('bump'), feat = laneRows('feat').filter((i) => rows[i] !== 'merge'), ana = laneRows('ana');
+    if (bump >= 0 && feat.length) out.push(`<path d="${curve('main', bump, 'feat', Math.max(...feat))}" stroke="${col.feat}"/>`);
+    if (bump >= 0 && ana.length) out.push(`<path d="${curve('main', bump, 'ana', Math.max(...ana))}" stroke="${col.ana}"/>`);
+    if (ana.length && at('refresh') >= 0) out.push(`<path d="${curve('ana', Math.min(...ana), 'feat', at('refresh'))}" stroke="${col.ana}"/>`);
+    if (at('merge') >= 0) out.push(`<path d="${curve('main', at('read'), 'feat', at('merge'))}" stroke="${col.main}"/>`);
+    if (merged) out.push(`<path d="${curve('feat', Math.min(...feat), 'main', 0)}" stroke="${col.feat}"/>`);
+    rows.forEach((id, i) => {
+      if (id === 'top') return;
+      const c = XMC_COMMITS[id], fill = conflicts.has(id) ? 'var(--xmc-orange)' : col[c.lane];
+      out.push(c.ring ? `<circle cx="${x(c.lane)}" cy="${y(i)}" r="4" fill="var(--color-background-primary-default)" stroke="${fill}" stroke-width="1.5"/>` : `<circle cx="${x(c.lane)}" cy="${y(i)}" r="3.2" fill="${fill}"/>`);
+    });
+    svg.setAttribute('height', String(rows.length * XMC_ROW));
+    svg.setAttribute('viewBox', `0 0 44 ${rows.length * XMC_ROW}`);
+    svg.innerHTML = out.join('');
+  }
 
   /* ---------------------------------------------------------------- demos */
   return [
@@ -736,6 +877,120 @@ export default function pack(h) {
         $('.xpr-aname', ans).textContent = 'Answer';
         setBadge(`${xcIcon('check')}Done`, 'ok');
         main.textContent = 'Reset';
+      } },
+
+    { group: G, title: 'Merge Conflicts', kind: 'scene',
+      desc: 'Generative UI #2 by Phil Pitus (@pitus_, https://x.com/pitus_/status/2111519352503873866), cloned with permission: "Create PR" opens a pull request card with a live commit graph, main moves on and three conflicts land in orange, the agent merges main in and resolves them one by one, checks pass and the PR merges in purple; Resolve conflicts and Merge can be clicked.',
+      async run(root, t) {
+        xcStyle('x-merge-conflicts-css', XMC_CSS);
+        const el = mk('section', 'xmc'); el.setAttribute('aria-label', 'Create PR conversation');
+        el.innerHTML = `<div class="xmc-thread" style="display:flex;flex-direction:column;gap:12px"></div><div class="xmc-chips" role="status" aria-live="polite"></div>
+<div class="xmc-compose" aria-hidden="true"><div class="xmc-ph">Ask anything, or type / for skills</div><div class="xmc-bar"><span class="xmc-tool is-round">${xcIcon('plus')}</span><span class="xmc-tool">${xcIcon('folder')}acme-webapp</span><span class="xmc-tool">${xcIcon('laptop')}Local</span><span class="xmc-tool is-round">${xcIcon('cloud')}</span><span style="flex:1"></span><span class="xmc-tool" style="background:none">${xcIcon('signal')}Medium</span><span class="xmc-tool is-round" style="background:none">${xcIcon('mic')}</span><span class="xmc-send">${xcIcon('arrowUp')}</span></div></div>`;
+        root.append(el);
+        const thread = $('.xmc-thread', el), chips = $('.xmc-chips', el);
+        const rows = [], conflicts = new Map(), dim = new Set(), seen = new Set();
+        let merged = false, top = null, card = null;
+
+        const setChips = (state) => {
+          const diff = '<span class="xmc-pill"><span class="xmc-diff"><span class="a">+482</span><span class="d">−37</span><span class="bars"><i></i><i></i><i></i><i class="r"></i><i class="o"></i></span></span>' + xcIcon('chevronDown') + '</span>';
+          chips.innerHTML = `<span class="xmc-pill" data-tone="${state.tone || ''}">${state.icon || ''}${state.pr ? '<b>#128</b>' : ''}<span>${esc(state.text)}</span></span>${state.diff === false ? '' : diff}`;
+        };
+        const spin = '<span class="xmc-spin" aria-hidden="true"></span>';
+        const say = (cls, html) => { const n = mk('div', `${cls} xmc-in`); n.innerHTML = html; thread.append(n); return n; };
+
+        // The rows and their graph are redrawn from the model on every change; only rows not seen before animate.
+        const render = () => {
+          const g = $('.xmc-graph', card);
+          const html = rows.map((id) => {
+            if (id === 'top') return `<div class="xmc-row xmc-top" data-tone="${top.tone}"><span class="xmc-st" aria-hidden="true">${top.icon}</span><div class="xmc-msg"><span>${esc(top.text)}</span>${top.chip ? `<span class="xmc-chip" data-tone="${top.chip[1]}">${top.chip[0]}</span>` : ''}</div><span class="xmc-right">${esc(top.right)}</span></div>`;
+            const c = XMC_COMMITS[id], n = conflicts.get(id), right = id === 'merge' && top.progress ? top.progress : `<code>${c.hash}</code>${c.by}`;
+            const cls = `${seen.has(id) ? '' : ' is-new'}${n ? ' is-conflict' : ''}${dim.has(id) ? ' is-dim' : ''}`;
+            seen.add(id);
+            return `<div class="xmc-row${cls}"><span></span><div class="xmc-msg"><span>${esc(c.text)}</span>${c.chip ? `<span class="xmc-chip" data-tone="${c.chip[1]}">${c.chip[0]}</span>` : ''}${n ? `<span class="xmc-n">${n}</span>` : ''}</div><span class="xmc-meta">${right}</span></div>`;
+          }).join('');
+          g.innerHTML = `<svg aria-hidden="true"></svg>${html}`;
+          xmcGraph($('svg', g), rows, merged, conflicts);
+        };
+        const setTop = (patch) => { top = { ...top, ...patch }; render(); };
+        const foot = (html, tone) => { const f = $('.xmc-fstat', card); f.innerHTML = html; if (tone) f.dataset.tone = tone; else delete f.dataset.tone; };
+        const action = (html, opts = {}) => { const a = $('.xmc-act', card); a.innerHTML = html; a.disabled = !!opts.disabled; a.hidden = !html; a.classList.toggle('is-plain', !!opts.plain); return a; };
+        // Resolves on a click, or after `ms` when nobody clicks: the demo plays on its own.
+        const press = (btn, ms) => new Promise((resolve) => { let done = false; const go = () => { if (!done) { done = true; resolve(); } }; btn.onclick = go; xcWait(t, ms).then(go); });
+
+        await xcWait(t, 600);
+        say('xmc-user', 'Create PR');
+        setChips({ icon: spin, text: 'Creating PR' });
+        await xcWait(t, 500);
+        const think = say('xmc-think is-run', `${xcIcon('chevronRight')}<b>Thinking</b><span class="xmc-sec">1s</span>`);
+        let secs = 1;
+        const tick = t.every(1000, () => { secs += 1; $('.xmc-sec', think).textContent = `${secs}s`; });
+        await xcWait(t, 700);
+        card = say('xmc-card', `<div class="xmc-chead"><b class="xmc-ctitle">Refresh sessions in the auth middleware</b><span class="xmc-state" hidden>Open</span></div><div class="xmc-graph"></div><div class="xmc-checks" hidden></div><div class="xmc-foot"><div class="xmc-fstat"></div><button type="button" class="xmc-act" hidden></button></div>`);
+        foot(`${spin}<span>Pushing 3 commits to origin</span>`);
+        for (const id of ['tests', 'refresh', 'consent', 'expiry', 'funnel', 'bump']) { rows.push(id); render(); await xcWait(t, 140); }
+        await xcWait(t, 1300);
+
+        // main moved on: fetch it, Lena's commits slide in and the merge row appears on top.
+        $('.xmc-ctitle', card).innerHTML = 'Refresh sessions in the auth middleware <span>#128</span>';
+        $('.xmc-state', card).hidden = false;
+        foot(`${spin}<span>Fetching main</span>`);
+        top = { text: 'Merge into main', tone: '', icon: `<svg viewBox="0 0 16 16" width="15" height="15"><circle cx="8" cy="8" r="3.2" fill="var(--xmc-gray)"/></svg>`, right: '' };
+        rows.unshift('top'); rows.splice(2, 0, 'rotate'); render();
+        await xcWait(t, 1100);
+        rows.splice(2, 0, 'read'); render();
+        await xcWait(t, 700);
+        t.stop(tick); think.classList.remove('is-run'); $('b', think).textContent = 'Worked for'; $('.xmc-sec', think).textContent = '5s';
+        conflicts.set('read', 1); conflicts.set('rotate', 2);
+        setTop({ tone: 'orange', icon: xcIcon('alert'), right: '3 conflicts' });
+        foot(`${xcIcon('alert')}<span>3 conflicts with main</span>`, 'orange');
+        const resolveBtn = action('Resolve conflicts');
+        setChips({ tone: 'orange', icon: '<i></i>', pr: true, text: '3 conflicts' });
+        const para = say('xmc-say', '');
+        for (const w of XMC_SAY.split(' ')) { para.insertAdjacentHTML('beforeend', `${w} `); await xcWait(t, 40); }
+        await press(resolveBtn, 1800);
+
+        // Merge main in and resolve the three conflicts one by one.
+        rows.splice(1, 0, 'merge');
+        action(`${spin}Resolving`, { disabled: true });
+        setChips({ icon: spin, pr: true, text: 'Resolving' });
+        for (let n = 1; n <= 3; n++) {
+          setTop({ progress: `${n}/3` });
+          foot(`${spin}<span>Resolving conflict ${n} of 3</span>`);
+          await xcWait(t, 1100);
+          const id = conflicts.get('rotate') > 1 || n === 2 ? 'rotate' : 'read';
+          const left = conflicts.get(id) - 1;
+          if (left) conflicts.set(id, left); else { conflicts.delete(id); dim.add(id); }
+          setTop({ right: 3 - n ? `${3 - n} conflict${3 - n > 1 ? 's' : ''}` : '' });
+        }
+        setTop({ progress: null, tone: 'green', icon: xcIcon('checkCircle'), right: 'ready' });
+
+        // Checks land, then the PR is ready to merge.
+        const checks = $('.xmc-checks', card); checks.hidden = false;
+        foot(`${spin}<span>Running checks</span>`);
+        action('');
+        for (const [name, val, tip] of [['Tests', '42 passed', 'bun test · 42 passed 14s'], ['Lint', 'passed', 'eslint · no problems 9s'], ['Types', 'passed', 'tsc · 0 errors 11s'], ['Preview', 'ready', 'preview.acme.dev/pr-128']]) {
+          const c = mk('span', 'xmc-check'); c.tabIndex = 0; c.dataset.tip = tip;
+          c.innerHTML = `${name === 'Preview' ? spin : xcIcon('check')}<b>${name}</b>${name === 'Preview' ? 'deploying' : val}`;
+          checks.append(c);
+          await xcWait(t, 260);
+          if (name === 'Preview') { await xcWait(t, 700); c.innerHTML = `${xcIcon('check')}<b>${name}</b>${val}`; }
+        }
+        foot(`${xcIcon('chevronDown')}<span>Ready to merge</span>`);
+        const mergeBtn = action(`${xcIcon('merge')}Merge`);
+        setChips({ tone: 'green', icon: '<i></i>', pr: true, text: 'Ready to merge' });
+        await press(mergeBtn, 2200);
+        foot(`${spin}<span>Merging into main</span>`);
+        action(`${spin}Merging`, { disabled: true });
+        setChips({ icon: spin, pr: true, text: 'Merging' });
+        await xcWait(t, 1500);
+
+        merged = true;
+        checks.hidden = true;
+        const state = $('.xmc-state', card); state.textContent = 'Merged'; state.dataset.tone = 'purple';
+        setTop({ text: 'Merged into main', chip: ['main', ''], tone: 'purple', icon: xcIcon('merge'), right: 'merged' });
+        foot(`${xcIcon('merge')}<span>Merged into main</span>`, 'purple');
+        action(`${xcIcon('github')}GitHub`, { plain: true });
+        setChips({ tone: 'purple', icon: xcIcon('merge'), pr: true, text: 'Merged', diff: false });
       } },
   ];
 }
