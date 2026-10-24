@@ -7,6 +7,8 @@
  *   Merge Conflicts — Phil Pitus (@pitus_), https://x.com/pitus_/status/2111519352503873866
  *   Merge Conflicts · One-shot v1 — Phil Pitus (@pitus_), https://x.com/pitus_/status/2111887566907802073
  *   Agent Approval Card — Kevin (@kvnkld, aicss.dev), https://x.com/kvnkld/status/2089693820313366635
+ *   Floating Agent Chat — Louis Nguyen Studio (@louisnstudio), https://x.com/louisnstudio/status/2096525796714438833
+ *     (measured on its live demo, crm-agent-pop.vercel.app)
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -82,6 +84,17 @@ export default function pack(h) {
     chevronUp: '<path d="M6.5 14.5L12 9l5.5 5.5"/>',
     dots: '<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
     minus: '<path d="M6 12h12"/>',
+    star: '<path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/>',
+    panel: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M14 5v14"/>',
+    copy: '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/>',
+    heart: '<path d="M12 19s-7-4.4-7-9.5A4 4 0 0 1 12 7a4 4 0 0 1 7 2.5C19 14.6 12 19 12 19z"/>',
+    share: '<circle cx="17.5" cy="6" r="2.2"/><circle cx="6.5" cy="12" r="2.2"/><circle cx="17.5" cy="18" r="2.2"/><path d="M8.5 11l7-4M8.5 13l7 4"/>',
+    at: '<circle cx="12" cy="12" r="3.5"/><path d="M15.5 12v1.5a2.5 2.5 0 0 0 5 0V12a8.5 8.5 0 1 0-3.4 6.8"/>',
+    send: '<path d="M5 12L19.5 5 15 19.5l-3-6z"/>',
+    home: '<path d="M4.5 11L12 4.5l7.5 6.5V19a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1z"/>',
+    inbox: '<path d="M4 13.5l2.5-8h11l2.5 8V19H4z"/><path d="M4 13.5h5l1 2h4l1-2h5"/>',
+    bubble: '<path d="M5 18.5V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H8z"/>',
+    users: '<circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8"/><path d="M15.5 6.2a3 3 0 0 1 0 5.6M17.5 14.6c1.6.6 2.7 2.2 3 4.4"/>',
   };
   const xcIcon = (name, cls = '') => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="${cls}">${XC_ICONS[name] || ''}</svg>`;
 
@@ -655,6 +668,78 @@ export default function pack(h) {
     { q: 'Where should secrets live?', opts: ['.env.local', 'Vault / secrets manager', 'CI only'] },
     { q: 'Ship behind a feature flag?', opts: ['Yes — gradual rollout', 'No — full release'] },
   ];
+
+  /* ---------------------------------------------------- Floating Agent Chat */
+  const XCP_CSS = `
+.xcp { --xcp-ease:cubic-bezier(0.22,1,0.36,1); --xcp-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary)); --xcp-line:var(--color-border-button-default);
+  --xcp-app:var(--color-background-primary-default); --xcp-panel:var(--color-background-secondary-default);
+  container-type:inline-size; position:relative; width:640px; max-width:100%; height:440px; overflow:hidden; border-radius:14px; border:1px solid var(--xcp-line); background:var(--xcp-app);
+  color:var(--color-text-primary); font-family:var(--font-sans); font-size:12.5px; line-height:18px; text-align:start; }
+:where(.xcp) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+.xcp button:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:1px; }
+.xcp svg { flex:none; width:13px; height:13px; }
+/* The CRM behind the chat */
+.xcp-side { position:absolute; inset:0 auto 0 0; width:132px; padding:10px 8px; border-right:1px solid var(--xcp-line); display:flex; flex-direction:column; gap:2px; font-size:11.5px; color:var(--xcp-muted); }
+.xcp-org { display:flex; align-items:center; gap:7px; height:24px; padding:0 4px; margin-bottom:6px; font-weight:600; color:var(--color-text-primary); }
+.xcp-org i, .xcp-me i { width:12px; height:12px; border-radius:3px; background:var(--color-chart-5-active); }
+.xcp-nav { display:flex; align-items:center; gap:7px; height:24px; padding:0 4px; border-radius:6px; }
+.xcp-nav.is-on { background:var(--xcp-panel); color:var(--color-text-primary); font-weight:500; }
+.xcp-me { margin-top:auto; display:flex; align-items:center; gap:7px; padding:0 4px; color:var(--color-text-primary); font-weight:500; } .xcp-me i { border-radius:999px; background:var(--color-chart-1-active); }
+.xcp-main { position:absolute; inset:0 0 0 132px; display:flex; flex-direction:column; align-items:center; padding:46px 24px 0; }
+.xcp-hello { font-family:Georgia, 'Times New Roman', serif; font-size:24px; line-height:30px; }
+.xcp-sub { margin-top:4px; font-size:11.5px; color:var(--xcp-muted); }
+.xcp-ghost { width:100%; max-width:380px; height:64px; margin-top:18px; border-radius:10px; border:1px solid var(--xcp-line); background:var(--xcp-panel); }
+.xcp-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; max-width:460px; margin-top:auto; margin-bottom:24px; }
+.xcp-cards span { height:52px; border-radius:8px; border:1px solid var(--xcp-line); background:var(--xcp-panel); }
+@container (max-width:520px) { .xcp-side { display:none } .xcp-main { left:0 } }
+/* The chat window and its three layouts */
+.xcp-win { position:absolute; z-index:2; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--xcp-line); background:var(--xcp-app);
+  box-shadow:0 24px 60px -24px color-mix(in srgb, var(--color-text-primary) 45%, transparent);
+  transition:left .45s var(--xcp-ease), top .45s var(--xcp-ease), width .45s var(--xcp-ease), height .45s var(--xcp-ease), border-radius .45s var(--xcp-ease), opacity .3s, transform .45s var(--xcp-ease); }
+.xcp-win[data-layout=popup] { left:22%; top:6%; width:64%; height:88%; border-radius:10px; }
+.xcp-win[data-layout=drawer] { left:54%; top:0; width:46%; height:100%; border-radius:0; border-width:0 0 0 1px; }
+.xcp-win[data-layout=full] { left:132px; top:0; width:calc(100% - 132px); height:100%; border-radius:0; border-width:0 0 0 1px; box-shadow:none; }
+.xcp-win.is-hidden { opacity:0; transform:translateY(12px) scale(.97); pointer-events:none; }
+@container (max-width:520px) { .xcp-win[data-layout] { left:0; top:0; width:100%; height:100%; border-radius:0; } }
+.xcp-head { display:flex; align-items:center; gap:6px; height:36px; padding:0 8px 0 12px; border-bottom:1px solid var(--xcp-line); flex:none; }
+.xcp-crumb { display:flex; align-items:center; gap:5px; min-width:0; flex:1; white-space:nowrap; overflow:hidden; color:var(--xcp-muted); }
+.xcp-crumb b { font-weight:500; color:var(--color-text-primary); overflow:hidden; text-overflow:ellipsis; }
+.xcp-hbtn { display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 6px; border-radius:6px; color:var(--xcp-muted); }
+.xcp-hbtn:hover, .xcp-hbtn[aria-expanded=true] { background:var(--xcp-panel); color:var(--color-text-primary); }
+.xcp-menu { position:absolute; z-index:3; top:34px; right:30px; min-width:150px; padding:4px; border-radius:8px; border:1px solid var(--xcp-line); background:var(--xcp-app); box-shadow:0 12px 30px -12px color-mix(in srgb, var(--color-text-primary) 40%, transparent); animation:xcp-in .2s var(--xcp-ease) both; }
+.xcp-menu p { padding:4px 8px; font-size:11px; color:var(--xcp-muted); }
+.xcp-menu button { display:flex; width:100%; height:26px; align-items:center; padding:0 8px; border-radius:5px; }
+.xcp-menu button:hover, .xcp-menu button[aria-checked=true] { background:var(--xcp-panel); }
+.xcp-feed { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; gap:18px; padding:14px; }
+.xcp-user { align-self:flex-end; max-width:78%; padding:8px 12px; border-radius:8px; background:var(--xcp-panel); animation:xcp-in .35s var(--xcp-ease) both; }
+.xcp-bot { display:flex; flex-direction:column; gap:10px; animation:xcp-in .35s var(--xcp-ease) both; }
+.xcp-tool { display:flex; align-items:center; gap:7px; padding:0 4px; color:var(--xcp-muted); }
+.xcp-tool i { width:12px; height:12px; border-radius:3px; background:linear-gradient(to top right, var(--color-chart-6-active), var(--color-chart-5-active)); }
+.xcp-tool svg { width:11px; height:11px; }
+.xcp-text { padding:0 4px; }
+.xcp-choices { display:flex; flex-wrap:wrap; gap:8px; }
+.xcp-choice { display:flex; align-items:center; gap:9px; width:196px; max-width:100%; height:36px; padding:0 10px; border-radius:9px; border:1px solid var(--xcp-line); background:var(--xcp-app); transition:opacity .3s, background-color .2s; }
+.xcp-choice:hover { background:var(--xcp-panel); }
+.xcp-choice[aria-pressed=false].is-decided { opacity:.5; }
+.xcp-choice i { width:13px; height:13px; border-radius:3px; }
+.xcp-choice span { flex:1; text-align:start; }
+.xcp-choice svg { color:var(--color-status-lime-text); opacity:0; transition:opacity .2s; } .xcp-choice[aria-pressed=true] svg { opacity:1; }
+.xcp-acts { display:flex; gap:12px; justify-content:center; color:var(--xcp-muted); }
+.xcp-file { display:flex; flex-direction:column; gap:9px; max-width:400px; padding:11px; border-radius:9px; border:1px solid var(--xcp-line); background:var(--xcp-app); box-shadow:0 1px 2px color-mix(in srgb, var(--color-text-primary) 6%, transparent); }
+.xcp-ftitle { display:flex; align-items:center; gap:8px; } .xcp-ftitle i { flex:none; width:15px; height:15px; border-radius:4px; background:var(--color-status-orange-text); }
+.xcp-ftitle span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.xcp-fdesc { font-size:11px; line-height:17px; color:var(--xcp-muted); }
+.xcp-fbtns { display:flex; justify-content:flex-end; gap:6px; }
+.xcp-fbtns button { display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 9px; border-radius:6px; border:1px solid var(--xcp-line); }
+.xcp-fbtns button.is-solid { border-color:var(--color-text-primary); background:var(--color-text-primary); color:var(--xcp-app); }
+.xcp-compose { flex:none; margin:0 12px 12px; padding:9px; display:flex; flex-direction:column; gap:10px; border-radius:10px; border:1px solid var(--xcp-line); background:var(--xcp-panel); }
+.xcp-ph { color:var(--color-text-tertiary); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.xcp-cbar { display:flex; align-items:center; gap:10px; min-width:0; overflow:hidden; white-space:nowrap; color:var(--xcp-muted); }
+.xcp-cbar .xcp-sep { width:1px; height:12px; background:var(--xcp-line); }
+.xcp-dots { display:flex; } .xcp-dots i { width:10px; height:10px; margin-left:-3px; border-radius:999px; box-shadow:0 0 0 1.5px var(--xcp-panel); }
+@keyframes xcp-in { from { opacity:0; transform:translateY(5px) } }
+@media (prefers-reduced-motion: reduce) { .xcp, .xcp * { animation:none !important; transition:none !important; } }`;
+  const XCP_DOTS = '<span class="xcp-dots" aria-hidden="true"><i style="background:var(--color-chart-1-active)"></i><i style="background:var(--color-chart-6-active)"></i><i style="background:var(--color-chart-5-active)"></i><i style="background:var(--color-chart-3-active)"></i></span>';
 
   /* ---------------------------------------------------------------- demos */
   return [
@@ -1247,6 +1332,69 @@ export default function pack(h) {
         await xcWait(t, 1000); ask.pick('CI only');
         await xcWait(t, 700); ask.next();
         await xcWait(t, 900); await ask.type('This is an example');
+      } },
+
+    { group: G, title: 'Floating Agent Chat', kind: 'scene',
+      desc: 'Floating CRM agent chat by Louis Nguyen Studio (@louisnstudio, https://x.com/louisnstudio/status/2096525796714438833, demo crm-agent-pop.vercel.app), cloned with permission: an agent conversation pops up over a CRM, asks which Acme to use, delivers a PDF report, then switches between pop-up, side drawer and full page from its layout menu.',
+      async run(root, t) {
+        xcStyle('x-floating-chat-css', XCP_CSS);
+        const el = mk('section', 'xcp'); el.setAttribute('aria-label', 'CRM with a floating agent chat');
+        el.innerHTML = `<aside class="xcp-side" aria-hidden="true"><div class="xcp-org"><i></i>Locally inc.</div>${[['bubble', 'Agents', 1], ['home', 'Home'], ['inbox', 'Inbox'], ['bubble', 'Messages'], ['layers', 'Balances'], ['users', 'Customers'], ['fileText', 'Contracts']].map(([i, l, on]) => `<div class="xcp-nav${on ? ' is-on' : ''}">${xcIcon(i)}${l}</div>`).join('')}<div class="xcp-me"><i></i>Jane Moore</div></aside>
+<div class="xcp-main" aria-hidden="true"><div class="xcp-hello">Good morning, Jane</div><div class="xcp-sub">I'm Rune, where should we start today?</div><div class="xcp-ghost"></div><div class="xcp-cards"><span></span><span></span><span></span></div></div>
+<div class="xcp-win is-hidden" data-layout="popup" role="dialog" aria-label="Quarterly sales report"><div class="xcp-head"><div class="xcp-crumb">Agent<span>/</span>Rune<span>/</span><b>Quarterly sales report</b></div><button type="button" class="xcp-hbtn">${xcIcon('star')}Favorite</button><button type="button" class="xcp-hbtn" data-menu aria-haspopup="menu" aria-expanded="false" aria-label="Switch layout">${xcIcon('panel')}</button><button type="button" class="xcp-hbtn" data-close aria-label="Close">${xcIcon('x')}</button></div><div class="xcp-feed" aria-live="polite"></div><div class="xcp-compose"><div class="xcp-ph">Example: Summarise the report data and forecast the trends...</div><div class="xcp-cbar">${xcIcon('plus')}${xcIcon('at')}<span class="xcp-sep"></span><span style="display:flex;align-items:center;gap:5px">${xcIcon('code')}Skills</span>${XCP_DOTS}<span>Model Fusion</span><span style="flex:1"></span>${xcIcon('mic')}</div></div></div>`;
+        root.append(el);
+        const win = $('.xcp-win', el), feed = $('.xcp-feed', el), menuBtn = $('[data-menu]', el);
+        const follow = () => { feed.scrollTop = feed.scrollHeight; };
+        const add = (cls, html) => { const n = mk('div', cls); n.innerHTML = html; feed.append(n); follow(); return n; };
+        const acts = `<div class="xcp-acts" aria-hidden="true">${xcIcon('copy')}${xcIcon('heart')}${xcIcon('rotate')}</div>`;
+        const type = async (node, text) => { for (const w of text.split(/(?<= )/)) { node.append(w); follow(); await xcWait(t, 28); } };
+
+        // Layout menu: Side Drawer, Full Page, Pop Up.
+        const LAYOUTS = [['drawer', 'Side Drawer'], ['full', 'Full Page'], ['popup', 'Pop Up']];
+        const setLayout = (k) => { win.dataset.layout = k; closeMenu(); };
+        const closeMenu = () => { $('.xcp-menu', win)?.remove(); menuBtn.setAttribute('aria-expanded', 'false'); };
+        menuBtn.onclick = () => {
+          if ($('.xcp-menu', win)) return closeMenu();
+          const m = mk('div', 'xcp-menu'); m.setAttribute('role', 'menu');
+          m.innerHTML = `<p>Switch Layout:</p>${LAYOUTS.map(([k, l]) => `<button type="button" role="menuitemradio" aria-checked="${win.dataset.layout === k}" data-l="${k}">${l}</button>`).join('')}`;
+          m.onclick = (e) => { const b = e.target.closest('[data-l]'); if (b) setLayout(b.dataset.l); };
+          win.append(m); menuBtn.setAttribute('aria-expanded', 'true');
+        };
+        $('[data-close]', el).onclick = () => win.classList.add('is-hidden');
+
+        await xcWait(t, 600);
+        win.classList.remove('is-hidden');
+        await xcWait(t, 500);
+        add('xcp-user', 'Generate a quarterly sales report for Acme Corp.');
+        await xcWait(t, 600);
+        const a1 = add('xcp-bot', `<div class="xcp-tool"><i></i>3 tool used${xcIcon('chevronRight')}</div><div class="xcp-text"></div>`);
+        await xcWait(t, 500);
+        await type($('.xcp-text', a1), 'I have identified 2 companies named "Acme." Which one do you prefer:');
+        const choices = mk('div', 'xcp-choices'); choices.setAttribute('role', 'group'); choices.setAttribute('aria-label', 'Company');
+        choices.innerHTML = [['Acme Corp', 'var(--color-chart-5-active)'], ['New Acme Corp', 'var(--color-status-rose-text)']].map(([l, c]) => `<button type="button" class="xcp-choice" aria-pressed="false"><i style="background:${c}"></i><span>${l}</span>${xcIcon('check')}</button>`).join('');
+        a1.append(choices); a1.insertAdjacentHTML('beforeend', acts); follow();
+        const choose = (b) => { for (const c of choices.children) { c.setAttribute('aria-pressed', String(c === b)); c.classList.add('is-decided'); } };
+        let picked = false;
+        for (const c of choices.children) c.onclick = () => { picked = true; choose(c); };
+        await xcWait(t, 1300);
+        if (!picked) choose(choices.children[0]);
+        await xcWait(t, 500);
+        add('xcp-user', 'The first one. Can you whip up the quarterly sales report using the data we have for this company?');
+        await xcWait(t, 700);
+        const a2 = add('xcp-bot', `<div class="xcp-tool"><i></i>1 tool used${xcIcon('chevronRight')}</div><div class="xcp-text"></div>`);
+        await xcWait(t, 400);
+        await type($('.xcp-text', a2), 'The quarterly sales report for Acme Corp has been successfully generated and is available in PDF format.');
+        a2.insertAdjacentHTML('beforeend', `<div class="xcp-file"><div class="xcp-ftitle"><i></i><span>Quarterly sales report for Acme Corp.pdf</span></div><p class="xcp-fdesc">Explore your Stripe data thoroughly to uncover vital insights that can shape your business strategies. By analyzing trends and patterns, you can make informed decisions.</p><div class="xcp-fbtns"><button type="button">${xcIcon('share')}Share</button><button type="button" class="is-solid">${xcIcon('download')}Download</button></div></div>${acts}`);
+        follow();
+
+        // The layout tour from the video, through the menu each time.
+        for (const k of ['drawer', 'full', 'popup']) {
+          await xcWait(t, 1500);
+          menuBtn.click();
+          await xcWait(t, 700);
+          $(`.xcp-menu [data-l=${k}]`, win)?.click();
+          await xcWait(t, 500); follow();
+        }
       } },
   ];
 }
