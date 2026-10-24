@@ -9,6 +9,8 @@
  *   Agent Approval Card — Kevin (@kvnkld, aicss.dev), https://x.com/kvnkld/status/2089693820313366635
  *   Floating Agent Chat — Louis Nguyen Studio (@louisnstudio), https://x.com/louisnstudio/status/2096525796714438833
  *     (measured on its live demo, crm-agent-pop.vercel.app)
+ *   Deploy Status — Charles Postiaux (@PostiauxCharles), https://x.com/PostiauxCharles/status/2109606436527366235
+ *     (three still images: the motion that plays them is ours)
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -741,6 +743,66 @@ export default function pack(h) {
 @media (prefers-reduced-motion: reduce) { .xcp, .xcp * { animation:none !important; transition:none !important; } }`;
   const XCP_DOTS = '<span class="xcp-dots" aria-hidden="true"><i style="background:var(--color-chart-1-active)"></i><i style="background:var(--color-chart-6-active)"></i><i style="background:var(--color-chart-5-active)"></i><i style="background:var(--color-chart-3-active)"></i></span>';
 
+  /* ---------------------------------------------------------- Deploy Status */
+  const XDS_CSS = `
+.xds { --xds-ease:cubic-bezier(0.22,1,0.36,1); --xds-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary)); --xds-dim:var(--color-text-tertiary);
+  --xds-live:color-mix(in oklab, var(--color-chart-7-active) 72%, var(--color-text-primary));
+  display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; gap:16px; width:100%; max-width:720px; color:var(--color-text-primary); font-family:var(--font-sans); font-size:13px; line-height:18px; text-align:start; }
+.dark .xds { --xds-dim:var(--color-text-secondary); }
+.xds-card { width:340px; max-width:100%; padding:18px 20px 20px; border-radius:16px; border:1px solid var(--color-border-button-default); background:var(--color-background-primary-default); }
+.xds-title { font-weight:500; } .xds-by { font-size:11px; color:var(--xds-muted); }
+.xds-mono { font-family:var(--font-mono); font-size:11px; font-variant-numeric:tabular-nums; }
+/* A: the vertical timeline */
+.xds-tl { position:relative; margin-top:16px; }
+.xds-tl::before { content:""; position:absolute; left:55px; top:30px; bottom:12px; width:1px; background:var(--color-border-button-default); }
+.xds-row { position:relative; display:grid; grid-template-columns:44px 22px minmax(0,1fr) auto; align-items:start; min-height:28px; animation:xds-in .35s var(--xds-ease) both; }
+.xds-row > .xds-mono:first-child { padding-top:3px; color:var(--xds-dim); }
+.xds-row .xds-name { padding-top:1px; }
+.xds-row .xds-d { padding-top:3px; color:var(--xds-muted); }
+.xds-row.is-group .xds-name, .xds-row.is-skip .xds-name { color:var(--xds-muted); }
+.xds-mark { position:relative; justify-self:center; width:5px; margin-top:7px; }
+.xds-mark, .xds-dot, .xds-bar { display:block; }
+.xds-dot { width:5px; height:5px; border-radius:999px; background:var(--color-text-primary); animation:xds-pop .3s var(--xds-ease) both; }
+.xds-bar { position:relative; width:5px; margin-top:-2px; border-radius:3px; overflow:hidden; background:color-mix(in srgb, var(--color-text-primary) 35%, transparent); }
+.xds-bar > i { position:absolute; inset:0 0 auto; border-radius:3px; background:var(--color-text-primary); transform:scaleY(0); transform-origin:top; transition:transform .12s linear; }
+.xds-was { position:absolute; left:58px; bottom:0; color:var(--xds-dim); }
+.xds-row.is-live .xds-name { color:var(--xds-live); } .xds-row.is-live .xds-dot { background:var(--color-chart-7-active); }
+.xds-row.is-live .xds-d { font-family:var(--font-sans); font-size:13px; font-weight:600; color:var(--color-text-primary); }
+/* B: the summary */
+.xds-legend { position:relative; height:16px; margin-top:20px; color:var(--xds-muted); }
+.xds-legend span { position:absolute; top:0; white-space:nowrap; } .xds-legend span.is-on { color:var(--color-text-primary); }
+.xds-segs { display:flex; gap:2px; height:40px; margin-top:6px; }
+.xds-segs i { min-width:4px; height:100%; border-radius:5px; background:var(--color-background-tertiary-default); transform:scaleY(.2); opacity:.4; transition:transform .35s var(--xds-ease), opacity .35s, background-color .3s; }
+.xds-segs i.is-in { transform:none; opacity:1; background:var(--xds-dim); }
+.xds-segs i.is-in.is-deploy { background:var(--color-text-primary); }
+.xds-axis { position:relative; height:16px; margin-top:6px; color:var(--xds-dim); }
+.xds-axis span { position:absolute; top:0; } .xds-axis span:last-child { right:0; }
+.xds-list { display:flex; flex-direction:column; margin-top:18px; }
+.xds-item { display:grid; grid-template-columns:16px minmax(0,1fr) auto 42px; align-items:center; gap:8px; height:26px; animation:xds-in .3s var(--xds-ease) both; }
+.xds-item svg { width:14px; height:14px; }
+.xds-item .is-build { color:var(--xds-dim); } .xds-item .is-deploy { color:var(--color-text-primary); }
+.xds-item.is-skip { color:var(--xds-muted); }
+.xds-item .xds-d { text-align:right; } .xds-item .xds-at { text-align:right; color:var(--xds-dim); }
+.xds-live { display:flex; align-items:center; gap:6px; margin-top:20px; color:var(--xds-live); font-size:12px; animation:xds-in .35s var(--xds-ease) both; }
+.xds-live::before { content:""; width:6px; height:6px; border-radius:999px; background:var(--color-chart-7-active); }
+.xds-big { font-size:46px; line-height:52px; font-weight:500; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+@keyframes xds-in { from { opacity:0; transform:translateY(4px) } }
+@keyframes xds-pop { from { opacity:0; transform:scale(.3) } }
+@media (prefers-reduced-motion: reduce) { .xds, .xds * { animation:none !important; transition:none !important; } }`;
+
+  // Steps in order: group, name, seconds, start (s), and the previous run's time for the long ones.
+  const XDS_STEPS = [
+    { group: 'build', name: 'Prepare environment', secs: 2, at: 0 },
+    { group: 'build', name: 'Run build commands', secs: 19, at: 2, was: 31 },
+    { group: 'build', name: 'Push application', secs: 3, at: 21 },
+    { group: 'deploy', name: 'Prepare environment', secs: 1, at: 24 },
+    { group: 'deploy', name: 'Run deploy commands', skipped: true, at: 25 },
+    { group: 'deploy', name: 'Update environment', secs: 15, at: 25, was: 21 },
+    { group: 'deploy', name: 'Route traffic', secs: 2, at: 40 },
+  ];
+  const XDS_TOTAL = 42, XDS_PX = 2.4; // timeline bars: pixels per second
+  const xdsClock = (s) => `00:${String(Math.round(s)).padStart(2, '0')}`;
+
   /* ---------------------------------------------------------------- demos */
   return [
     { group: G, title: 'Agent Status', kind: 'scene',
@@ -1395,6 +1457,48 @@ export default function pack(h) {
           $(`.xcp-menu [data-l=${k}]`, win)?.click();
           await xcWait(t, 500); follow();
         }
+      } },
+
+    { group: G, title: 'Deploy Status', kind: 'scene',
+      desc: 'Deploy status by Charles Postiaux (@PostiauxCharles, https://x.com/PostiauxCharles/status/2109606436527366235), cloned with permission from its three stills: a timeline plays the deploy step by step, long steps grow against last run\'s time, and a summary fills a build-and-deploy bar chart beside it until the site is live in 42s.',
+      async run(root, t) {
+        xcStyle('x-deploy-status-css', XDS_CSS);
+        const el = mk('section', 'xds'); el.setAttribute('aria-label', 'Deploy of Update pricing page');
+        const head = '<div class="xds-title">Update pricing page</div><div class="xds-by">Charles Postiaux · main / a3f91c2</div>';
+        const live = XDS_STEPS.filter((s) => !s.skipped);
+        el.innerHTML = `<div class="xds-card">${head}<div class="xds-tl" role="list" aria-label="Deploy timeline"></div></div>
+<div class="xds-card">${head}<div class="xds-legend xds-mono" aria-hidden="true"><span style="left:0">build · 24s</span><span class="is-on" style="left:${(24 / XDS_TOTAL) * 100}%">deploy · 18s</span></div><div class="xds-segs" aria-hidden="true">${live.map((s) => `<i class="${s.group === 'deploy' ? 'is-deploy' : ''}" style="flex:${s.secs} 1 0"></i>`).join('')}</div><div class="xds-axis xds-mono" aria-hidden="true"><span style="left:0">00:00</span><span style="left:${(24 / XDS_TOTAL) * 100}%;transform:translateX(-50%)">00:24</span><span>00:42</span></div><div class="xds-list" role="list" aria-label="Steps"></div><div class="xds-end" role="status" aria-live="polite"></div></div>`;
+        root.append(el);
+        const tl = $('.xds-tl', el), list = $('.xds-list', el), end = $('.xds-end', el), segs = [...el.querySelectorAll('.xds-segs i')];
+        const row = (cls, time, mark, name, d) => { const r = mk('div', `xds-row${cls}`); r.setAttribute('role', 'listitem'); r.innerHTML = `<span class="xds-mono">${time}</span><span class="xds-mark">${mark}</span><span class="xds-name">${esc(name)}</span><span class="xds-mono xds-d">${d}</span>`; tl.append(r); return r; };
+        const SIM = 200; // real ms per simulated second
+        let group = '', seg = 0;
+        await xcWait(t, 500);
+        for (const s of XDS_STEPS) {
+          if (s.group !== group) { group = s.group; row(' is-group', '', '', group === 'build' ? 'Build' : 'Deploy', group === 'build' ? '24s' : '18s'); await xcWait(t, 200); }
+          if (s.skipped) {
+            row(' is-skip', xdsClock(s.at), '', s.name, 'skipped');
+            list.insertAdjacentHTML('beforeend', `<div class="xds-item is-skip" role="listitem">${xcIcon('circleDashed')}<span>${esc(s.name)}</span><span class="xds-mono xds-d">skipped</span><span class="xds-mono xds-at">${xdsClock(s.at)}</span></div>`);
+            await xcWait(t, 300);
+            continue;
+          }
+          const long = !!s.was;
+          const r = row('', xdsClock(s.at), long ? `<span class="xds-bar" style="height:${s.was * XDS_PX}px"><i style="height:${s.secs * XDS_PX}px"></i></span>` : '<span class="xds-dot"></span>', s.name, '0s');
+          if (long) { r.style.minHeight = `${s.was * XDS_PX + 18}px`; r.insertAdjacentHTML('beforeend', `<span class="xds-mono xds-was">was ${s.was}s</span>`); }
+          const fill = $('.xds-bar > i', r), d = $('.xds-d', r);
+          for (let k = 1; k <= s.secs; k++) {
+            if (fill) fill.style.transform = `scaleY(${k / s.secs})`;
+            d.textContent = `${k}s`;
+            await xcWait(t, SIM);
+          }
+          segs[seg++].classList.add('is-in');
+          list.insertAdjacentHTML('beforeend', `<div class="xds-item" role="listitem"><span class="is-${s.group}">${xcIcon('checkCircle')}</span><span>${esc(s.name)}</span><span class="xds-mono xds-d">${s.secs}s</span><span class="xds-mono xds-at">${xdsClock(s.at)}</span></div>`);
+        }
+        row(' is-live', xdsClock(XDS_TOTAL), '<span class="xds-dot"></span>', 'Live on baobun.studio', `${XDS_TOTAL}s`);
+        end.innerHTML = '<div class="xds-live">Live on baobun.studio</div><div class="xds-big">0s</div>';
+        const big = $('.xds-big', end);
+        for (let v = 0; v <= XDS_TOTAL; v += 3) { big.textContent = `${v}s`; await xcWait(t, 30); }
+        big.textContent = `${XDS_TOTAL}s`;
       } },
   ];
 }
