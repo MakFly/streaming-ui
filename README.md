@@ -4,7 +4,7 @@
 
 **Every way an AI response can arrive.**
 
-227 live streaming, thinking and agent patterns · 10 complete AI chat templates · 11 composers you can install with the shadcn CLI.
+235 live streaming, thinking and agent patterns · 10 complete AI chat templates · 11 composers you can install with the shadcn CLI.
 
 [![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)](https://react.dev)
 [![Vite 7](https://img.shields.io/badge/Vite-7-646cff?logo=vite&logoColor=white)](https://vite.dev)
@@ -31,7 +31,7 @@
 
 ## Features
 
-- **227 response patterns, playing live.** Reasoning blocks, shimmering status lines, tool calls, web search trails, task lists, skeletons, dot-grid loaders, approval cards and full agent timelines, sorted into 14 collections. Every card plays on screen and stops off screen.
+- **235 response patterns, playing live.** Reasoning blocks, shimmering status lines, tool calls, web search trails, task lists, skeletons, dot-grid loaders, approval cards and full agent timelines, sorted into 14 collections. Every card plays on screen and stops off screen.
 - **A rebuild prompt for everything.** Each demo, template and composer opens a Markdown prompt with the exact choreography, timings and source files, ready to paste into an AI coding assistant.
 - **10 AI chat templates.** Assistant, Research, Coding Agent, Support Copilot, Data Analyst, Agent Builder, Canvas, Deep Research, Agent Approvals and Model Compare. Each one plays a scripted conversation, then answers what you type, with a desktop / tablet / mobile preview.
 - **11 interchangeable composers.** Pill, Box, Panel, Dock, Command, Inline, Voice, Halo, Media, Palette and Mention, all behind one `<Composer variant="…" />` API. Pick one for every template at once from any header.
@@ -152,7 +152,7 @@ src/
   router.tsx               route tree, each page lazy-loaded and prefetched while idle
   routes/                  landing, gallery, demo, templates, template, composers, orbs, preview, prompt, 404
   components/              site chrome, demo stage, prompt dialog, palette picker, install button, shadcn ui/
-  engine/                  the 227 response demos (imperative DOM choreographies) and their registry
+  engine/                  the 235 response demos (imperative DOM choreographies) and their registry
   templates/               the 10 chat templates
     kit/                   the chat kit: engine, markdown, parts, model picker, attachments, limits
       composer-kit.tsx     props contract and shared composer behaviour
@@ -178,7 +178,7 @@ scripts/                   build-registry.mjs, collect-classes.mjs
 
 ## How it works
 
-- **Demos.** Each of the 227 demos follows one contract, `{ group, title, desc, kind, run(root, t, ctx) }`. React owns the stage element; the demo owns what is inside it. `t` is a timer scope, so clearing it stops everything a demo scheduled.
+- **Demos.** Each of the 235 demos follows one contract, `{ group, title, desc, kind, run(root, t, ctx) }`. React owns the stage element; the demo owns what is inside it. `t` is a timer scope, so clearing it stops everything a demo scheduled.
 - **Prompts.** A demo's prompt is rebuilt from `run.toString()` and the helpers it uses, so the production build keeps the code as authored: no minification, `esnext` target, no tree-shaking (see `vite.config.ts`).
 - **Templates.** `templates/kit/engine.ts` runs async scripts (think, call tools, stream markdown, ask for approval) as React state. A new message or Stop cancels whatever is playing.
 - **Theme and palettes.** Dark mode is a `.dark` class on `<html>`; a palette is a `data-palette` attribute that swaps the `--color-neutral-*` and `--color-accent-*` scales every semantic token is built from. Both are applied before first paint and synced across tabs and preview frames.

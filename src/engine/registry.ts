@@ -9,6 +9,7 @@ import textGlow from './packs/text-glow.js';
 import research from './packs/research.js';
 import blocksDotsAnimated from './packs/blocks-dots-animated.js';
 import transitionsMore from './packs/transitions-more.js';
+import agentOps from './packs/agent-ops.js';
 import { slug } from './prompt.js';
 import type { Demo, DemoSource, Library, Timers } from './types';
 
@@ -25,6 +26,7 @@ const PACKS: [string, PackFactory][] = [
   ['research', research],
   ['blocks-dots-animated', blocksDotsAnimated],
   ['transitions-more', transitionsMore],
+  ['agent-ops', agentOps],
 ] as [string, PackFactory][];
 for (const [name, pack] of PACKS) {
   try {

@@ -12,14 +12,14 @@ export const HOME: PageMeta = {
   path: '/',
   title: 'Streaming UI: every way an AI response can arrive',
   description:
-    'Every way an AI response can arrive: 227 live streaming and agent patterns, 10 AI chat templates and 11 composers you can install with the shadcn CLI.',
+    'Every way an AI response can arrive: 235 live streaming and agent patterns, 10 AI chat templates and 11 composers you can install with the shadcn CLI.',
 };
 
 export const RESPONSES: PageMeta = {
   path: '/responses',
   title: 'Streaming responses · Streaming UI',
   description:
-    '227 live streaming, thinking and agent patterns in 14 collections. Watch each one play, then copy the prompt that rebuilds it.',
+    '235 live streaming, thinking and agent patterns in 14 collections. Watch each one play, then copy the prompt that rebuilds it.',
 };
 
 export const TEMPLATES: PageMeta = {
@@ -45,7 +45,7 @@ export const ORBS: PageMeta = {
 
 /** Collection pages. Slugs match engine/prompt.js slug(group). */
 const LIBRARIES: { slug: string; name: string; description: string }[] = [
-  { slug: 'agent', name: 'Agent', description: 'Agent thinking, a composer loader, progress, task lists and web search, playing live as the work happens.' },
+  { slug: 'agent', name: 'Agent', description: 'Agent thinking, progress, task lists, web search, cited answers, pipelines, live logs, diffs, handoffs and a context budget, playing live as the work happens.' },
   { slug: 'stream', name: 'Stream', description: 'Streaming replies, reasoning lines, tool results, citations, approvals and loaders.' },
   { slug: 'chat', name: 'Chat', description: 'Streaming text, thinking states, tool chips, composers and approval cards.' },
   { slug: 'assist', name: 'Assist', description: 'Reasoning, tool calls, a worked summary and the chat workspace.' },
