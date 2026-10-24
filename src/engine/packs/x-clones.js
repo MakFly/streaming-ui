@@ -6,6 +6,7 @@
  *   Parallel Research Run — Akash (@a1x45h), https://x.com/a1x45h/status/2113708491907215460
  *   Merge Conflicts — Phil Pitus (@pitus_), https://x.com/pitus_/status/2111519352503873866
  *   Merge Conflicts · One-shot v1 — Phil Pitus (@pitus_), https://x.com/pitus_/status/2111887566907802073
+ *   Agent Approval Card — Kevin (@kvnkld, aicss.dev), https://x.com/kvnkld/status/2089693820313366635
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -72,6 +73,15 @@ export default function pack(h) {
     github: '<path d="M9 19c-4 1.3-4-2-5.5-2.5M14.5 21v-3.4a3 3 0 0 0-.8-2.2c2.8-.3 5.8-1.4 5.8-6.2a4.8 4.8 0 0 0-1.3-3.3 4.5 4.5 0 0 0-.1-3.3s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6.2 0C6.1 1.3 5.1 1.6 5.1 1.6a4.5 4.5 0 0 0-.1 3.3 4.8 4.8 0 0 0-1.3 3.3c0 4.8 3 5.9 5.8 6.2a3 3 0 0 0-.8 2.2V21"/>',
     chevronDown: '<path d="M6.5 9.5L12 15l5.5-5.5"/>',
     signal: '<path d="M5 18v-3M10 18v-6M15 18v-9M20 18V6"/>',
+    download: '<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/>',
+    expand: '<path d="M14.5 4.5h5v5M19.5 4.5L13 11M9.5 19.5h-5v-5M4.5 19.5L11 13"/>',
+    listCheck: '<path d="M11 6.5h9M11 12h9M11 17.5h9"/><path d="M3.5 6.5l1.5 1.5 3-3M3.5 12l1.5 1.5 3-3"/><path d="M4.5 17.5h2"/>',
+    circleDashed: '<path d="M10.1 3.7a8.5 8.5 0 0 1 3.8 0M17.4 5.6a8.5 8.5 0 0 1 2.4 3M20.3 13.9a8.5 8.5 0 0 1-1.9 3.4M15.4 19.8a8.5 8.5 0 0 1-3.8.7M8 19.6a8.5 8.5 0 0 1-3-2.3M3.6 13.6a8.5 8.5 0 0 1 .4-3.9M5.9 6.1a8.5 8.5 0 0 1 3-2"/>',
+    question: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.5a2.5 2.5 0 0 1 4.8.8c0 1.7-2.4 2.1-2.4 3.5M12 16.8v.01"/>',
+    enter: '<path d="M19 5.5v6a3 3 0 0 1-3 3H6M9.5 11L6 14.5 9.5 18"/>',
+    chevronUp: '<path d="M6.5 14.5L12 9l5.5 5.5"/>',
+    dots: '<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
+    minus: '<path d="M6 12h12"/>',
   };
   const xcIcon = (name, cls = '') => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="${cls}">${XC_ICONS[name] || ''}</svg>`;
 
@@ -585,6 +595,66 @@ export default function pack(h) {
     if (state === 'merged') out.push(`<path d="M335 74 C375 74 385 34 420 34" stroke="${blue}"/>`, dot(420, 34, 'var(--xmc-purple)', 5), `<rect x="392" y="6" width="56" height="16" rx="8" fill="color-mix(in srgb, var(--xmc-purple) 14%, transparent)"/>`, label(420, 18, 'Merged', 'var(--xmc-ink-purple)'));
     return `<svg viewBox="0 0 460 100" aria-hidden="true">${out.join('')}</svg>`;
   }
+
+  /* ---------------------------------------------------- Agent Approval Card */
+  const XAP_CSS = `
+.xap { --xap-ease:cubic-bezier(0.22,1,0.36,1); --xap-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary));
+  width:400px; max-width:100%; color:var(--color-text-primary); font-family:var(--font-sans); font-size:13px; line-height:18px; text-align:start; }
+:where(.xap) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+.xap button:focus-visible, .xap input:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:2px; }
+.xap-label { margin:0 0 8px 2px; font-size:10.5px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--xap-muted); }
+.xap-tabs { display:flex; gap:6px; margin-bottom:18px; }
+.xap-tab { height:28px; padding:0 12px; border-radius:999px; border:1px solid var(--color-border-button-default); color:var(--xap-muted); font-weight:500; transition:background-color .2s, color .2s, border-color .2s; }
+.xap-tab[aria-pressed=true] { color:var(--color-text-primary); border-color:var(--color-border-button-hover); background:var(--color-background-primary-default); box-shadow:0 1px 2px color-mix(in srgb, var(--color-text-primary) 8%, transparent); }
+.xap-tab[aria-disabled=true] { cursor:not-allowed; opacity:.6; }
+.xap-card { padding:14px; border-radius:14px; border:1px solid var(--color-border-button-default); background:var(--color-background-primary-default); box-shadow:0 1px 3px color-mix(in srgb, var(--color-text-primary) 6%, transparent); animation:xap-in .3s var(--xap-ease) both; }
+.xap-head { display:flex; align-items:center; gap:8px; }
+.xap-head > b { flex:1; font-weight:500; }
+.xap-badge { display:grid; place-items:center; width:20px; height:20px; border-radius:6px; background:color-mix(in srgb, var(--color-chart-7-active) 14%, transparent); color:color-mix(in oklab, var(--color-chart-7-active) 65%, var(--color-text-primary)); }
+.xap-badge.is-blue { border-radius:999px; background:color-mix(in srgb, var(--color-chart-6-active) 14%, transparent); color:color-mix(in oklab, var(--color-chart-6-active) 70%, var(--color-text-primary)); }
+.xap-badge svg { width:12px; height:12px; }
+.xap-tools { display:flex; gap:10px; color:var(--xap-muted); } .xap-tools svg { width:14px; height:14px; }
+.xap-title { margin-top:14px; font-size:15px; font-weight:600; }
+.xap-desc { margin-top:2px; color:var(--xap-muted); }
+.xap-todos { margin-top:12px; padding:10px 12px; border-radius:10px; background:var(--color-background-secondary-default); }
+.xap-thead { display:flex; align-items:center; gap:8px; margin-bottom:4px; font-weight:500; }
+.xap-thead svg { width:14px; height:14px; } .xap-thead span { margin-left:auto; color:var(--xap-muted); font-weight:400; }
+.xap-todo { display:flex; align-items:center; gap:10px; height:26px; color:var(--xap-muted); }
+.xap-todo svg { flex:none; width:13px; height:13px; }
+.xap-todo.is-in { animation:xap-in .3s var(--xap-ease) both; }
+.xap-more { display:flex; align-items:center; gap:10px; height:26px; color:var(--xap-muted); }
+.xap-more:hover { color:var(--color-text-primary); }
+.xap-foot { display:flex; align-items:center; gap:8px; margin-top:14px; }
+.xap-auto { display:flex; align-items:center; gap:8px; flex:1; min-width:0; color:var(--xap-muted); font-size:12.5px; font-variant-numeric:tabular-nums; }
+.xap-ring { flex:none; width:14px; height:14px; transform:rotate(-90deg); }
+.xap-ring circle { fill:none; stroke-width:2; }
+.xap-btn { height:28px; padding:0 12px; border-radius:999px; background:var(--color-background-secondary-default); font-weight:500; transition:background-color .2s; }
+.xap-btn:hover { background:var(--color-background-tertiary-default); }
+.xap-btn.is-dark { display:inline-flex; align-items:center; gap:6px; background:var(--color-text-primary); color:var(--color-background-primary-default); }
+.xap-btn.is-dark[disabled] { cursor:default; background:var(--color-background-tertiary-default); color:var(--xap-muted); }
+.xap-btn svg { width:12px; height:12px; }
+.xap-q { margin-top:12px; font-weight:500; }
+.xap-opts { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.xap-opt { display:flex; align-items:center; gap:10px; width:100%; height:32px; padding:0 8px; border-radius:8px; border:1px solid var(--color-border-button-default); text-align:start; transition:background-color .2s, border-color .2s; animation:xap-in .25s var(--xap-ease) both; }
+.xap-opt:hover { background:var(--color-background-secondary-default); }
+.xap-key { flex:none; display:grid; place-items:center; width:18px; height:18px; border-radius:5px; background:var(--color-background-secondary-default); color:var(--xap-muted); font-size:10.5px; font-weight:600; transition:background-color .2s, color .2s; }
+.xap-opt[aria-checked=true] { border-color:var(--color-border-button-hover); }
+.xap-opt[aria-checked=true] .xap-key { background:var(--color-text-primary); color:var(--color-background-primary-default); }
+.xap-opt input { min-width:0; flex:1; height:100%; border:0; background:none; color:inherit; font:inherit; outline:none; }
+.xap-opt input::placeholder { color:var(--color-text-tertiary); }
+.xap-pager { display:flex; align-items:center; gap:6px; flex:1; color:var(--xap-muted); font-variant-numeric:tabular-nums; }
+.xap-pager button { display:grid; place-items:center; width:18px; height:18px; color:var(--xap-muted); } .xap-pager button[disabled] { opacity:.4; cursor:default; } .xap-pager svg { width:13px; height:13px; }
+.xap-done { display:flex; align-items:center; gap:6px; color:color-mix(in oklab, var(--color-chart-7-active) 62%, var(--color-text-primary)); font-weight:500; animation:xap-in .3s var(--xap-ease) both; }
+.xap-done svg { width:14px; height:14px; }
+@keyframes xap-in { from { opacity:0; transform:translateY(4px) } }
+@media (prefers-reduced-motion: reduce) { .xap, .xap * { animation:none !important; transition:none !important; } }`;
+
+  const XAP_TODOS = ['Add migration for sessions table', 'Wire auth middleware', 'Update login flow + tests', 'Add account settings page', 'Tighten CSRF + rate limits', 'Write rollout notes'];
+  const XAP_QUESTIONS = [
+    { q: 'Which auth approach should we use?', opts: ['Session cookies', 'JWT bearer', 'OAuth only'] },
+    { q: 'Where should secrets live?', opts: ['.env.local', 'Vault / secrets manager', 'CI only'] },
+    { q: 'Ship behind a feature flag?', opts: ['Yes — gradual rollout', 'No — full release'] },
+  ];
 
   /* ---------------------------------------------------------------- demos */
   return [
@@ -1111,6 +1181,72 @@ export default function pack(h) {
         graph.innerHTML = xmvGraph('merged');
         setSum('purple', 'merge', 'Merged into main', '<code style="font-family:var(--font-mono);font-size:11px">feat/session-refresh</code> was deleted · just now');
         setChips(`${xcIcon('merge')}#128 Merged`, 'purple');
+      } },
+
+    { group: G, title: 'Agent Approval Card', kind: 'scene',
+      desc: 'Agent approval components by Kevin (@kvnkld, aicss.dev, https://x.com/kvnkld/status/2089693820313366635), cloned with permission: a plan card with an expandable to-do list and an auto-approve countdown, and a three-step question card with lettered options and a free answer; every control works (the Command variant is not shown in the original post, so it stays disabled).',
+      async run(root, t) {
+        xcStyle('x-approval-card-css', XAP_CSS);
+        const el = mk('section', 'xap'); el.setAttribute('aria-label', 'Agent approval');
+        el.innerHTML = `<div class="xap-label">Select variant</div><div class="xap-tabs" role="group" aria-label="Variant"><button type="button" class="xap-tab" data-v="plan" aria-pressed="true">Plan</button><button type="button" class="xap-tab" data-v="questions" aria-pressed="false">Questions</button><button type="button" class="xap-tab" aria-disabled="true" title="Not shown in the original post">Command</button></div><div class="xap-label">Preview</div><div class="xap-stage"></div>`;
+        root.append(el);
+        const stage = $('.xap-stage', el), tabs = $('.xap-tabs', el);
+        let plan = null, ask = null;
+
+        // Plan: header, summary, to-dos folded to three, and the auto-approve countdown ring.
+        const showPlan = () => {
+          stage.innerHTML = `<div class="xap-card"><div class="xap-head"><span class="xap-badge">${xcIcon('listCheck')}</span><b>Plan Overview</b><span class="xap-tools" aria-hidden="true">${xcIcon('download')}${xcIcon('expand')}</span></div><div class="xap-title">Session auth migration</div><div class="xap-desc">Ship cookie-based sessions with middleware and tests. Includes a safe rollout path for production.</div><div class="xap-todos"><div class="xap-thead">${xcIcon('listCheck')}To-dos<span>${XAP_TODOS.length}</span></div><div class="xap-list"></div></div><div class="xap-foot"><div class="xap-auto" role="status" aria-live="polite"><svg class="xap-ring" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="var(--color-background-tertiary-default)"/><circle class="xap-arc" cx="8" cy="8" r="6" stroke="var(--xap-muted)" stroke-dasharray="37.7" stroke-dashoffset="32"/></svg><span>Auto Approve in 28s</span></div><button type="button" class="xap-btn">View Plan</button><button type="button" class="xap-btn is-dark">Approve ${xcIcon('enter')}</button></div></div>`;
+          const list = $('.xap-list', stage);
+          const draw = (open) => {
+            const items = open ? XAP_TODOS : XAP_TODOS.slice(0, 3);
+            list.innerHTML = items.map((x, i) => `<div class="xap-todo${open && i > 2 ? ' is-in' : ''}">${xcIcon('circleDashed')}<span>${esc(x)}</span></div>`).join('') + `<button type="button" class="xap-more" aria-expanded="${open}">${xcIcon(open ? 'minus' : 'dots')}${open ? 'Show less' : `${XAP_TODOS.length - 3} more`}</button>`;
+            $('.xap-more', list).onclick = () => draw(!open);
+          };
+          draw(false);
+          let left = 28; const arc = $('.xap-arc', stage), label = $('.xap-auto span', stage);
+          const approve = () => { t.stop(timer); $('.xap-foot', stage).innerHTML = `<div class="xap-done">${xcIcon('checkCircle')}Plan approved</div>`; };
+          const timer = t.every(1000, () => { left -= 1; label.textContent = `Auto Approve in ${left}s`; arc.style.strokeDashoffset = String(37.7 * (1 - Math.max(0.15, (28 - left) / 28))); if (!left) approve(); });
+          $('.xap-btn.is-dark', stage).onclick = approve;
+          plan = { toggle: () => $('.xap-more', list).click(), stop: () => t.stop(timer) };
+        };
+
+        // Questions: one at a time, lettered options plus a free answer; Continue unlocks once one is chosen.
+        const showQuestions = () => {
+          let at = 0; const picks = [];
+          stage.innerHTML = '<div class="xap-card"></div>';
+          const card = $('.xap-card', stage);
+          const draw = () => {
+            const q = XAP_QUESTIONS[at], free = String.fromCharCode(65 + q.opts.length);
+            card.innerHTML = `<div class="xap-head"><span class="xap-badge is-blue">${xcIcon('question')}</span><b>Questions</b></div><div class="xap-q">${esc(q.q)}</div><div class="xap-opts" role="radiogroup" aria-label="${esc(q.q)}">${q.opts.map((o, i) => `<button type="button" class="xap-opt" role="radio" aria-checked="${picks[at] === o}" data-o="${esc(o)}"><span class="xap-key">${String.fromCharCode(65 + i)}</span>${esc(o)}</button>`).join('')}<label class="xap-opt" role="radio" aria-checked="false"><span class="xap-key">${free}</span><input type="text" placeholder="Something else..." aria-label="Something else"></label></div><div class="xap-foot"><div class="xap-pager"><button type="button" data-p="-1" aria-label="Previous question"${at ? '' : ' disabled'}>${xcIcon('chevronUp')}</button><span>${at + 1}/${XAP_QUESTIONS.length}</span><button type="button" data-p="1" aria-label="Next question"${at < XAP_QUESTIONS.length - 1 ? '' : ' disabled'}>${xcIcon('chevronDown')}</button></div><button type="button" class="xap-btn" data-skip>Skip</button><button type="button" class="xap-btn is-dark" data-next${picks[at] ? '' : ' disabled'}>Continue ${xcIcon('enter')}</button></div>`;
+            const next = $('[data-next]', card), input = $('input', card), freeRow = input.closest('.xap-opt');
+            const choose = (val, row) => { picks[at] = val; for (const r of card.querySelectorAll('.xap-opt')) r.setAttribute('aria-checked', String(r === row)); next.disabled = !val; };
+            for (const b of card.querySelectorAll('button.xap-opt')) b.onclick = () => choose(b.dataset.o, b);
+            input.oninput = () => choose(input.value.trim(), freeRow);
+            const go = (d) => { at = Math.max(0, Math.min(XAP_QUESTIONS.length - 1, at + d)); draw(); };
+            for (const p of card.querySelectorAll('[data-p]')) p.onclick = () => go(Number(p.dataset.p));
+            $('[data-skip]', card).onclick = () => go(1);
+            next.onclick = () => { if (at < XAP_QUESTIONS.length - 1) go(1); else $('.xap-foot', card).innerHTML = `<div class="xap-done">${xcIcon('checkCircle')}Answers sent</div>`; };
+          };
+          draw();
+          ask = {
+            pick: (label) => { const b = [...card.querySelectorAll('button.xap-opt')].find((x) => x.dataset.o === label); b?.click(); },
+            type: async (text) => { const input = $('input', card); for (const ch of text) { input.value += ch; input.dispatchEvent(new Event('input')); await xcWait(t, 55); } },
+            next: () => $('[data-next]', card).click(),
+          };
+        };
+        const select = (v) => { for (const b of tabs.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', String(b.dataset.v === v)); plan?.stop(); if (v === 'plan') showPlan(); else showQuestions(); };
+        tabs.onclick = (e) => { const b = e.target.closest('[data-v]'); if (b) select(b.dataset.v); };
+
+        // The video's walkthrough: unfold the to-dos, then answer the three questions.
+        showPlan();
+        await xcWait(t, 1800); plan.toggle();
+        await xcWait(t, 1800); plan.toggle();
+        await xcWait(t, 1400); select('questions');
+        await xcWait(t, 1000); ask.pick('Session cookies');
+        await xcWait(t, 700); ask.next();
+        await xcWait(t, 1000); ask.pick('CI only');
+        await xcWait(t, 700); ask.next();
+        await xcWait(t, 900); await ask.type('This is an example');
       } },
   ];
 }
