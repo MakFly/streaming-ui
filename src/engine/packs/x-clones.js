@@ -15,6 +15,7 @@
  *     (three still images: the motion that plays them is ours)
  *   Stepper Run — Bob (@bobganiev), https://x.com/bobganiev/status/2106396667398533125 (one still; motion is ours),
  *     the vertical stepper of ReUI (reui.io, MIT): the layout and indicators follow its demo, redrawn in vanilla JS
+ *   File Upload Card — Chatto (@itschatto, createui.co), https://x.com/itschatto/status/2096962716036472894
  *   Logs Explorer — Léo (@sinequanonh), https://x.com/sinequanonh/status/2108225806954799155 (stills; motion is ours)
  *   Assistant Chat States — Maxim Kuznetsov (@disarto_max), https://x.com/disarto_max/status/2100625465937424873 (first video;
  *     adapted: drawn with the app's own chat parts rather than as a pixel clone)
@@ -93,6 +94,7 @@ export default function pack(h) {
     chevronUp: '<path d="M6.5 14.5L12 9l5.5 5.5"/>',
     dots: '<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
     minus: '<path d="M6 12h12"/>',
+    trash: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/><path d="M10.5 11v5M13.5 11v5"/>',
     thumbUp: '<path d="M8 10.5v9H5v-9zM8 10.5l3.5-6a2 2 0 0 1 2.3 2.4L13 10h5a2 2 0 0 1 2 2.3l-1 5.5a2 2 0 0 1-2 1.7H8"/>',
     thumbDown: '<path d="M8 13.5v-9H5v9zM8 13.5l3.5 6a2 2 0 0 0 2.3-2.4L13 14h5a2 2 0 0 0 2-2.3l-1-5.5a2 2 0 0 0-2-1.7H8"/>',
     command: '<path d="M9 6.5V17.5M15 6.5V17.5M6.5 9H17.5M6.5 15H17.5"/><path d="M9 9H7a2.5 2.5 0 1 1 2-2.5M15 9h2a2.5 2.5 0 1 0-2-2.5M9 15H7a2.5 2.5 0 1 0 2 2.5M15 15h2a2.5 2.5 0 1 1-2 2.5"/>',
@@ -1295,6 +1297,50 @@ export default function pack(h) {
   // One indicator, three looks: dashed ring (pending), spinning arc (running), ring with a check (done).
   const xstInd = (state) => `<span class="xst-ind" aria-hidden="true"><svg viewBox="0 0 22 22">${state === 'run' ? '<circle class="track" cx="11" cy="11" r="9.5"/><circle class="arc" cx="11" cy="11" r="9.5"/>' : '<circle cx="11" cy="11" r="9.5"/>'}${state === 'done' ? '<path d="M7.2 11.3l2.5 2.5 5-5.3"/>' : ''}</svg></span>`;
 
+  /* ------------------------------------------------------- File Upload Card */
+  const XUP_CSS = `
+.xup { --xup-ease:cubic-bezier(0.22,1,0.36,1); --xup-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary));
+  --xup-acc:var(--color-accent-500); --xup-acc-ink:color-mix(in oklab, var(--color-accent-500) 72%, var(--color-text-primary));
+  position:relative; width:420px; max-width:100%; overflow:hidden; border-radius:18px; border:1px solid var(--color-border-button-default); background:var(--color-background-primary-default);
+  box-shadow:0 18px 40px -24px color-mix(in srgb, var(--color-text-primary) 35%, transparent); color:var(--color-text-primary); font-family:var(--font-sans); text-align:start;
+  transition:opacity .35s var(--xup-ease), transform .35s var(--xup-ease); }
+.xup.is-gone { opacity:0; transform:scale(.97); }
+:where(.xup) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+.xup button:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:2px; }
+/* The wash behind the row fills with the upload, soft at its leading edge. */
+.xup-wash { position:absolute; inset:0; transform:scaleX(.02); transform-origin:left; background:linear-gradient(90deg, color-mix(in srgb, var(--xup-acc) 16%, transparent), color-mix(in srgb, var(--xup-acc) 7%, transparent)); transition:transform .25s linear, opacity .4s var(--xup-ease); pointer-events:none; }
+.xup[data-state=done] .xup-wash { opacity:0; }
+.xup-row { position:relative; display:flex; align-items:center; gap:14px; padding:16px 16px 14px; }
+.xup-file { flex:none; position:relative; display:grid; place-items:end center; width:40px; height:46px; padding-bottom:5px; border-radius:7px 14px 7px 7px; background:var(--color-chart-7-active); color:var(--color-background-primary-default); font-size:9.5px; font-weight:700; letter-spacing:.03em; }
+.xup-file svg { position:absolute; top:8px; left:50%; width:15px; height:15px; transform:translateX(-50%); stroke-width:2.2; }
+.xup-main { min-width:0; flex:1; }
+.xup-name { font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.xup-status { display:flex; align-items:center; gap:7px; margin-top:3px; font-size:14px; white-space:nowrap; }
+.xup-status b { font-weight:500; color:var(--xup-acc-ink); font-variant-numeric:tabular-nums; }
+.xup-status span { color:var(--xup-muted); font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; }
+.xup-status svg { width:16px; height:16px; }
+.xup-status svg circle { fill:var(--color-chart-7-active); stroke:none; }
+.xup-status svg path { stroke:var(--color-background-primary-default); stroke-width:2.6; }
+.xup[data-state=done] .xup-status b { color:var(--color-text-primary); }
+.xup-tools { display:flex; align-items:center; gap:8px; align-self:flex-start; }
+.xup-tools button { display:grid; place-items:center; width:26px; height:26px; border-radius:999px; }
+.xup-tools svg { width:13px; height:13px; }
+.xup-pause { background:var(--color-background-secondary-default); }
+.xup-pause:hover { background:var(--color-background-tertiary-default); }
+.xup-trash { background:var(--color-status-rose-background); color:var(--color-status-rose-text); animation:xup-pop .3s var(--xup-ease) both; }
+.xup-bar { position:relative; height:6px; margin:0 16px 16px; overflow:hidden; border-radius:3px; background:var(--color-background-tertiary-default); transition:opacity .3s, margin .35s var(--xup-ease), height .35s var(--xup-ease); }
+.xup-bar i { position:absolute; inset:0; border-radius:inherit; background:linear-gradient(90deg, color-mix(in srgb, var(--xup-acc) 55%, transparent), var(--xup-acc)); transform:scaleX(0); transform-origin:left; transition:transform .25s linear; }
+.xup[data-state=done] .xup-bar { height:0; margin-bottom:0; opacity:0; }
+.xup-acts { display:grid; grid-template-rows:0fr; transition:grid-template-rows .4s var(--xup-ease); }
+.xup-acts.is-open { grid-template-rows:1fr; }
+.xup-acts > div { min-height:0; overflow:hidden; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px; }
+.xup-acts.is-open > div { padding-bottom:12px; }
+.xup-acts button { height:40px; border-radius:11px; font-size:14px; font-weight:600; background:var(--color-background-secondary-default); }
+.xup-acts button.is-dark { background:var(--color-text-primary); color:var(--color-background-primary-default); }
+@keyframes xup-pop { from { opacity:0; transform:scale(.6) } }
+@media (prefers-reduced-motion: reduce) { .xup, .xup * { animation:none !important; transition:none !important; } }`;
+  const XUP_SIZE = 2.3; // MB
+
   /* ---------------------------------------------------------------- demos */
   return [
     { group: G, title: 'Agent Status', kind: 'scene',
@@ -2029,6 +2075,42 @@ export default function pack(h) {
           set(step, 'done'); live.textContent = `${XST_STEPS[i]}, done`;
           await xcWait(t, 250);
         }
+      } },
+
+    { group: G, title: 'File Upload Card', kind: 'scene',
+      desc: 'File upload by Chatto (@itschatto, createui.co, https://x.com/itschatto/status/2096962716036472894), cloned with permission: an attachment uploads with a wash that fills the card and a progress bar, pauses and resumes, lands as Completed with a delete button, then opens Change and Download.',
+      async run(root, t, ctx) {
+        xcStyle('x-file-upload-css', XUP_CSS);
+        const el = mk('section', 'xup'); el.dataset.state = 'up'; el.setAttribute('aria-label', 'Attachment create-ui.xlsx');
+        el.innerHTML = `<span class="xup-wash" aria-hidden="true"></span><div class="xup-row"><span class="xup-file" aria-hidden="true">${xcIcon('table')}XLSX</span><div class="xup-main"><div class="xup-name">create-ui.xlsx</div><div class="xup-status" role="status" aria-live="polite"></div></div><div class="xup-tools"><button type="button" class="xup-pause" aria-label="Pause upload">${xcIcon('pause')}</button><button type="button" class="xup-x" aria-label="Cancel upload">${xcIcon('x')}</button></div></div><div class="xup-bar" role="progressbar" aria-label="Upload" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div><div class="xup-acts"><div><button type="button">Change</button><button type="button" class="is-dark">Download</button></div></div>`;
+        root.append(el);
+        const status = $('.xup-status', el), wash = $('.xup-wash', el), bar = $('.xup-bar', el), fill = $('.xup-bar i', el), pause = $('.xup-pause', el);
+        let paused = false, cancelled = false;
+        const draw = (p) => {
+          status.innerHTML = `<b>${paused ? 'Paused' : 'Uploading'} ${Math.round(p)}%</b><span>• ${((p / 100) * XUP_SIZE).toFixed(1)}MB of ${XUP_SIZE} MB</span>`;
+          wash.style.transform = `scaleX(${Math.max(0.02, p / 100)})`; fill.style.transform = `scaleX(${p / 100})`; bar.setAttribute('aria-valuenow', String(Math.round(p)));
+        };
+        pause.onclick = () => { paused = !paused; pause.innerHTML = xcIcon(paused ? 'play' : 'pause'); pause.setAttribute('aria-label', paused ? 'Resume upload' : 'Pause upload'); };
+        $('.xup-x', el).onclick = () => { cancelled = true; el.classList.add('is-gone'); };
+        // The upload: fast at first, a slow patch past 60% as in the video, then a sprint to the end.
+        let p = 0; draw(0);
+        await xcWait(t, 700);
+        while (p < 100 && !cancelled) {
+          await xcWait(t, 110);
+          if (paused) { draw(p); continue; }
+          p = Math.min(100, p + (p > 60 && p < 70 ? 0.6 : 2.6));
+          draw(p);
+          if (REDUCE) p = 100;
+        }
+        if (cancelled) return;
+        // Done: the wash and bar fade, the row says Completed, a delete button replaces the controls, then the actions open.
+        el.dataset.state = 'done';
+        status.innerHTML = `${xcIcon('checkCircle')}<b>Completed</b><span>• ${XUP_SIZE}MB</span>`;
+        $('.xup-tools', el).innerHTML = `<button type="button" class="xup-trash" aria-label="Delete file">${xcIcon('trash')}</button>`;
+        $('.xup-trash', el).onclick = () => { el.classList.add('is-gone'); t.sleep(700).then(() => ctx.restart?.()); };
+        $('.xup-acts button', el).onclick = () => ctx.restart?.();
+        await xcWait(t, 1400);
+        $('.xup-acts', el).classList.add('is-open');
       } },
 
     { group: G, title: 'Logs Explorer', kind: 'scene',
