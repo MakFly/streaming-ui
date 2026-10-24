@@ -999,7 +999,13 @@ export default function pack(h) {
 .xch-error span { flex:1; } .xch-error button { display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:6px; border:1px solid var(--xch-line); color:var(--color-text-primary); }
 .xch-compose { flex:none; margin:8px 8px 0; padding:8px; border-radius:12px; border:1px solid var(--xch-line); background:var(--color-background-primary-default); }
 .xch-input { display:flex; align-items:center; flex-wrap:wrap; gap:6px; min-height:22px; padding:0 4px; }
-.xch-input .ph { color:var(--xch-dim); } .xch-input .caret { display:inline-block; width:1.5px; height:14px; margin-left:1px; vertical-align:-3px; background:var(--xch-hot); animation:xch-blink 1s step-end infinite; }
+.xch-field { min-width:0; flex:1; height:22px; border:0; background:none; outline:none; color:var(--color-text-primary); caret-color:var(--xch-hot); font:inherit; }
+.xch-field::placeholder { color:var(--xch-dim); }
+.xch-slot:empty { display:none; }
+.xch-ctl { display:grid; place-items:center; min-width:22px; height:20px; padding:0 4px; border-radius:5px; color:var(--xch-muted); font:inherit; }
+.xch-ctl:hover, .xch-ctl[aria-pressed=true] { background:var(--xch-panel); color:var(--color-text-primary); }
+.xch-stopped { color:var(--xch-muted); font-style:italic; }
+.xch-compose:focus-within { border-color:color-mix(in srgb, var(--xch-hot) 45%, var(--xch-line)); }
 .xch-tools { display:flex; align-items:center; gap:6px; margin-top:8px; }
 .xch-tool { display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 9px; border-radius:999px; border:1px solid var(--xch-line); color:var(--xch-muted); font-size:11.5px; transition:background-color .2s, color .2s, border-color .2s; }
 .xch-tool.is-round { width:26px; padding:0; justify-content:center; }
@@ -1802,128 +1808,224 @@ export default function pack(h) {
       } },
 
     { group: G, title: 'Assistant Chat States', kind: 'scene',
-      desc: 'Assistant window by Maxim Kuznetsov (@disarto_max, https://x.com/disarto_max/status/2100625465937424873, first video), cloned with permission: seven auto-played turns walk the chat states, from the empty greeting through cited search, a chart, a drafted email, a PDF read, a code block and a scheduled digest to an over-capacity error and its retry, with a minimise-to-pill along the way.',
+      desc: 'Assistant window by Maxim Kuznetsov (@disarto_max, https://x.com/disarto_max/status/2100625465937424873, first video), cloned with permission: seven auto-played turns walk the chat states, from the empty greeting through cited search, a chart, a drafted email, a PDF read, a code block and a scheduled digest to an over-capacity error and its retry; type, click a suggestion, pause, speed up or stop at any time and the window answers you.',
       async run(root, t) {
         xcStyle('x-assistant-states-css', XCH_CSS);
+        const SUGGESTIONS = [['globe', 'What changed in the EU AI Act?'], ['chart', 'How did signups trend this quarter?'], ['code', 'Write a debounce hook'], ['calendar', 'Set up a weekly digest']];
+        const empty = `<div class="xch-empty"><span class="xch-orb is-big" aria-hidden="true"></span><h4>Good evening</h4><p>What are we working on?</p><div class="xch-sugs">${SUGGESTIONS.map(([i, l]) => `<button type="button" class="xch-sug" data-q="${esc(l)}">${xcIcon(i)}${l}</button>`).join('')}</div></div>`;
         const el = mk('section', 'xch'); el.setAttribute('aria-label', 'Assistant');
-        el.innerHTML = `<div class="xch-win"><div class="xch-head"><span class="xch-orb" aria-hidden="true"></span><b>Assistant</b><button type="button" class="xch-hb" aria-label="New chat">${xcIcon('bubble')}</button><button type="button" class="xch-hb" aria-label="Commands">${xcIcon('command')}</button><button type="button" class="xch-hb" aria-label="Settings">${xcIcon('sliders')}</button><button type="button" class="xch-hb" data-min aria-label="Minimise">${xcIcon('minus')}</button></div>
-<div class="xch-feed" aria-live="polite"><div class="xch-empty"><span class="xch-orb is-big" aria-hidden="true"></span><h4>Good evening</h4><p>What are we working on?</p><div class="xch-sugs">${[['globe', 'What changed in the EU AI Act?'], ['chart', 'How did signups trend this quarter?'], ['code', 'Write a debounce hook'], ['calendar', 'Set up a weekly digest']].map(([i, l]) => `<button type="button" class="xch-sug">${xcIcon(i)}${l}</button>`).join('')}</div></div></div>
-<div class="xch-compose"><div class="xch-input"><span class="ph">Ask anything...</span></div><div class="xch-tools"><span class="xch-tool is-round" aria-hidden="true">${xcIcon('plus')}</span><button type="button" class="xch-tool" data-tg="search" aria-pressed="false">${xcIcon('globe')}Search</button><button type="button" class="xch-tool" data-tg="think" aria-pressed="false">${xcIcon('bulb')}Think</button><span class="xch-tool xch-model"><span class="dm">${xcIcon('diamond')}</span>Nova Pro${xcIcon('chevronDown')}</span><span style="margin-left:auto;color:var(--xch-muted)">${xcIcon('mic')}</span><span class="xch-send" style="margin-left:8px" aria-hidden="true">${xcIcon('arrowUp')}</span></div></div>
-<div class="xch-foot xch-mono" data-tone="ok" role="status"><span class="dot" aria-hidden="true"></span><span class="st">AUTO-PLAY · READY</span><span class="xch-keys"><span>1×</span>${xcIcon('pause')}<span class="xch-kbd">⌘K</span><span>COMMANDS</span><span class="xch-kbd">⌘\\</span><span>PANEL</span></span></div></div>
+        el.innerHTML = `<div class="xch-win"><div class="xch-head"><span class="xch-orb" aria-hidden="true"></span><b>Assistant</b><button type="button" class="xch-hb" data-new aria-label="New chat">${xcIcon('bubble')}</button><button type="button" class="xch-hb" aria-label="Commands">${xcIcon('command')}</button><button type="button" class="xch-hb" aria-label="Settings">${xcIcon('sliders')}</button><button type="button" class="xch-hb" data-min aria-label="Minimise">${xcIcon('minus')}</button></div>
+<div class="xch-feed" aria-live="polite">${empty}</div>
+<form class="xch-compose"><div class="xch-input"><span class="xch-slot"></span><input class="xch-field" type="text" placeholder="Ask anything..." aria-label="Message" autocomplete="off"></div><div class="xch-tools"><button type="button" class="xch-tool is-round" data-attach aria-pressed="false" aria-label="Attach q3-board-deck.pdf">${xcIcon('plus')}</button><button type="button" class="xch-tool" data-tg="search" aria-pressed="false">${xcIcon('globe')}Search</button><button type="button" class="xch-tool" data-tg="think" aria-pressed="false">${xcIcon('bulb')}Think</button><span class="xch-tool xch-model"><span class="dm">${xcIcon('diamond')}</span>Nova Pro${xcIcon('chevronDown')}</span><span style="margin-left:auto;color:var(--xch-muted)">${xcIcon('mic')}</span><button type="submit" class="xch-send" style="margin-left:8px" aria-label="Send">${xcIcon('arrowUp')}</button></div></form>
+<div class="xch-foot xch-mono" data-tone="ok"><span class="dot" aria-hidden="true"></span><span class="st" role="status">AUTO-PLAY · READY</span><button type="button" class="xch-ctl" data-speed aria-label="Playback speed">1×</button><button type="button" class="xch-ctl" data-pause aria-pressed="false" aria-label="Pause auto-play">${xcIcon('pause')}</button><span class="xch-keys"><span class="xch-kbd">⌘K</span><span>COMMANDS</span><span class="xch-kbd">⌘\\</span><span>PANEL</span></span></div></div>
 <div class="xch-pill"><span class="xch-orb" aria-hidden="true"></span><div><b>Assistant</b><span class="xch-mono xch-pst"></span></div><button type="button" data-open>OPEN</button></div>`;
         root.append(el);
-        const feed = $('.xch-feed', el), input = $('.xch-input', el), send = $('.xch-send', el), foot = $('.xch-foot', el);
-        $('[data-min]', el).onclick = () => el.classList.add('is-min');
-        $('[data-open]', el).onclick = () => el.classList.remove('is-min');
-        for (const b of el.querySelectorAll('[data-tg]')) b.onclick = () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+        const feed = $('.xch-feed', el), form = $('.xch-compose', el), field = $('.xch-field', el), slot = $('.xch-slot', el), send = $('.xch-send', el), foot = $('.xch-foot', el);
+        const pauseBtn = $('[data-pause]', el), speedBtn = $('[data-speed]', el), attachBtn = $('[data-attach]', el);
+
+        // Who drives: the auto-play script until the reader types, clicks a suggestion or starts a new chat.
+        const STOP = new Error('stopped');
+        let auto = true, paused = false, speed = 1, busy = false, phase = '', stopNow = false, attached = '', label = 'READY', step = 0, lastTouch = 0;
         const follow = () => { feed.scrollTop = feed.scrollHeight; };
-        const setFoot = (tone, n, status) => { foot.dataset.tone = tone; const s = `AUTO-PLAY · ${n}/7 · ${status}`; $('.st', foot).textContent = s; $('.xch-pst', el).textContent = s; };
+        const paint = () => { const s = auto ? `AUTO-PLAY · ${step}/7 · ${paused ? 'PAUSED' : label}` : `MANUAL · ${label}`; $('.st', foot).textContent = s; $('.xch-pst', el).textContent = s; };
+        const setFoot = (tone, status) => { foot.dataset.tone = tone; label = status; paint(); };
+        // Every wait in a turn goes through here: it honours pause and speed, and Stop throws out of the turn.
+        const w = async (ms) => {
+          await xcWait(t, ms / speed);
+          while (paused && auto && !REDUCE) await t.sleep(120);
+          if (stopNow) throw STOP;
+        };
         const toggle = (k, v) => { const b = $(`[data-tg=${k}]`, el); if (b) b.setAttribute('aria-pressed', String(v)); };
+        const setAttach = (name) => { attached = name; attachBtn.setAttribute('aria-pressed', String(!!name)); slot.innerHTML = name ? `<span class="xch-file"><i>${xcIcon('pdf')}</i>${name}</span>` : ''; };
         const cite = (s) => s.replace(/\{(\d)\}/g, '<span class="xch-cite">$1</span>');
-        const stream = async (node, text, ms = 32) => { for (const w of text.split(' ')) { node.insertAdjacentHTML('beforeend', `${cite(w)} `); follow(); await xcWait(t, ms); } };
+        const stream = async (node, text, ms = 32) => { for (const word of text.split(' ')) { node.insertAdjacentHTML('beforeend', `${cite(word)} `); follow(); await w(ms); } };
         const para = (body, text) => { const p = mk('p'); body.append(p); return stream(p, text); };
         const card = (body, head, inner) => { const c = mk('div', 'xch-card'); c.innerHTML = `<div class="xch-ch">${head}</div>${inner}`; body.append(c); follow(); return c; };
-        const acts = (body) => body.insertAdjacentHTML('beforeend', `<div class="xch-acts" aria-hidden="true">${xcIcon('copy')}${xcIcon('thumbUp')}${xcIcon('thumbDown')}${xcIcon('rotate')}</div>`);
 
-        // One turn: type, send, show the work, then hand the answer body to `answer`.
-        const turn = async (n, q, { tg, file, steps, thought }, answer) => {
-          setFoot('run', n, 'TYPING');
-          if (tg) toggle(tg, true);
-          input.innerHTML = `${file ? `<span class="xch-file"><i>${xcIcon('pdf')}</i>${file}</span>` : ''}<span class="tx"></span><span class="caret" aria-hidden="true"></span>`;
-          const tx = $('.tx', input);
-          for (const ch of q) { tx.textContent += ch; await xcWait(t, 22); }
-          await xcWait(t, 250);
-          $('.xch-empty', feed)?.remove();
-          input.innerHTML = '<span class="ph">Ask anything...</span>';
-          const u = mk('div', 'xch-user'); u.innerHTML = `${file ? `<span class="xch-file"><i>${xcIcon('pdf')}</i>${file}</span>` : ''}<p></p>`; $('p', u).textContent = q; feed.append(u);
-          send.dataset.busy = ''; send.innerHTML = xcIcon('stop'); setFoot('run', n, 'SENDING'); follow();
-          await xcWait(t, 400);
-          const bot = mk('div', 'xch-bot'); bot.innerHTML = '<span class="xch-orb" aria-hidden="true"></span><div class="xch-body"></div>'; feed.append(bot);
-          const body = $('.xch-body', bot);
-          const work = mk('div'); work.innerHTML = `<div class="xch-work"><span class="xch-spin" aria-hidden="true"></span><b></b></div><div class="xch-steps"></div>`; body.append(work);
-          for (const s of steps) {
-            $('b', work).textContent = `${s}...`; setFoot('run', n, s.toUpperCase());
-            const row = mk('div'); row.innerHTML = `<span class="xch-spin" aria-hidden="true"></span>${esc(s)}`; $('.xch-steps', work).append(row); follow();
-            await xcWait(t, 900);
-            row.firstElementChild.outerHTML = xcIcon('check');
+        // The seven answers of the video, plus one for anything else the reader asks.
+        const TURNS = [
+          { q: 'What changed in the EU AI Act timeline this month?', match: /ai act|eu\b|regulat|commission/i, tg: 'search', steps: ['Searching the web', 'Reading 4 sources', 'Cross-checking dates'], thought: '3.6s', answer: async (body) => {
+            await para(body, 'Two things moved. The Commission confirmed that general-purpose model obligations apply from 2 August, with the code of practice now final{1}{2}. Separately, eleven member states published their market surveillance authorities ahead of the deadline, so enforcement contacts now exist in most of the EU{3}.');
+            const grid = mk('div', 'xch-srcs'); body.append(grid);
+            for (const [i, [ab, title, domain, tone]] of XCH_SOURCES.entries()) {
+              const c = { blue: 'var(--xch-blue)', green: 'var(--xch-ok)', orange: 'var(--xch-hot)', purple: 'var(--color-chart-5-active)' }[tone];
+              grid.insertAdjacentHTML('beforeend', `<button type="button" class="xch-src"><i style="background:color-mix(in srgb, ${c} 18%, transparent);color:color-mix(in oklab, ${c} 50%, var(--color-text-primary))">${ab}</i><span><b>${esc(title)}</b><span>${domain}</span></span><em>${i + 1}</em></button>`);
+              follow(); await w(140);
+            }
+            await para(body, 'High-risk system obligations are unchanged and still land in August next year{4}.');
+          } },
+          { q: 'How did weekly signups trend this quarter?', match: /signup|sign-up|trend|quarter|growth/i, tg: 'think', steps: ['Querying analytics', 'Aggregating 13 weeks'], thought: '2.1s', answer: async (body) => {
+            await para(body, 'Signups grew steadily through the quarter, finishing 53% above the first week. The only dip was W33, which tracks a paused campaign.');
+            const max = Math.max(...XCH_WEEKS);
+            const c = card(body, `${xcIcon('chart')}<span class="grow">Weekly signups</span>`, `<div class="xch-stats xch-mono"><div><span>TOTAL</span><b>13,009</b></div><div><span>VS FIRST WEEK</span><b class="up">+53.2%</b></div><div><span>AVERAGE</span><b>1,001</b></div><div><span>PEAK · W39</span><b>1,244</b></div></div><div class="xch-bars">${XCH_WEEKS.map((v, i) => `<i style="height:${(v / max) * 100}%" title="W${27 + i}: ${v.toLocaleString('en-US')} signups"></i>`).join('')}</div><div class="xch-axis xch-mono"><span>W27</span><span>13,009 SIGNUPS</span><span>W39</span></div>`);
+            for (const b of c.querySelectorAll('.xch-bars i')) { b.style.transform = 'none'; await w(45); }
+            await para(body, 'Hover the bars for exact counts. Want this broken down by acquisition channel?');
+          } },
+          { q: 'Draft a launch announcement for the new dashboard', match: /launch|announce|email|draft|blog/i, steps: ['Checking project notes'], thought: '1.9s', answer: async (body) => {
+            await para(body, 'Which channel is this for? I\'ll match the tone and length.');
+            const chips = mk('div', 'xch-chips xch-mono'); chips.innerHTML = ['EMAIL', 'BLOG POST', 'SOCIAL THREAD'].map((l) => `<button type="button" class="xch-chip" aria-pressed="false">${l}</button>`).join(''); body.append(chips);
+            for (const b of chips.children) b.onclick = () => { for (const x of chips.children) x.setAttribute('aria-pressed', String(x === b)); };
+            await w(700);
+            if (![...chips.children].some((b) => b.getAttribute('aria-pressed') === 'true')) chips.firstElementChild.setAttribute('aria-pressed', 'true');
+            const channel = $('[aria-pressed=true]', chips).textContent;
+            const c = card(body, `${xcIcon('fileText')}<span class="grow">Launch announcement</span><span class="xch-mono">${channel} · 80 WORDS</span>${xcIcon('copy')}${xcIcon('pen')}`, '<div class="xch-doc"></div>');
+            const doc = $('.xch-doc', c);
+            for (const line of ['Subject: Your new dashboard is live', 'Hi there,', 'Today we\'re rolling out the redesigned dashboard to every workspace. It puts your monitors, usage and spend on one screen, loads twice as fast, and finally works on mobile.', 'Nothing changes about your data or alerts. Open it from the sidebar, or reply to this email if anything looks off — we read every message.']) await para(doc, line);
+            doc.insertAdjacentHTML('beforeend', '<p class="sig">— The team</p>');
+            await para(body, 'Want a shorter version for the in-app banner as well?');
+          } },
+          { q: 'Summarize the risks flagged in this deck', match: /risk|deck|pdf|board|summar/i, tg: 'think', file: 'q3-board-deck.pdf', steps: ['Reading 24 pages', 'Extracting risk items'], thought: '2.8s', answer: async (body) => {
+            await para(body, 'The deck flags five risks. Two are rated high and both relate to Q4 renewals, so I\'d start there.');
+            const c = card(body, `<span class="xch-file" style="border:0;padding:0;height:auto"><i>${xcIcon('pdf')}</i></span><span class="grow">Risks in q3-board-deck.pdf</span>`, '');
+            for (const [s, text, page] of XCH_RISKS) {
+              c.insertAdjacentHTML('beforeend', `<div class="xch-risk"><span class="xch-sev" data-s="${s}" aria-label="${['', 'Low', 'Medium', 'High'][s]} severity"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px"></i></span><span>${esc(text)}</span><em class="xch-mono">${page}</em></div>`);
+              follow(); await w(220);
+            }
+          } },
+          { q: 'Write a debounce hook', match: /debounce|hook|react|code|typescript/i, steps: ['Writing useDebounce.ts'], thought: '1.4s', answer: async (body) => {
+            await para(body, 'Here\'s a typed hook: it waits until the value stops changing for the delay, then updates, and cancels the pending timer on unmount.');
+            const c = card(body, `<span class="xch-lang">TS</span><span class="grow">useDebounce.ts</span>${xcIcon('copy')}`, '<div class="xch-code"></div>');
+            const code = $('.xch-code', c);
+            for (const [i, line] of XCH_CODE.entries()) { code.insertAdjacentHTML('beforeend', `<div><span>${i + 1}</span><span>${line || ' '}</span></div>`); follow(); await w(90); }
+            await para(body, 'Pair it with a controlled input and pass the debounced value to your fetch.');
+          } },
+          { q: 'Set up a weekly digest of these metrics for the team', match: /digest|schedul|slack|every (monday|week)/i, steps: ['Checking connected apps'], thought: '1.7s', answer: async (body) => {
+            await para(body, 'I\'ll schedule a Monday 9:00 digest with signups, activation and open incidents.');
+            const c = card(body, `${xcIcon('calendar')}<span class="grow">Weekly metrics digest</span><span class="xch-mono xch-n">0/4</span>`, `<div class="xch-stripe" aria-hidden="true"></div>${XCH_DIGEST.map((d) => `<div class="xch-task"><i aria-hidden="true"></i>${esc(d)}</div>`).join('')}`);
+            for (const [i, task] of [...c.querySelectorAll('.xch-task')].entries()) {
+              await w(650);
+              task.classList.add('is-done'); task.firstElementChild.innerHTML = xcIcon('check');
+              $('.xch-n', c).textContent = `${i + 1}/4`; $('.xch-stripe', c).style.setProperty('--p', `${((i + 1) / 4) * 100}%`);
+            }
+          } },
+          { q: 'Translate the digest into German and Japanese', match: /translat|german|japanese|french|language/i, steps: ['Translating 2 versions'], thought: '5.5s', answer: async (body, bot) => {
+            // First attempt fails: the orb turns red, the error offers Retry, then the answer streams.
+            const orb = $('.xch-orb', bot), thought = $('.xch-thought', body); orb.classList.add('is-err'); thought.hidden = true;
+            const err = mk('div', 'xch-error'); err.innerHTML = `${xcIcon('alert')}<span>The model is over capacity right now. Nothing was sent.</span><button type="button">${xcIcon('rotate')}Retry</button>`;
+            body.prepend(err); setFoot('err', 'ERROR'); follow();
+            let retried = false; $('button', err).onclick = () => { retried = true; };
+            for (let waited = 0; !retried && (auto ? waited < 1800 : true); waited += 100) await w(100);
+            err.remove(); orb.classList.remove('is-err'); thought.hidden = false; setFoot('run', 'STREAMING');
+            await para(body, 'Done — both translations are attached to the digest as alternate versions. German keeps the numbers in the original format; Japanese uses full-width digits to match the team\'s convention.');
+          } },
+        ];
+        const FALLBACK = { steps: ['Thinking'], thought: '0.8s', answer: async (body) => {
+          await para(body, 'This window plays seven scripted answers. Ask about the EU AI Act, weekly signups, a launch email, the risks in a deck (attach it with +), a debounce hook, a weekly digest or a translation, and I\'ll show that one.');
+        } };
+
+        // One turn: optionally type the question, send it, show the work, stream the answer. Stop ends it early.
+        const runTurn = async (turn, q, typed) => {
+          if (busy) return;
+          busy = true; stopNow = false;
+          try {
+            if (typed) {
+              phase = 'typing'; setFoot('run', 'TYPING');
+              if (turn.tg) toggle(turn.tg, true);
+              if (turn.file) setAttach(turn.file);
+              field.value = '';
+              for (const ch of q) { field.value += ch; await w(22); }
+              await w(250);
+            }
+            phase = 'answering';
+            const file = attached; field.value = ''; setAttach('');
+            $('.xch-empty', feed)?.remove();
+            const u = mk('div', 'xch-user'); u.innerHTML = `${file ? `<span class="xch-file"><i>${xcIcon('pdf')}</i>${file}</span>` : ''}<p></p>`; $('p', u).textContent = q; feed.append(u);
+            send.innerHTML = xcIcon('stop'); send.dataset.busy = ''; send.setAttribute('aria-label', 'Stop'); setFoot('run', 'SENDING'); follow();
+            await w(400);
+            const bot = mk('div', 'xch-bot'); bot.innerHTML = '<span class="xch-orb" aria-hidden="true"></span><div class="xch-body"></div>'; feed.append(bot);
+            const body = $('.xch-body', bot);
+            try {
+              const work = mk('div'); work.innerHTML = '<div class="xch-work"><span class="xch-spin" aria-hidden="true"></span><b></b></div><div class="xch-steps"></div>'; body.append(work);
+              for (const s of turn.steps) {
+                $('b', work).textContent = `${s}...`; setFoot('run', s.toUpperCase());
+                const row = mk('div'); row.innerHTML = `<span class="xch-spin" aria-hidden="true"></span>${esc(s)}`; $('.xch-steps', work).append(row); follow();
+                await w(900);
+                row.firstElementChild.outerHTML = xcIcon('check');
+              }
+              await w(250);
+              work.outerHTML = `<div class="xch-thought">${xcIcon('chevronRight')}Thought for ${turn.thought}</div>`;
+              setFoot('run', 'STREAMING');
+              await turn.answer(body, bot);
+              setFoot('ok', 'DONE');
+            } catch (e) {
+              if (e !== STOP) throw e;
+              body.querySelector('.xch-work')?.remove();
+              $('.xch-error', body)?.remove(); $('.xch-orb', bot).classList.remove('is-err');
+              body.insertAdjacentHTML('beforeend', '<p class="xch-stopped">Stopped.</p>');
+              setFoot('ok', 'STOPPED');
+            }
+            body.insertAdjacentHTML('beforeend', `<div class="xch-acts" aria-hidden="true">${xcIcon('copy')}${xcIcon('thumbUp')}${xcIcon('thumbDown')}${xcIcon('rotate')}</div>`);
+            follow();
+          } catch (e) {
+            if (e !== STOP) throw e;
+            field.value = ''; setAttach(''); setFoot('ok', 'READY');
+          } finally {
+            busy = false; stopNow = false; phase = '';
+            send.innerHTML = xcIcon('arrowUp'); send.removeAttribute('data-busy'); send.setAttribute('aria-label', 'Send');
+            if (auto) { toggle('search', false); toggle('think', false); }
           }
-          await xcWait(t, 250);
-          work.outerHTML = `<div class="xch-thought">${xcIcon('chevronRight')}Thought for ${thought}</div>`;
-          setFoot('run', n, 'STREAMING');
-          await answer(body, bot);
-          acts(body); follow();
-          send.removeAttribute('data-busy'); send.innerHTML = xcIcon('arrowUp'); if (tg) toggle(tg, false);
-          setFoot('ok', n, 'DONE');
-          await xcWait(t, 900);
         };
+        // Translation first: "translate the digest" is about translating, not scheduling.
+        const pick = (q) => [TURNS[6], ...TURNS.slice(0, 6)].find((x) => x.match.test(q)) || FALLBACK;
 
+        // The reader takes over: auto-play stops (it drops a question it was still typing) and every control is theirs.
+        const takeover = () => {
+          lastTouch = Date.now();
+          if (!auto) return;
+          auto = false; paused = false; pauseBtn.setAttribute('aria-pressed', 'false'); pauseBtn.innerHTML = xcIcon('pause');
+          if (phase === 'typing') stopNow = true;
+          paint();
+        };
+        field.addEventListener('focus', takeover);
+        field.addEventListener('keydown', takeover);
+        form.onsubmit = (e) => {
+          e.preventDefault(); takeover();
+          if (busy) { if (phase === 'answering') stopNow = true; return; }
+          const q = field.value.trim();
+          if (q) runTurn(pick(q), q, false);
+        };
+        feed.addEventListener('click', (e) => {
+          const s = e.target.closest('.xch-sug'); if (!s) return;
+          takeover(); const q = s.dataset.q;
+          const go = () => (busy ? t.sleep(100).then(go) : runTurn(pick(q), q, false));
+          go();
+        });
+        attachBtn.onclick = () => { takeover(); setAttach(attached ? '' : 'q3-board-deck.pdf'); };
+        for (const b of el.querySelectorAll('[data-tg]')) b.onclick = () => { takeover(); b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); };
+        $('[data-new]', el).onclick = () => {
+          takeover(); if (busy) stopNow = true;
+          const reset = () => (busy ? t.sleep(100).then(reset) : (feed.innerHTML = empty, setFoot('ok', 'READY')));
+          reset();
+        };
+        pauseBtn.onclick = () => {
+          if (!auto) return;
+          paused = !paused; pauseBtn.setAttribute('aria-pressed', String(paused));
+          pauseBtn.innerHTML = xcIcon(paused ? 'play' : 'pause'); pauseBtn.setAttribute('aria-label', paused ? 'Resume auto-play' : 'Pause auto-play');
+          paint();
+        };
+        speedBtn.onclick = () => { speed = speed === 1 ? 2 : 1; speedBtn.textContent = `${speed}×`; };
+        $('[data-min]', el).onclick = () => el.classList.add('is-min');
+        $('[data-open]', el).onclick = () => el.classList.remove('is-min');
+
+        // Auto-play: the seven turns of the video, folding into the pill once after the third.
         await xcWait(t, 1200);
-        await turn(1, 'What changed in the EU AI Act timeline this month?', { tg: 'search', steps: ['Searching the web', 'Reading 4 sources', 'Cross-checking dates'], thought: '3.6s' }, async (body) => {
-          await para(body, 'Two things moved. The Commission confirmed that general-purpose model obligations apply from 2 August, with the code of practice now final{1}{2}. Separately, eleven member states published their market surveillance authorities ahead of the deadline, so enforcement contacts now exist in most of the EU{3}.');
-          const grid = mk('div', 'xch-srcs'); body.append(grid);
-          for (const [i, [ab, title, domain, tone]] of XCH_SOURCES.entries()) {
-            const c = { blue: 'var(--xch-blue)', green: 'var(--xch-ok)', orange: 'var(--xch-hot)', purple: 'var(--color-chart-5-active)' }[tone];
-            grid.insertAdjacentHTML('beforeend', `<button type="button" class="xch-src"><i style="background:color-mix(in srgb, ${c} 18%, transparent);color:color-mix(in oklab, ${c} 50%, var(--color-text-primary))">${ab}</i><span><b>${esc(title)}</b><span>${domain}</span></span><em>${i + 1}</em></button>`);
-            follow(); await xcWait(t, 140);
+        for (const [i, turn] of TURNS.entries()) {
+          if (!auto) break;
+          while (paused && auto && !REDUCE) await t.sleep(120);
+          step = i + 1;
+          await runTurn(turn, turn.q, true);
+          if (!auto) break;
+          if (i === 2) {
+            el.classList.add('is-min'); setFoot('ok', 'MINIMISED');
+            await xcWait(t, 1800 / speed);
+            el.classList.remove('is-min');
           }
-          await para(body, 'High-risk system obligations are unchanged and still land in August next year{4}.');
-        });
-        await turn(2, 'How did weekly signups trend this quarter?', { tg: 'think', steps: ['Querying analytics', 'Aggregating 13 weeks'], thought: '2.1s' }, async (body) => {
-          await para(body, 'Signups grew steadily through the quarter, finishing 53% above the first week. The only dip was W33, which tracks a paused campaign.');
-          const max = Math.max(...XCH_WEEKS);
-          const c = card(body, `${xcIcon('chart')}<span class="grow">Weekly signups</span>`, `<div class="xch-stats xch-mono"><div><span>TOTAL</span><b>13,009</b></div><div><span>VS FIRST WEEK</span><b class="up">+53.2%</b></div><div><span>AVERAGE</span><b>1,001</b></div><div><span>PEAK · W39</span><b>1,244</b></div></div><div class="xch-bars">${XCH_WEEKS.map((v, i) => `<i style="height:${(v / max) * 100}%" title="W${27 + i}: ${v.toLocaleString('en-US')} signups"></i>`).join('')}</div><div class="xch-axis xch-mono"><span>W27</span><span>13,009 SIGNUPS</span><span>W39</span></div>`);
-          for (const b of c.querySelectorAll('.xch-bars i')) { b.style.transform = 'none'; await xcWait(t, 45); }
-          await para(body, 'Hover the bars for exact counts. Want this broken down by acquisition channel?');
-        });
-        await turn(3, 'Draft a launch announcement for the new dashboard', { steps: ['Checking project notes'], thought: '1.9s' }, async (body) => {
-          await para(body, 'Which channel is this for? I\'ll match the tone and length.');
-          const chips = mk('div', 'xch-chips xch-mono'); chips.innerHTML = ['EMAIL', 'BLOG POST', 'SOCIAL THREAD'].map((l) => `<button type="button" class="xch-chip" aria-pressed="false">${l}</button>`).join(''); body.append(chips);
-          await xcWait(t, 700); chips.firstElementChild.setAttribute('aria-pressed', 'true');
-          for (const b of chips.children) b.onclick = () => { for (const x of chips.children) x.setAttribute('aria-pressed', String(x === b)); };
-          const c = card(body, `${xcIcon('fileText')}<span class="grow">Launch announcement</span><span class="xch-mono">EMAIL · 80 WORDS</span>${xcIcon('copy')}${xcIcon('pen')}`, '<div class="xch-doc"></div>');
-          const doc = $('.xch-doc', c);
-          for (const line of ['Subject: Your new dashboard is live', 'Hi there,', 'Today we\'re rolling out the redesigned dashboard to every workspace. It puts your monitors, usage and spend on one screen, loads twice as fast, and finally works on mobile.', 'Nothing changes about your data or alerts. Open it from the sidebar, or reply to this email if anything looks off — we read every message.']) await para(doc, line);
-          doc.insertAdjacentHTML('beforeend', '<p class="sig">— The team</p>');
-          await para(body, 'Want a shorter version for the in-app banner as well?');
-        });
-        // The video folds the window into its pill between turns, then opens it again.
-        el.classList.add('is-min'); setFoot('ok', 3, 'MINIMISED');
-        await xcWait(t, 1800);
-        el.classList.remove('is-min');
-        await xcWait(t, 500);
-        await turn(4, 'Summarize the risks flagged in this deck', { tg: 'think', file: 'q3-board-deck.pdf', steps: ['Reading 24 pages', 'Extracting risk items'], thought: '2.8s' }, async (body) => {
-          await para(body, 'The deck flags five risks. Two are rated high and both relate to Q4 renewals, so I\'d start there.');
-          const c = card(body, `<span class="xch-file" style="border:0;padding:0;height:auto"><i>${xcIcon('pdf')}</i></span><span class="grow">Risks in q3-board-deck.pdf</span>`, '');
-          for (const [s, text, page] of XCH_RISKS) {
-            c.insertAdjacentHTML('beforeend', `<div class="xch-risk"><span class="xch-sev" data-s="${s}" aria-label="${['', 'Low', 'Medium', 'High'][s]} severity"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px"></i></span><span>${esc(text)}</span><em class="xch-mono">${page}</em></div>`);
-            follow(); await xcWait(t, 220);
-          }
-        });
-        await turn(5, 'Write a debounce hook', { steps: ['Writing useDebounce.ts'], thought: '1.4s' }, async (body) => {
-          await para(body, 'Here\'s a typed hook: it waits until the value stops changing for the delay, then updates, and cancels the pending timer on unmount.');
-          const c = card(body, `<span class="xch-lang">TS</span><span class="grow">useDebounce.ts</span>${xcIcon('copy')}`, '<div class="xch-code"></div>');
-          const code = $('.xch-code', c);
-          for (const [i, line] of XCH_CODE.entries()) { code.insertAdjacentHTML('beforeend', `<div><span>${i + 1}</span><span>${line || ' '}</span></div>`); follow(); await xcWait(t, 90); }
-          await para(body, 'Pair it with a controlled input and pass the debounced value to your fetch.');
-        });
-        await turn(6, 'Set up a weekly digest of these metrics for the team', { steps: ['Checking connected apps'], thought: '1.7s' }, async (body) => {
-          await para(body, 'I\'ll schedule a Monday 9:00 digest with signups, activation and open incidents.');
-          const c = card(body, `${xcIcon('calendar')}<span class="grow">Weekly metrics digest</span><span class="xch-mono xch-n">0/4</span>`, `<div class="xch-stripe" aria-hidden="true"></div>${XCH_DIGEST.map((d) => `<div class="xch-task"><i aria-hidden="true"></i>${esc(d)}</div>`).join('')}`);
-          for (const [i, task] of [...c.querySelectorAll('.xch-task')].entries()) {
-            await xcWait(t, 650);
-            task.classList.add('is-done'); task.firstElementChild.innerHTML = xcIcon('check');
-            $('.xch-n', c).textContent = `${i + 1}/4`; $('.xch-stripe', c).style.setProperty('--p', `${((i + 1) / 4) * 100}%`);
-          }
-        });
-        await turn(7, 'Translate the digest into German and Japanese', { steps: ['Translating 2 versions'], thought: '5.5s' }, async (body, bot) => {
-          // First attempt fails: the orb turns red, the error offers Retry, then the answer streams.
-          const orb = $('.xch-orb', bot), thought = $('.xch-thought', body); orb.classList.add('is-err'); thought.hidden = true;
-          const err = mk('div', 'xch-error'); err.innerHTML = `${xcIcon('alert')}<span>The model is over capacity right now. Nothing was sent.</span><button type="button">${xcIcon('rotate')}Retry</button>`;
-          body.prepend(err); setFoot('err', 7, 'ERROR'); follow();
-          await new Promise((resolve) => { let done = false; const go = () => { if (!done) { done = true; resolve(); } }; $('button', err).onclick = go; xcWait(t, 1800).then(go); });
-          err.remove(); orb.classList.remove('is-err'); thought.hidden = false; setFoot('run', 7, 'STREAMING');
-          await para(body, 'Done — both translations are attached to the digest as alternate versions. German keeps the numbers in the original format; Japanese uses full-width digits to match the team\'s convention.');
-        });
+          await xcWait(t, 900 / speed);
+        }
+        // Once the reader has taken over, never hand the stage back to the replay loop while they are using it.
+        if (!auto) await new Promise(() => {});
+        // A quiet moment after auto-play: if the reader starts now, keep their conversation.
+        for (let idle = 0; idle < 3000; idle += 200) { await t.sleep(200); if (!auto) await new Promise(() => {}); }
       } },
   ];
 }
