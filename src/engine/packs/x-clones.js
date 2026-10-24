@@ -3,6 +3,7 @@
  *   Agent Status — Elia Kuratli (@eliakuratli), https://x.com/eliakuratli/status/2113618712066711970
  *   RAG Pipeline — Jeet (@jeetnirnejak), https://x.com/jeetnirnejak/status/2095507715556831429
  *   Release Pipeline Card — Akash (@a1x45h), https://x.com/a1x45h/status/2112964394825187349
+ *   Parallel Research Run — Akash (@a1x45h), https://x.com/a1x45h/status/2113708491907215460
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -56,6 +57,11 @@ export default function pack(h) {
     layers: '<path d="M12 4l8.5 4.5L12 13 3.5 8.5z"/><path d="M3.5 12.5L12 17l8.5-4.5M3.5 16.5L12 21l8.5-4.5"/>',
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     alert: '<path d="M12 4.5l8.5 15h-17z"/><path d="M12 10.5v3.5M12 17v.01"/>',
+    fork: '<circle cx="6" cy="5.5" r="2"/><circle cx="18" cy="5.5" r="2"/><circle cx="12" cy="18.5" r="2"/><path d="M6 7.5v1.5a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7.5M12 12v4.5"/>',
+    table: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M10 10v9"/>',
+    tag: '<path d="M4 4.5h7l8.5 8.5-7 7L4 11.5z"/><circle cx="8" cy="8.5" r="1.2"/>',
+    chevronRight: '<path d="M9.5 6.5L15 12l-5.5 5.5"/>',
+    research: '<circle cx="14" cy="10" r="4.5"/><path d="M17.3 13.3L20.5 16.5M3.5 7h4M3.5 11h3M3.5 15h6"/>',
   };
   const xcIcon = (name, cls = '') => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="${cls}">${XC_ICONS[name] || ''}</svg>`;
 
@@ -298,6 +304,87 @@ export default function pack(h) {
     { name: 'Deploy', title: 'Deploy to', secs: 20, lines: [['upload', 'Uploading 3 artifacts'], ['layers', 'Shifting traffic to v2.9.0'], ['cloud', 'Warming edge caches']] },
   ];
   const XRP_TARGETS = { staging: { label: 'Staging', url: 'staging.checkout.dev' }, production: { label: 'Production', url: 'checkout.dev' } };
+
+  /* ------------------------------------------------- Parallel Research Run */
+  const XPR_CSS = `
+.xpr { --xpr-ease:cubic-bezier(0.22,1,0.36,1); --xpr-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary));
+  --xpr-run:var(--color-accent-500); --xpr-ok:var(--color-chart-7-active); --xpr-ok-ink:color-mix(in oklab, var(--color-chart-7-active) 62%, var(--color-text-primary));
+  width:440px; max-width:100%; padding:0 10px 10px; border-radius:24px; background:var(--color-background-secondary-default); border:1px solid var(--color-border-button-default);
+  box-shadow:0 22px 48px -28px color-mix(in srgb, var(--color-text-primary) 40%, transparent); color:var(--color-text-primary); font-family:var(--font-sans); font-size:13px; line-height:18px; text-align:start; }
+:where(.xpr) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+.xpr button:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:2px; }
+.xpr-head { display:flex; align-items:center; gap:12px; height:62px; padding:0 4px; }
+.xpr-logo { flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:10px; background:var(--color-text-primary); color:var(--color-background-primary-default); }
+.xpr-logo svg { width:16px; height:16px; }
+.xpr-name { min-width:0; flex:1; }
+.xpr-name b { display:block; font-size:14px; font-weight:600; }
+.xpr-name span { font-size:12px; color:var(--xpr-muted); }
+.xpr-badge { flex:none; display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 10px; border-radius:999px; border:1px solid color-mix(in srgb, var(--xpr-run) 30%, transparent); background:var(--color-badge-new-background);
+  color:color-mix(in oklab, var(--xpr-run) 70%, var(--color-text-primary)); font-size:12px; font-weight:600; white-space:nowrap; animation:xpr-in .3s var(--xpr-ease) both; }
+.xpr-badge i { width:6px; height:6px; border-radius:999px; background:var(--xpr-run); }
+.xpr-badge svg { width:12px; height:12px; }
+.xpr-badge[data-tone=ok] { border-color:color-mix(in srgb, var(--xpr-ok) 40%, transparent); background:color-mix(in srgb, var(--xpr-ok) 12%, var(--color-background-primary-default)); color:var(--xpr-ok-ink); }
+.xpr-panel { padding:16px 16px 14px; border-radius:16px; background:var(--color-background-primary-default); box-shadow:0 1px 2px color-mix(in srgb, var(--color-text-primary) 8%, transparent); }
+.xpr-q { display:flex; align-items:center; gap:12px; font-weight:500; }
+.xpr-q::before { content:""; flex:none; width:6px; height:6px; margin:0 3px; border-radius:999px; background:var(--color-text-primary); }
+.xpr-split { display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; color:var(--xpr-muted); }
+.xpr-split svg { flex:none; width:13px; height:13px; }
+.xpr-split.is-run span { background:linear-gradient(90deg, var(--xpr-muted) 0%, var(--xpr-muted) 35%, var(--color-text-primary) 50%, var(--xpr-muted) 65%, var(--xpr-muted) 100%); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:xpr-shimmer 2s linear infinite; }
+.xpr-agents, .xpr-steps { display:flex; flex-direction:column; }
+.xpr-agents { margin-top:4px; padding-left:22px; }
+.xpr-steps { padding-left:22px; overflow:hidden; }
+.xpr-agent, .xpr-step { --xpr-c:var(--xpr-run); position:relative; }
+.xpr-agent[data-state=done] { --xpr-c:var(--xpr-ok); }
+/* Elbow from the trunk into each row, and the trunk on to the next row: drawn in the row's colour. */
+.xpr-agent::before, .xpr-step::before { content:""; position:absolute; left:-16px; width:11px; border-left:1.5px solid var(--xpr-c); border-bottom:1.5px solid var(--xpr-c); border-bottom-left-radius:7px; }
+.xpr-agent::before { top:-6px; height:21px; } .xpr-step::before { top:-3px; height:16px; }
+.xpr-agent:not(:last-child)::after, .xpr-step:not(:last-child)::after { content:""; position:absolute; left:-16px; top:8px; bottom:-8px; border-left:1.5px solid var(--xpr-c); }
+.xpr-agent { padding-top:8px; animation:xpr-in .35s var(--xpr-ease) both; }
+.xpr-atop { display:flex; align-items:center; gap:10px; height:22px; }
+.xpr-atop > .xpr-st { flex:none; display:grid; place-items:center; width:16px; height:16px; }
+.xpr-spin { width:14px; height:14px; border-radius:999px; border:1.5px solid var(--color-border-button-default); border-top-color:var(--xpr-run); animation:xpr-spin .9s linear infinite; }
+.xpr-ok { display:grid; place-items:center; width:16px; height:16px; border-radius:999px; background:var(--xpr-ok); color:var(--color-background-primary-default); animation:xpr-pop .3s var(--xpr-ease) both; }
+.xpr-ok svg { width:10px; height:10px; stroke-width:2.6; }
+.xpr-aname { min-width:0; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-weight:600; }
+.xpr-atime { flex:none; font-family:var(--font-mono); font-size:11.5px; color:var(--xpr-muted); font-variant-numeric:tabular-nums; }
+.xpr-toggle { display:none; place-items:center; width:16px; height:16px; color:var(--xpr-muted); }
+.xpr-toggle svg { width:13px; height:13px; transition:transform .3s var(--xpr-ease); }
+.xpr-toggle[aria-expanded=true] svg { transform:rotate(90deg); }
+.xpr-agent[data-state=done] .xpr-toggle { display:grid; }
+.xpr-sum { display:flex; align-items:center; gap:10px; height:24px; color:var(--xpr-ok-ink); font-weight:500; animation:xpr-in .3s var(--xpr-ease) both; }
+.xpr-sum .xpr-ok { width:14px; height:14px; margin-left:1px; }
+.xpr-step { display:flex; align-items:center; gap:10px; height:24px; font-size:12px; color:var(--xpr-muted); animation:xpr-in .3s var(--xpr-ease) both; }
+.xpr-step svg { flex:none; width:13px; height:13px; }
+.xpr-step[data-state=run] svg { color:var(--xpr-run); }
+.xpr-step[data-state=run] span { background:linear-gradient(90deg, var(--xpr-muted) 0%, var(--xpr-muted) 35%, var(--color-text-primary) 50%, var(--xpr-muted) 65%, var(--xpr-muted) 100%); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:xpr-shimmer 2s linear infinite; }
+.xpr-answer { position:relative; margin-top:12px; animation:xpr-in .35s var(--xpr-ease) both; }
+.xpr-answer .xpr-atop { margin-bottom:6px; }
+.xpr-answer.is-run .xpr-aname { font-weight:500; color:var(--xpr-muted); }
+.xpr-answer p, .xpr-answer ol { padding-left:26px; }
+.xpr-answer ol { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+.xpr-answer li { display:flex; gap:10px; }
+.xpr-answer li > i { flex:none; display:grid; place-items:center; width:18px; height:18px; border-radius:5px; background:var(--color-background-tertiary-default); font-style:normal; font-size:11px; font-weight:600; font-family:var(--font-mono); }
+.xpr-foot { display:flex; align-items:center; gap:14px; margin-top:12px; padding:0 4px 0 8px; }
+.xpr-stat { display:flex; flex-direction:column; gap:2px; padding-right:14px; border-right:1px solid var(--color-border-button-default); }
+.xpr-stat:nth-child(3) { border-right:0; }
+.xpr-stat span { font-size:11.5px; color:var(--xpr-muted); }
+.xpr-stat b { font-family:var(--font-mono); font-size:12.5px; font-weight:500; font-variant-numeric:tabular-nums; }
+.xpr-main { margin-left:auto; min-width:120px; height:40px; padding:0 20px; border-radius:999px; background:var(--color-text-primary); color:var(--color-background-primary-default); font-weight:600; transition:transform .2s var(--xpr-ease); }
+.xpr-main:active { transform:scale(.97); }
+@keyframes xpr-in { from { opacity:0; transform:translateY(4px) } }
+@keyframes xpr-pop { from { opacity:0; transform:scale(.5) } }
+@keyframes xpr-spin { to { transform:rotate(360deg) } }
+@keyframes xpr-shimmer { from { background-position:100% 0 } to { background-position:0% 0 } }
+@media (prefers-reduced-motion: reduce) { .xpr, .xpr * { animation:none !important; transition:none !important; } }`;
+
+  // Three agents run at once; each step is [icon, text, real ms], and `secs` is the time the agent reports.
+  const XPR_QUESTION = 'Which e-bike under $2,000 suits a 15 km hilly commute?';
+  const XPR_AGENTS = [
+    { name: 'Compare motor torque on climbs', secs: 4.7, sum: '3 bikes over 80 Nm', steps: [['search', 'Searching mid-drive torque tests', 900], ['fileText', 'Reading 6 reviews', 1100], ['table', 'Extracting torque figures', 1300]] },
+    { name: 'Check real-world battery range', secs: 6.0, sum: 'All 3 cover 30 km on one charge', steps: [['search', 'Searching owner range reports', 1000], ['history', 'Retried after rate limit', 1200], ['fileText', 'Reading 4 long-term tests', 1300], ['table', 'Comparing range figures', 1100]] },
+    { name: 'Find prices and warranty terms', secs: 4.3, sum: 'Best price $1,849', steps: [['search', 'Searching 5 retailers', 900], ['tag', 'Comparing prices', 1000], ['checkCircle', 'Reading warranty terms', 1000]] },
+  ];
+  const XPR_ANSWER = { lead: 'The Vela Trail fits best:', points: ['Its 85 Nm mid-drive handles the climbs', 'The battery covers the 30 km round trip with charge to spare', 'It costs $1,849 with a 2-year warranty'] };
 
   /* ---------------------------------------------------------------- demos */
   return [
@@ -564,6 +651,91 @@ export default function pack(h) {
         if (second) { setTarget('production'); await xcWait(t, 500); setFailing(true); await xcWait(t, 600); }
         await release(0);
         if (phase === 'failed') { await xcWait(t, 1600); setFailing(false); await release(resume); }
+      } },
+
+    { group: G, title: 'Parallel Research Run', kind: 'scene',
+      desc: 'Multi-agent run by Akash (@a1x45h, https://x.com/a1x45h/status/2113708491907215460), cloned with permission: a question splits into three agents that work in parallel on curved branches, each folds into a green finding as it lands, the answer streams as a numbered list, and time, sources and tokens count along; Stop and the chevrons work.',
+      async run(root, t, ctx) {
+        xcStyle('x-parallel-run-css', XPR_CSS);
+        const el = mk('section', 'xpr'); el.setAttribute('aria-label', 'Research run');
+        el.innerHTML = `<div class="xpr-head"><span class="xpr-logo" aria-hidden="true">${xcIcon('research')}</span><div class="xpr-name"><b>Research run</b><span>${XPR_AGENTS.length} agents in parallel</span></div><span class="xpr-badge" role="status" aria-live="polite"></span></div>
+<div class="xpr-panel"><div class="xpr-q"></div><div class="xpr-split is-run">${xcIcon('fork')}<span>Planning tasks</span></div><div class="xpr-agents"></div></div>
+<div class="xpr-foot"><div class="xpr-stat"><span>Time</span><b data-k="time">0.0s</b></div><div class="xpr-stat"><span>Sources</span><b data-k="src">0</b></div><div class="xpr-stat"><span>Tokens</span><b data-k="tok">0</b></div><button type="button" class="xpr-main">Stop</button></div>`;
+        $('.xpr-q', el).textContent = XPR_QUESTION;
+        root.append(el);
+        const badge = $('.xpr-badge', el), split = $('.xpr-split', el), list = $('.xpr-agents', el), panel = $('.xpr-panel', el), main = $('.xpr-main', el);
+        const stat = (k) => $(`[data-k=${k}]`, el);
+        const SRC = [[3, 2, 0], [3, 0, 2, 0], [2, 2, 1]], TOK = [[1600, 2200, 1600], [1300, 300, 2400, 1800], [1500, 1600, 1500]];
+        let stopped = false, sources = 0, tokens = 0, working = XPR_AGENTS.length;
+        const setBadge = (html, tone) => { badge.innerHTML = html; if (tone) badge.dataset.tone = tone; else delete badge.dataset.tone; };
+        const fmtTok = (v) => (v < 1000 ? String(Math.round(v)) : `${(v / 1000).toFixed(1)}k`);
+        const addTokens = async (n) => { const from = tokens; tokens += n; for (let k = 1; k <= 5; k++) { stat('tok').textContent = fmtTok(from + (n * k) / 5); await xcWait(t, 40); } };
+        main.onclick = () => { if (main.textContent === 'Stop') { stopped = true; setBadge('<i></i>Stopped'); main.textContent = 'Reset'; } else ctx.restart?.(); };
+
+        const t0 = performance.now(), times = [];
+        const clock = t.every(100, () => {
+          stat('time').textContent = `${((performance.now() - t0) / 1000).toFixed(1)}s`;
+          for (const a of times) if (a.running) a.el.textContent = `${((performance.now() - a.t0) / 1000).toFixed(1)}s`;
+        });
+
+        setBadge('<i></i>Planning');
+        await xcWait(t, 1300);
+        split.classList.remove('is-run'); $('span', split).textContent = `Split into ${XPR_AGENTS.length} parallel tasks`;
+        setBadge(`<i></i>${working} working`);
+
+        const agent = async (a, i) => {
+          await xcWait(t, i * 140);
+          const row = mk('div', 'xpr-agent'); row.dataset.state = 'run';
+          row.innerHTML = `<div class="xpr-atop"><span class="xpr-st"><span class="xpr-spin" aria-hidden="true"></span></span><span class="xpr-aname"></span><span class="xpr-atime">0.0s</span><button type="button" class="xpr-toggle" aria-expanded="false" aria-label="Show steps">${xcIcon('chevronRight')}</button></div><div class="xpr-steps"></div>`;
+          $('.xpr-aname', row).textContent = a.name;
+          list.append(row);
+          const steps = $('.xpr-steps', row), timer = { el: $('.xpr-atime', row), t0: performance.now(), running: true };
+          times.push(timer);
+          for (const [j, [icon, text, ms]] of a.steps.entries()) {
+            if (stopped) return;
+            const st = mk('div', 'xpr-step'); st.dataset.state = 'run'; st.innerHTML = `${xcIcon(icon)}<span></span>`; $('span', st).textContent = text;
+            steps.append(st);
+            await xcWait(t, ms);
+            if (stopped) return;
+            st.dataset.state = 'done';
+            sources += SRC[i][j]; stat('src').textContent = sources;
+            addTokens(TOK[i][j]);
+          }
+          timer.running = false; timer.el.textContent = `${a.secs.toFixed(1)}s`;
+          row.dataset.state = 'done';
+          $('.xpr-st', row).innerHTML = `<span class="xpr-ok" aria-hidden="true">${xcIcon('check')}</span>`;
+          steps.hidden = true;
+          const sum = mk('div', 'xpr-sum'); sum.innerHTML = `<span class="xpr-ok" aria-hidden="true">${xcIcon('check')}</span><span></span>`; $('span:last-child', sum).textContent = a.sum;
+          row.append(sum);
+          const toggle = $('.xpr-toggle', row);
+          toggle.onclick = () => { steps.hidden = !steps.hidden; toggle.setAttribute('aria-expanded', String(!steps.hidden)); toggle.setAttribute('aria-label', steps.hidden ? 'Show steps' : 'Hide steps'); };
+          working -= 1;
+          if (working) setBadge(`<i></i>${working} working`);
+        };
+        await Promise.all(XPR_AGENTS.map(agent));
+        if (stopped) { t.stop(clock); return; }
+
+        // The answer: a spinner while it writes, then the lead line and the numbered points stream in.
+        setBadge('<i></i>Writing');
+        const ans = mk('div', 'xpr-answer is-run');
+        ans.innerHTML = `<div class="xpr-atop"><span class="xpr-st"><span class="xpr-spin" aria-hidden="true"></span></span><span class="xpr-aname">Writing answer</span></div><p></p><ol></ol>`;
+        panel.append(ans);
+        const stream = async (node, text) => { for (const w of text.split(/(?<= )/)) { node.append(w); await xcWait(t, 45); if (stopped) return; } };
+        await xcWait(t, 500);
+        await stream($('p', ans), XPR_ANSWER.lead);
+        for (const [i, point] of XPR_ANSWER.points.entries()) {
+          const li = mk('li'); li.innerHTML = `<i>${i + 1}</i><span></span>`; $('ol', ans).append(li);
+          await stream($('span', li), point);
+          if (stopped) { t.stop(clock); return; }
+        }
+        await addTokens(1800);
+        t.stop(clock);
+        if (REDUCE) stat('time').textContent = '11.9s';
+        ans.classList.remove('is-run');
+        $('.xpr-st', ans).innerHTML = `<span class="xpr-ok" aria-hidden="true">${xcIcon('check')}</span>`;
+        $('.xpr-aname', ans).textContent = 'Answer';
+        setBadge(`${xcIcon('check')}Done`, 'ok');
+        main.textContent = 'Reset';
       } },
   ];
 }
