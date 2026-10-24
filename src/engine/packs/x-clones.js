@@ -2,6 +2,7 @@
  * its author and post in its description, which the Prompt dialog carries into the rebuild prompt (as /orbs does):
  *   Agent Status — Elia Kuratli (@eliakuratli), https://x.com/eliakuratli/status/2113618712066711970
  *   RAG Pipeline — Jeet (@jeetnirnejak), https://x.com/jeetnirnejak/status/2095507715556831429
+ *   Release Pipeline Card — Akash (@a1x45h), https://x.com/a1x45h/status/2112964394825187349
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -34,6 +35,27 @@ export default function pack(h) {
     sparkles: '<path d="M10 4.5l1.6 4.4 4.4 1.6-4.4 1.6L10 16.5l-1.6-4.4L4 10.5l4.4-1.6z"/><path d="M17.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>',
     rotate: '<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/>',
     playOutline: '<path d="M7.5 5.5v13l10.5-6.5z"/>',
+    box: '<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>',
+    history: '<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4M12 8v4l2.5 2"/>',
+    link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+    code: '<path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4"/>',
+    scissors: '<circle cx="6.5" cy="7" r="2.5"/><circle cx="6.5" cy="17" r="2.5"/><path d="M8.5 8.5L19 17M8.5 15.5L19 7"/>',
+    folder: '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    x: '<path d="M7 7l10 10M17 7L7 17"/>',
+    target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+    user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.6 3.5-5.5 7-5.5s6.3 1.9 7 5.5"/>',
+    asterisk: '<path d="M12 4v16M5 8l14 8M19 8L5 16"/>',
+    scale: '<path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-2.5 6a2.5 2.5 0 0 0 5 0zM19 8l-2.5 6a2.5 2.5 0 0 0 5 0z"/>',
+    shield: '<path d="M12 3.5l7 2.5v5.5c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6z"/>',
+    bug: '<rect x="7.5" y="8" width="9" height="11" rx="4.5"/><path d="M9.5 8a2.5 2.5 0 0 1 5 0M4 13h3.5M16.5 13H20M5 8.5l2.5 1.5M19 8.5l-2.5 1.5M5 18l2.5-1.5M19 18l-2.5-1.5"/>',
+    upload: '<path d="M12 15V4.5M7.5 9L12 4.5 16.5 9"/><path d="M4.5 15v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3"/>',
+    gitBranch: '<circle cx="6.5" cy="5.5" r="2"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="7.5" r="2"/><path d="M6.5 7.5v9M17.5 9.5c0 4-5 4-10 7"/>',
+    commit: '<circle cx="12" cy="12" r="3.5"/><path d="M3.5 12h5M15.5 12h5"/>',
+    cloud: '<path d="M7 18.5a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.5 1.5A3.8 3.8 0 0 1 17.5 18.5z"/>',
+    layers: '<path d="M12 4l8.5 4.5L12 13 3.5 8.5z"/><path d="M3.5 12.5L12 17l8.5-4.5M3.5 16.5L12 21l8.5-4.5"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    alert: '<path d="M12 4.5l8.5 15h-17z"/><path d="M12 10.5v3.5M12 17v.01"/>',
   };
   const xcIcon = (name, cls = '') => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="${cls}">${XC_ICONS[name] || ''}</svg>`;
 
@@ -197,6 +219,85 @@ export default function pack(h) {
   // Grey levels of the embedding cells, fixed so every run draws the same vector.
   const XRG_CELLS = [3, 1, 4, 1, 5, 2, 6, 5, 3, 5, 2, 1, 6, 2, 4, 3, 2, 3, 6, 1, 5, 4, 2, 6, 4, 3, 1, 2, 5, 3, 4, 2, 6, 1, 2, 4, 3, 5];
   const xrgCell = (lv) => `color-mix(in srgb, var(--color-text-primary) ${8 + lv * 8}%, var(--color-background-primary-default))`;
+
+  /* ------------------------------------------------- Release Pipeline Card */
+  const XRP_CSS = `
+.xrp { --xrp-ease:cubic-bezier(0.22,1,0.36,1); --xrp-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary));
+  --xrp-ok:var(--color-status-lime-text); --xrp-err:var(--color-status-rose-text); --xrp-run:var(--color-accent-500);
+  container-type:inline-size; width:520px; max-width:100%; padding:0 12px 12px; border-radius:24px; background:var(--color-background-secondary-default); border:1px solid var(--color-border-button-default);
+  box-shadow:0 22px 48px -28px color-mix(in srgb, var(--color-text-primary) 40%, transparent); color:var(--color-text-primary); font-family:var(--font-sans); font-size:13px; line-height:18px; text-align:start; }
+.dark .xrp { --xrp-err:var(--color-notification-error-foreground); }
+:where(.xrp) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+.xrp-head { display:flex; align-items:center; gap:12px; height:68px; padding:0 4px; }
+.xrp-logo { flex:none; display:grid; place-items:center; width:36px; height:36px; border-radius:10px; background:var(--color-text-primary); color:var(--color-background-primary-default); }
+.xrp-logo svg { width:17px; height:17px; }
+.xrp-name { min-width:0; flex:1; }
+.xrp-name b { display:block; font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.xrp-name span { color:var(--xrp-muted); }
+.xrp-badge { flex:none; display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 10px; border-radius:999px; border:1px solid var(--color-border-button-default); background:var(--color-background-primary-default); font-size:12px; font-weight:600; color:var(--xrp-muted); white-space:nowrap; animation:xrp-in .3s var(--xrp-ease) both; }
+.xrp-badge svg { width:12px; height:12px; }
+.xrp-badge i { width:6px; height:6px; border-radius:999px; background:currentColor; }
+.xrp-badge[data-tone=run] { color:color-mix(in oklab, var(--xrp-run) 70%, var(--color-text-primary)); background:var(--color-badge-new-background); border-color:color-mix(in srgb, var(--xrp-run) 35%, transparent); }
+.xrp-badge[data-tone=ok] { color:var(--xrp-ok); background:var(--color-status-lime-background); border-color:color-mix(in srgb, var(--xrp-ok) 35%, transparent); }
+.xrp-badge[data-tone=err] { color:var(--xrp-err); background:var(--color-status-rose-background); border-color:color-mix(in srgb, var(--xrp-err) 35%, transparent); }
+.xrp-panel { border-radius:16px; background:var(--color-background-primary-default); box-shadow:0 1px 2px color-mix(in srgb, var(--color-text-primary) 8%, transparent); }
+.xrp-steps { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); padding:22px 8px 16px; }
+.xrp-step { position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0; text-align:center; }
+.xrp-step:not(:last-child)::after { content:""; position:absolute; top:16px; left:calc(50% + 20px); right:calc(-50% + 20px); height:2px; border-radius:1px; background:var(--color-background-tertiary-default); }
+.xrp-link { position:absolute; top:16px; left:calc(50% + 20px); right:calc(-50% + 20px); z-index:1; height:2px; border-radius:1px; background:var(--xrp-run); transform:scaleX(0); transform-origin:left; transition:transform .25s linear, background-color .3s; }
+.xrp-step[data-state=done] .xrp-link { background:var(--color-chart-7-active); }
+.xrp-node { position:relative; display:grid; place-items:center; width:34px; height:34px; margin-bottom:8px; border-radius:999px; border:1.5px solid var(--color-border-button-default); background:var(--color-background-primary-default); color:transparent; transition:background-color .3s var(--xrp-ease), border-color .3s var(--xrp-ease), color .3s var(--xrp-ease); }
+.xrp-node svg { width:15px; height:15px; animation:xrp-pop .32s var(--xrp-ease) both; }
+.xrp-step[data-state=run] .xrp-node { border-color:color-mix(in srgb, var(--xrp-run) 25%, transparent); box-shadow:0 0 0 4px color-mix(in srgb, var(--xrp-run) 10%, transparent); }
+.xrp-step[data-state=run] .xrp-node::after { content:""; position:absolute; inset:-1.5px; border-radius:inherit; border:2px solid transparent; border-top-color:var(--xrp-run); border-left-color:var(--xrp-run); animation:xrp-spin .9s linear infinite; }
+.xrp-step[data-state=done] .xrp-node { border-color:color-mix(in srgb, var(--color-chart-7-active) 45%, transparent); background:color-mix(in srgb, var(--color-chart-7-active) 12%, var(--color-background-primary-default)); color:color-mix(in oklab, var(--color-chart-7-active) 70%, var(--color-text-primary)); }
+.xrp-step[data-state=fail] .xrp-node { border-color:color-mix(in srgb, var(--xrp-err) 30%, transparent); background:var(--color-status-rose-background); color:var(--xrp-err); }
+.xrp-step-n { font-size:12.5px; }
+.xrp-step[data-state=pending] .xrp-step-n { color:var(--xrp-muted); }
+.xrp-step-t { min-height:16px; font-family:var(--font-mono); font-size:11.5px; color:var(--xrp-muted); font-variant-numeric:tabular-nums; }
+.xrp-detail { margin-top:8px; min-height:178px; padding:16px 18px; }
+.xrp-dtop { display:flex; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.xrp-dtitle { font-weight:600; }
+.xrp-dtitle.is-run { font-weight:500; background:linear-gradient(90deg, var(--xrp-muted) 0%, var(--xrp-muted) 35%, var(--color-text-primary) 50%, var(--xrp-muted) 65%, var(--xrp-muted) 100%); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:xrp-shimmer 2s linear infinite; }
+.xrp-dtime { font-family:var(--font-mono); font-size:12px; color:var(--xrp-muted); font-variant-numeric:tabular-nums; }
+.xrp-lines { display:flex; flex-direction:column; }
+.xrp-line { display:flex; align-items:center; gap:10px; height:28px; animation:xrp-in .32s var(--xrp-ease) both; }
+.xrp-line svg { flex:none; width:14px; height:14px; color:var(--xrp-muted); }
+.xrp-line[data-tone=ok] { color:var(--xrp-ok); font-weight:500; } .xrp-line[data-tone=ok] svg { color:var(--xrp-ok); }
+.xrp-line[data-tone=err] { color:var(--xrp-err); font-weight:500; } .xrp-line[data-tone=err] svg { color:var(--xrp-err); }
+.xrp-line[data-tone=run] svg { color:var(--xrp-run); }
+.xrp-line > b { font-weight:500; }
+.xrp-line > .xrp-k { width:64px; color:var(--xrp-muted); }
+.xrp-skel { display:flex; align-items:center; gap:10px; height:28px; }
+.xrp-skel i { width:14px; height:14px; border-radius:999px; border:1.5px solid var(--color-border-button-default); border-top-color:var(--xrp-muted); animation:xrp-spin .9s linear infinite; }
+.xrp-skel span { width:96px; height:8px; border-radius:4px; background:linear-gradient(90deg, var(--color-background-tertiary-default) 0%, var(--color-background-secondary-default) 50%, var(--color-background-tertiary-default) 100%); background-size:200% 100%; animation:xrp-shimmer 1.4s linear infinite; }
+.xrp-foot { display:flex; align-items:center; gap:10px; margin-top:12px; }
+.xrp-seg { display:flex; padding:3px; border-radius:999px; background:var(--color-background-tertiary-default); }
+.xrp-seg button { height:34px; padding:0 16px; border-radius:999px; font-weight:500; color:var(--xrp-muted); transition:background-color .25s var(--xrp-ease), color .25s, box-shadow .25s; }
+.xrp-seg button[aria-pressed=true] { background:var(--color-background-primary-default); color:var(--color-text-primary); box-shadow:0 1px 2px color-mix(in srgb, var(--color-text-primary) 14%, transparent); }
+.xrp-fail { display:grid; place-items:center; width:40px; height:40px; border-radius:999px; border:1px solid var(--color-border-button-default); color:var(--xrp-muted); transition:background-color .25s, color .25s, border-color .25s; }
+.xrp-fail svg { width:15px; height:15px; }
+.xrp-fail:hover, .xrp-fail[aria-pressed=true] { background:var(--color-status-rose-background); border-color:color-mix(in srgb, var(--xrp-err) 35%, transparent); color:var(--xrp-err); }
+.xrp-main { margin-left:auto; min-width:148px; height:40px; padding:0 20px; border-radius:999px; background:var(--color-text-primary); color:var(--color-background-primary-default); font-weight:600; transition:transform .2s var(--xrp-ease), opacity .2s; }
+.xrp-main:active { transform:scale(.97); }
+.xrp button:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:2px; }
+@keyframes xrp-in { from { opacity:0; transform:translateY(4px) } }
+@keyframes xrp-pop { from { opacity:0; transform:scale(.5) } }
+@keyframes xrp-spin { to { transform:rotate(360deg) } }
+@keyframes xrp-shimmer { from { background-position:100% 0 } to { background-position:0% 0 } }
+@container (max-width:440px) { .xrp-seg button { padding:0 10px; } .xrp-main { min-width:0; } .xrp-step-n { font-size:11.5px; } .xrp-step-t { font-size:10.5px; } }
+@media (prefers-reduced-motion: reduce) { .xrp, .xrp * { animation:none !important; transition:none !important; } }`;
+
+  // Each stage: simulated seconds, its log lines (icon, text) and how it ends. `fail` is the scan's failing run.
+  const XRP_STAGES = [
+    { name: 'Install', title: 'Install dependencies', secs: 15, lines: [['box', 'Resolving 1,096 packages'], ['history', 'Restoring cache from main'], ['link', 'Linking binaries']] },
+    { name: 'Build', title: 'Build', secs: 22, lines: [['code', 'Compiling 214 modules'], ['scissors', 'Removing unused exports'], ['folder', 'Writing 3 chunks']], end: ['check', '412 kB bundle'] },
+    { name: 'Test', title: 'Run tests', secs: 28, lines: [['target', 'Running 86 suites'], ['user', 'Unit: 1,102 passed'], ['asterisk', 'Integration: 182 passed']], end: ['check', '1,284 passed'] },
+    { name: 'Scan', title: 'Security scan', secs: 17, lines: [['search', 'Auditing 1,096 dependencies'], ['scale', 'Checking licences'], ['shield', 'Scanning container image']], end: ['check', 'No known vulnerabilities'],
+      fail: { secs: 10.6, lines: [['search', 'Auditing 1,096 dependencies'], ['bug', 'lodash 4.17.20: prototype pollution'], ['bug', 'minimist 1.2.5: prototype pollution']], end: ['x', '2 high-severity issues'] } },
+    { name: 'Deploy', title: 'Deploy to', secs: 20, lines: [['upload', 'Uploading 3 artifacts'], ['layers', 'Shifting traffic to v2.9.0'], ['cloud', 'Warming edge caches']] },
+  ];
+  const XRP_TARGETS = { staging: { label: 'Staging', url: 'staging.checkout.dev' }, production: { label: 'Production', url: 'checkout.dev' } };
 
   /* ---------------------------------------------------------------- demos */
   return [
@@ -380,6 +481,89 @@ export default function pack(h) {
         reset();
         await xcWait(t, 900);
         await pipeline();
+      } },
+
+    { group: G, title: 'Release Pipeline Card', kind: 'scene',
+      desc: 'Release pipeline by Akash (@a1x45h, https://x.com/a1x45h/status/2112964394825187349), cloned with permission: install, build, test, scan and deploy run node by node with their logs and timers; every other run ships to production with a failing security scan that you retry, and the target, failure toggle, Cancel and Reset all work.',
+      async run(root, t, ctx) {
+        xcStyle('x-release-card-css', XRP_CSS);
+        const el = mk('section', 'xrp'); el.setAttribute('aria-label', 'Release v2.9.0');
+        el.innerHTML = `<div class="xrp-head"><span class="xrp-logo" aria-hidden="true">${xcIcon('box')}</span><div class="xrp-name"><b>Release v2.9.0</b><span>checkout-api</span></div><span class="xrp-badge" role="status" aria-live="polite"></span></div>
+<ol class="xrp-panel xrp-steps" aria-label="Pipeline">${XRP_STAGES.map((s) => `<li class="xrp-step" data-state="pending">${s === XRP_STAGES[XRP_STAGES.length - 1] ? '' : '<span class="xrp-link" aria-hidden="true"></span>'}<span class="xrp-node" aria-hidden="true"></span><span class="xrp-step-n">${s.name}</span><span class="xrp-step-t"></span></li>`).join('')}</ol>
+<div class="xrp-panel xrp-detail"></div>
+<div class="xrp-foot"><div class="xrp-seg" role="group" aria-label="Target">${Object.entries(XRP_TARGETS).map(([k, v]) => `<button type="button" data-target="${k}" aria-pressed="${k === 'staging'}">${v.label}</button>`).join('')}</div><button type="button" class="xrp-fail" aria-pressed="false" aria-label="Simulate a failing scan">${xcIcon('alert')}</button><button type="button" class="xrp-main"></button></div>`;
+        root.append(el);
+        const badge = $('.xrp-badge', el), detail = $('.xrp-detail', el), main = $('.xrp-main', el), failBtn = $('.xrp-fail', el), seg = $('.xrp-seg', el);
+        const steps = [...el.querySelectorAll('.xrp-step')];
+        let target = 'staging', failing = false, phase = 'ready', token = 0, resume = 0;
+
+        const setBadge = (tone, html) => { badge.dataset.tone = tone; badge.innerHTML = html; };
+        const setMain = (label, onclick) => { main.textContent = label; main.onclick = onclick; };
+        const setTarget = (k) => { target = k; for (const b of seg.children) b.setAttribute('aria-pressed', String(b.dataset.target === k)); if (phase === 'ready') ready(); };
+        const setFailing = (v) => { failing = v; failBtn.setAttribute('aria-pressed', String(v)); };
+        const kv = (rows) => rows.map(([icon, k, v]) => `<div class="xrp-line">${xcIcon(icon)}<span class="xrp-k">${k}</span><b>${esc(v)}</b></div>`).join('');
+        const setStep = (i, state, time) => { steps[i].dataset.state = state; $('.xrp-node', steps[i]).innerHTML = state === 'done' ? xcIcon('check') : state === 'fail' ? xcIcon('x') : ''; if (time !== undefined) $('.xrp-step-t', steps[i]).textContent = time; };
+        seg.onclick = (e) => { const b = e.target.closest('button'); if (b && phase !== 'run') setTarget(b.dataset.target); };
+        failBtn.onclick = () => setFailing(!failing);
+
+        function ready() {
+          phase = 'ready'; token += 1;
+          steps.forEach((_, i) => { setStep(i, 'pending', ''); const l = $('.xrp-link', steps[i]); if (l) l.style.transform = ''; });
+          setBadge('', '<i></i>Ready');
+          detail.innerHTML = `<div class="xrp-dtop"><span class="xrp-dtitle">Ready to release</span></div><div class="xrp-lines">${kv([['gitBranch', 'Branch', 'main'], ['commit', 'Commit', 'a41f8c2'], ['cloud', 'Target', XRP_TARGETS[target].label], ['layers', 'Steps', String(XRP_STAGES.length)]])}</div>`;
+          setMain('Run pipeline', () => release(0));
+        }
+
+        // Runs the stages from `from`; a newer run (Cancel, Reset, Retry) bumps the token and this one stops.
+        async function release(from) {
+          const my = ++token; phase = 'run';
+          setMain('Cancel', () => ready());
+          for (let i = from; i < XRP_STAGES.length; i++) {
+            const s = XRP_STAGES[i], bad = s.fail && failing, run = bad ? s.fail : s;
+            setBadge('run', `<i></i>Step ${i + 1}/${XRP_STAGES.length}`); setStep(i, 'run', '');
+            detail.innerHTML = `<div class="xrp-dtop"><span class="xrp-dtitle is-run">${esc(s.name === 'Deploy' ? `${s.title} ${target}` : s.title)}</span><span class="xrp-dtime">0.0s</span></div><div class="xrp-lines"></div>`;
+            const lines = $('.xrp-lines', detail), time = $('.xrp-dtime', detail), link = $('.xrp-link', steps[i]);
+            const skel = mk('div', 'xrp-skel'); skel.innerHTML = '<i></i><span></span>'; skel.setAttribute('aria-hidden', 'true');
+            const total = run.lines.length + 1;
+            for (let j = 0; j < total; j++) {
+              const entry = j < run.lines.length ? run.lines[j] : null;
+              if (entry) { const ln = mk('div', 'xrp-line'); ln.innerHTML = `${xcIcon(entry[0])}<span>${esc(entry[1])}</span>`; lines.append(ln, skel); }
+              for (let k = 1; k <= 6; k++) {
+                const frac = (j + k / 6) / total;
+                time.textContent = `${(run.secs * frac).toFixed(1)}s`;
+                if (link && !bad) link.style.transform = `scaleX(${frac})`;
+                await xcWait(t, 90);
+                if (my !== token) return;
+              }
+            }
+            skel.remove();
+            $('.xrp-dtitle', detail).classList.remove('is-run');
+            time.textContent = `${run.secs.toFixed(1)}s`;
+            if (run.end) { const ln = mk('div', 'xrp-line'); ln.dataset.tone = bad ? 'err' : 'ok'; ln.innerHTML = `${xcIcon(run.end[0])}<span>${esc(run.end[1])}</span>`; lines.append(ln); }
+            if (bad) {
+              setStep(i, 'fail', `${run.secs.toFixed(1)}s`);
+              setBadge('err', `${xcIcon('x')}Failed`); phase = 'failed'; resume = i;
+              setMain('Retry scan', () => { setFailing(false); release(resume); });
+              return;
+            }
+            setStep(i, 'done', `${s.secs.toFixed(1)}s`);
+            if (link) link.style.transform = 'scaleX(1)';
+            await xcWait(t, 380);
+            if (my !== token) return;
+          }
+          phase = 'done';
+          setBadge('ok', `${xcIcon('check')}Released`);
+          detail.innerHTML = `<div class="xrp-dtop"><span class="xrp-dtitle">Live on ${target}</span></div><div class="xrp-lines">${kv([['clock', 'Duration', '1:42'], ['flask', 'Tests', '1,284 passed'], ['box', 'Bundle', '412 kB'], ['link', 'URL', XRP_TARGETS[target].url]])}</div>`;
+          setMain('Reset', () => ready());
+        }
+
+        // Every other run plays the video's second take: production, a failing scan, then the retry.
+        const second = (ctx.xrpRuns = (Number(ctx.xrpRuns) || 0) + 1) % 2 === 0;
+        ready();
+        await xcWait(t, 1100);
+        if (second) { setTarget('production'); await xcWait(t, 500); setFailing(true); await xcWait(t, 600); }
+        await release(0);
+        if (phase === 'failed') { await xcWait(t, 1600); setFailing(false); await release(resume); }
       } },
   ];
 }
