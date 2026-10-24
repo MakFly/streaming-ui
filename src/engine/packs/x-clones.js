@@ -9,6 +9,8 @@
  *   Agent Approval Card — Kevin (@kvnkld, aicss.dev), https://x.com/kvnkld/status/2089693820313366635
  *   Floating Agent Chat — Louis Nguyen Studio (@louisnstudio), https://x.com/louisnstudio/status/2096525796714438833
  *     (measured on its live demo, crm-agent-pop.vercel.app)
+ *     + window layout, menu icons and suggestions from Startup Visuals (@startupvisuals),
+ *       https://x.com/startupvisuals/status/2100519773914427610 (one still)
  *   Deploy Status — Charles Postiaux (@PostiauxCharles), https://x.com/PostiauxCharles/status/2109606436527366235
  *     (three still images: the motion that plays them is ours)
  *   Logs Explorer — Léo (@sinequanonh), https://x.com/sinequanonh/status/2108225806954799155 (stills; motion is ours)
@@ -718,8 +720,12 @@ export default function pack(h) {
 .xcp-win[data-layout=popup] { left:22%; top:6%; width:64%; height:88%; border-radius:10px; }
 .xcp-win[data-layout=drawer] { left:54%; top:0; width:46%; height:100%; border-radius:0; border-width:0 0 0 1px; }
 .xcp-win[data-layout=full] { left:132px; top:0; width:calc(100% - 132px); height:100%; border-radius:0; border-width:0 0 0 1px; box-shadow:none; }
+.xcp-win[data-layout=window] { left:44%; top:5%; width:53%; height:88%; border-radius:10px; }
+.xcp-win[data-layout=min] { left:calc(100% - 236px); top:calc(100% - 50px); width:224px; height:38px; border-radius:10px; }
+.xcp-win[data-layout=min] .xcp-feed, .xcp-win[data-layout=min] .xcp-compose, .xcp-win[data-layout=min] .xcp-hbtn:not([data-menu]) { display:none; }
+.xcp-win[data-layout=min] .xcp-head { cursor:pointer; border-bottom:0; }
 .xcp-win.is-hidden { opacity:0; transform:translateY(12px) scale(.97); pointer-events:none; }
-@container (max-width:520px) { .xcp-win[data-layout] { left:0; top:0; width:100%; height:100%; border-radius:0; } }
+@container (max-width:520px) { .xcp-win[data-layout]:not([data-layout=min]) { left:0; top:0; width:100%; height:100%; border-radius:0; } }
 .xcp-head { display:flex; align-items:center; gap:6px; height:36px; padding:0 8px 0 12px; border-bottom:1px solid var(--xcp-line); flex:none; }
 .xcp-crumb { display:flex; align-items:center; gap:5px; min-width:0; flex:1; white-space:nowrap; overflow:hidden; color:var(--xcp-muted); }
 .xcp-crumb b { font-weight:500; color:var(--color-text-primary); overflow:hidden; text-overflow:ellipsis; }
@@ -727,7 +733,14 @@ export default function pack(h) {
 .xcp-hbtn:hover, .xcp-hbtn[aria-expanded=true] { background:var(--xcp-panel); color:var(--color-text-primary); }
 .xcp-menu { position:absolute; z-index:3; top:34px; right:30px; min-width:150px; padding:4px; border-radius:8px; border:1px solid var(--xcp-line); background:var(--xcp-app); box-shadow:0 12px 30px -12px color-mix(in srgb, var(--color-text-primary) 40%, transparent); animation:xcp-in .2s var(--xcp-ease) both; }
 .xcp-menu p { padding:4px 8px; font-size:11px; color:var(--xcp-muted); }
-.xcp-menu button { display:flex; width:100%; height:26px; align-items:center; padding:0 8px; border-radius:5px; }
+.xcp-menu button { display:flex; width:100%; height:26px; align-items:center; gap:8px; padding:0 8px; border-radius:5px; }
+.xcp-menu button > svg:first-child { color:var(--xcp-muted); }
+.xcp-menu button > svg:last-child:not(:first-child) { margin-left:auto; color:var(--color-status-lime-text); }
+.xcp-sugg { display:flex; flex-direction:column; align-items:flex-start; gap:6px; color:var(--xcp-muted); animation:xcp-in .35s var(--xcp-ease) both; }
+.xcp-sugg button { display:flex; align-items:center; gap:8px; padding:0 4px; text-align:start; }
+.xcp-sugg button:hover { color:var(--color-text-primary); }
+.xcp-sugg button i { width:10px; height:10px; border-radius:3px; background:var(--color-chart-3-active); }
+.xcp-ph.is-typed { color:var(--color-text-primary); }
 .xcp-menu button:hover, .xcp-menu button[aria-checked=true] { background:var(--xcp-panel); }
 .xcp-feed { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; gap:18px; padding:14px; }
 .xcp-user { align-self:flex-end; max-width:78%; padding:8px 12px; border-radius:8px; background:var(--xcp-panel); animation:xcp-in .35s var(--xcp-ease) both; }
@@ -1836,7 +1849,7 @@ export default function pack(h) {
       } },
 
     { group: G, title: 'Floating Agent Chat', kind: 'scene',
-      desc: 'Floating CRM agent chat by Louis Nguyen Studio (@louisnstudio, https://x.com/louisnstudio/status/2096525796714438833, demo crm-agent-pop.vercel.app), cloned with permission: an agent conversation pops up over a CRM, asks which Acme to use, delivers a PDF report, then switches between pop-up, side drawer and full page from its layout menu.',
+      desc: 'Floating CRM agent chat by Louis Nguyen Studio (@louisnstudio, https://x.com/louisnstudio/status/2096525796714438833, demo crm-agent-pop.vercel.app) with the window layout from Startup Visuals (@startupvisuals, https://x.com/startupvisuals/status/2100519773914427610), cloned with permission: an agent conversation pops up over a CRM, asks which Acme to use, delivers a PDF report with follow-up suggestions, then tours side drawer, full page, window and minimize from its layout menu.',
       async run(root, t) {
         xcStyle('x-floating-chat-css', XCP_CSS);
         const el = mk('section', 'xcp'); el.setAttribute('aria-label', 'CRM with a floating agent chat');
@@ -1850,18 +1863,21 @@ export default function pack(h) {
         const acts = `<div class="xcp-acts" aria-hidden="true">${xcIcon('copy')}${xcIcon('heart')}${xcIcon('rotate')}</div>`;
         const type = async (node, text) => { for (const w of text.split(/(?<= )/)) { node.append(w); follow(); await xcWait(t, 28); } };
 
-        // Layout menu: Side Drawer, Full Page, Pop Up.
-        const LAYOUTS = [['drawer', 'Side Drawer'], ['full', 'Full Page'], ['popup', 'Pop Up']];
+        // Layout menu: Side Drawer, Full Page, Window (the pop-up anchored right), Minimize. The first open is centred.
+        const LAYOUTS = [['drawer', 'Side Drawer', 'panel'], ['full', 'Full Page', 'expand'], ['window', 'Window', 'copy'], ['min', 'Minimize', 'minus']];
         const setLayout = (k) => { win.dataset.layout = k; closeMenu(); };
         const closeMenu = () => { $('.xcp-menu', win)?.remove(); menuBtn.setAttribute('aria-expanded', 'false'); };
-        menuBtn.onclick = () => {
+        menuBtn.onclick = (e) => {
+          e.stopPropagation();
           if ($('.xcp-menu', win)) return closeMenu();
           const m = mk('div', 'xcp-menu'); m.setAttribute('role', 'menu');
-          m.innerHTML = `<p>Switch Layout:</p>${LAYOUTS.map(([k, l]) => `<button type="button" role="menuitemradio" aria-checked="${win.dataset.layout === k}" data-l="${k}">${l}</button>`).join('')}`;
-          m.onclick = (e) => { const b = e.target.closest('[data-l]'); if (b) setLayout(b.dataset.l); };
+          m.innerHTML = `<p>Switch Layout:</p>${LAYOUTS.map(([k, l, i]) => `<button type="button" role="menuitemradio" aria-checked="${win.dataset.layout === k}" data-l="${k}">${xcIcon(i)}${l}${win.dataset.layout === k ? xcIcon('check') : ''}</button>`).join('')}`;
+          m.onclick = (ev) => { const b = ev.target.closest('[data-l]'); if (b) setLayout(b.dataset.l); };
           win.append(m); menuBtn.setAttribute('aria-expanded', 'true');
         };
-        $('[data-close]', el).onclick = () => win.classList.add('is-hidden');
+        // Minimized, the header bar alone stays; clicking it restores the window.
+        $('.xcp-head', el).onclick = () => { if (win.dataset.layout === 'min') setLayout('window'); };
+        $('[data-close]', el).onclick = (e) => { e.stopPropagation(); win.classList.add('is-hidden'); };
 
         await xcWait(t, 600);
         win.classList.remove('is-hidden');
@@ -1886,16 +1902,26 @@ export default function pack(h) {
         await xcWait(t, 400);
         await type($('.xcp-text', a2), 'The quarterly sales report for Acme Corp has been successfully generated and is available in PDF format.');
         a2.insertAdjacentHTML('beforeend', `<div class="xcp-file"><div class="xcp-ftitle"><i></i><span>Quarterly sales report for Acme Corp.pdf</span></div><p class="xcp-fdesc">Explore your Stripe data thoroughly to uncover vital insights that can shape your business strategies. By analyzing trends and patterns, you can make informed decisions.</p><div class="xcp-fbtns"><button type="button">${xcIcon('share')}Share</button><button type="button" class="is-solid">${xcIcon('download')}Download</button></div></div>${acts}`);
+        const sugg = add('xcp-sugg', '<p>Conversation suggestions:</p>');
+        const ph = $('.xcp-ph', el);
+        for (const s of ['Update contract liability time range to 5.5 years', 'Draft updated description for Acme Corp']) {
+          const b = mk('button', ''); b.type = 'button'; b.innerHTML = `↳ <span></span><i aria-hidden="true"></i>`; $('span', b).textContent = s;
+          b.onclick = () => { ph.textContent = s; ph.classList.add('is-typed'); };
+          sugg.append(b);
+        }
         follow();
 
-        // The layout tour from the video, through the menu each time.
-        for (const k of ['drawer', 'full', 'popup']) {
+        // The layout tour from the posts, through the menu each time, ending on the anchored window.
+        for (const k of ['drawer', 'full', 'window', 'min']) {
           await xcWait(t, 1500);
           menuBtn.click();
           await xcWait(t, 700);
           $(`.xcp-menu [data-l=${k}]`, win)?.click();
           await xcWait(t, 500); follow();
         }
+        await xcWait(t, 1400);
+        $('.xcp-head', el).click();
+        await xcWait(t, 500); follow();
       } },
 
     { group: G, title: 'Deploy Status', kind: 'scene',
