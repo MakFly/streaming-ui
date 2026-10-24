@@ -12,14 +12,14 @@ export const HOME: PageMeta = {
   path: '/',
   title: 'Streaming UI: every way an AI response can arrive',
   description:
-    'Every way an AI response can arrive: 247 live streaming and agent patterns, 10 AI chat templates and 11 composers you can install with the shadcn CLI.',
+    'Every way an AI response can arrive: 249 live streaming and agent patterns, 10 AI chat templates and 11 composers you can install with the shadcn CLI.',
 };
 
 export const RESPONSES: PageMeta = {
   path: '/responses',
   title: 'Streaming responses · Streaming UI',
   description:
-    '247 live streaming, thinking and agent patterns in 14 collections. Watch each one play, then copy the prompt that rebuilds it.',
+    '249 live streaming, thinking and agent patterns in 14 collections. Watch each one play, then copy the prompt that rebuilds it.',
 };
 
 export const TEMPLATES: PageMeta = {

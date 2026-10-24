@@ -2,7 +2,7 @@
   "name": "streaming-ui",
   "private": true,
   "version": "1.0.0",
-  "description": "Every way an AI response can arrive: 247 live streaming and agent patterns, 10 AI chat templates and 11 composers installable with the shadcn CLI.",
+  "description": "Every way an AI response can arrive: 249 live streaming and agent patterns, 10 AI chat templates and 11 composers installable with the shadcn CLI.",
   "license": "MIT",
   "author": "Kev (MakFly)",
   "repository": {
