@@ -11,6 +11,7 @@
  *     (measured on its live demo, crm-agent-pop.vercel.app)
  *   Deploy Status — Charles Postiaux (@PostiauxCharles), https://x.com/PostiauxCharles/status/2109606436527366235
  *     (three still images: the motion that plays them is ours)
+ *   Logs Explorer — Léo (@sinequanonh), https://x.com/sinequanonh/status/2108225806954799155 (stills; motion is ours)
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -803,6 +804,96 @@ export default function pack(h) {
   const XDS_TOTAL = 42, XDS_PX = 2.4; // timeline bars: pixels per second
   const xdsClock = (s) => `00:${String(Math.round(s)).padStart(2, '0')}`;
 
+  /* ---------------------------------------------------------- Logs Explorer */
+  const XLG_CSS = `
+.xlg { --xlg-ease:cubic-bezier(0.22,1,0.36,1); --xlg-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary)); --xlg-dim:var(--color-text-tertiary); --xlg-line:var(--color-border-button-default);
+  --xlg-info:var(--color-chart-6-active); --xlg-warn:var(--color-status-orange-text); --xlg-err:color-mix(in oklab, var(--color-chart-3-active) 60%, var(--color-status-rose-text));
+  --xlg-info-ink:color-mix(in oklab, var(--xlg-info) 70%, var(--color-text-primary)); --xlg-err-ink:color-mix(in oklab, var(--xlg-err) 80%, var(--color-text-primary));
+  container-type:inline-size; position:relative; display:flex; width:720px; max-width:100%; height:500px; overflow:hidden; border-radius:16px; border:1px solid var(--xlg-line); background:var(--color-background-primary-default);
+  color:var(--color-text-primary); font-family:var(--font-sans); font-size:12.5px; line-height:18px; text-align:start; }
+.dark .xlg { --xlg-dim:var(--color-text-secondary); }
+:where(.xlg) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+.xlg button:focus-visible, .xlg [tabindex]:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:-2px; }
+.xlg svg { flex:none; width:14px; height:14px; }
+.xlg-mono { font-family:var(--font-mono); font-size:11.5px; font-variant-numeric:tabular-nums; }
+.xlg-rail { flex:none; width:44px; display:flex; flex-direction:column; align-items:center; gap:14px; padding:12px 0; border-right:1px solid var(--xlg-line); color:var(--xlg-muted); }
+.xlg-rail .xlg-app { display:grid; place-items:center; width:24px; height:24px; border-radius:7px; background:var(--color-accent-500); color:var(--color-background-primary-default); }
+.xlg-rail .is-on { display:grid; place-items:center; width:26px; height:26px; margin:-6px 0; border-radius:7px; background:var(--color-background-secondary-default); color:var(--color-text-primary); }
+.xlg-main { position:relative; display:flex; flex-direction:column; min-width:0; flex:1; padding:12px 18px 0; }
+.xlg-crumb { display:flex; align-items:center; gap:7px; color:var(--xlg-muted); } .xlg-crumb b { font-weight:500; color:var(--color-text-primary); }
+.xlg-top { display:flex; align-items:center; gap:8px; margin-top:14px; }
+.xlg-top h3 { flex:1; font-size:22px; line-height:28px; font-weight:600; letter-spacing:-.01em; }
+.xlg-seg { display:flex; padding:2px; border-radius:8px; border:1px solid var(--xlg-line); }
+.xlg-seg span { height:22px; padding:0 8px; border-radius:6px; line-height:22px; font-size:11.5px; color:var(--xlg-muted); }
+.xlg-seg span.is-on { background:var(--color-background-secondary-default); color:var(--color-text-primary); font-weight:500; }
+.xlg-live { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 10px; border-radius:8px; border:1px solid var(--xlg-line); font-weight:500; }
+.xlg-live i { width:7px; height:7px; border-radius:999px; background:var(--color-chart-7-active); box-shadow:0 0 0 3px color-mix(in srgb, var(--color-chart-7-active) 25%, transparent); animation:xlg-pulse 1.6s ease-in-out infinite; }
+.xlg-q { display:flex; align-items:center; gap:8px; height:34px; margin-top:12px; padding:0 10px; border-radius:9px; border:1px solid var(--xlg-line); background:var(--color-background-secondary-default); color:var(--xlg-muted); }
+.xlg-q code { flex:1; font-family:var(--font-mono); font-size:12px; color:var(--color-text-primary); } .xlg-q .k { color:var(--xlg-info-ink); } .xlg-q .n { color:var(--xlg-err-ink); }
+.xlg-q kbd { padding:0 5px; border-radius:4px; border:1px solid var(--xlg-line); font-family:var(--font-mono); font-size:10.5px; }
+.xlg-chart { margin-top:10px; padding:10px 12px 8px; border-radius:10px; border:1px solid var(--xlg-line); }
+.xlg-chead { display:flex; align-items:center; gap:12px; font-size:11.5px; color:var(--xlg-muted); }
+.xlg-chead b { color:var(--color-text-primary); font-weight:600; } .xlg-chead > span:first-child { flex:1; }
+.xlg-leg { display:inline-flex; align-items:center; gap:5px; } .xlg-leg i { width:7px; height:7px; border-radius:2px; }
+.xlg-bars { position:relative; display:flex; align-items:flex-end; gap:3px; height:64px; margin-top:12px; }
+.xlg-bars > span { flex:1; display:flex; flex-direction:column-reverse; gap:1px; height:100%; justify-content:flex-start; }
+.xlg-bars i { display:block; border-radius:2px; transition:height .3s var(--xlg-ease); }
+.xlg-inc { position:absolute; top:-6px; bottom:0; border-top:1.5px solid var(--xlg-err); background:color-mix(in srgb, var(--xlg-err) 8%, transparent); }
+.xlg-inc span { position:absolute; left:0; top:-17px; white-space:nowrap; font-family:var(--font-mono); font-size:10.5px; color:var(--xlg-err-ink); }
+.xlg-axis { display:flex; justify-content:space-between; margin-top:6px; color:var(--xlg-dim); font-size:10.5px; }
+.xlg-table { flex:1; min-height:0; margin-top:10px; overflow:hidden; }
+.xlg-th, .xlg-tr { display:grid; grid-template-columns:96px 54px 66px minmax(0,1fr); align-items:center; gap:8px; height:28px; padding:0 8px; }
+.xlg-th { color:var(--xlg-muted); font-size:11.5px; }
+.xlg-tr { width:100%; border-radius:7px; border:1px solid transparent; text-align:start; animation:xlg-new 1.1s var(--xlg-ease) both; }
+.xlg-tr:hover { background:var(--color-background-secondary-default); }
+.xlg-tr[aria-selected=true] { border-color:color-mix(in srgb, var(--xlg-err) 45%, transparent); background:color-mix(in srgb, var(--xlg-err) 10%, transparent); box-shadow:inset 2px 0 0 var(--xlg-err); }
+.xlg-tr .ms, .xlg-msg .d { color:var(--xlg-dim); }
+.xlg-msg { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; } .xlg-msg .e { color:var(--xlg-err-ink); }
+.xlg-lvl { justify-self:start; padding:0 4px; border-radius:4px; font-family:var(--font-mono); font-size:9.5px; font-weight:600; line-height:16px; letter-spacing:.03em; }
+.xlg-lvl[data-l=INFO] { background:color-mix(in srgb, var(--xlg-info) 16%, transparent); color:var(--xlg-info-ink); }
+.xlg-lvl[data-l=WARN] { background:var(--color-status-orange-background); color:var(--xlg-warn); }
+.xlg-lvl[data-l=ERROR] { background:color-mix(in srgb, var(--xlg-err) 16%, transparent); color:var(--xlg-err-ink); }
+.xlg-svc { overflow:hidden; text-overflow:ellipsis; }
+/* Detail panel */
+.xlg-panel { position:absolute; top:0; right:0; bottom:0; z-index:2; width:340px; max-width:100%; overflow:hidden auto; padding:14px 16px; border-left:1px solid var(--xlg-line); background:var(--color-background-primary-default);
+  box-shadow:-24px 0 48px -28px color-mix(in srgb, var(--color-text-primary) 45%, transparent); transform:translateX(105%); transition:transform .42s var(--xlg-ease); }
+.xlg-panel.is-open { transform:none; }
+.xlg-ph { display:flex; align-items:center; gap:8px; } .xlg-ph .grow { flex:1; } .xlg-ph .xlg-mono.dim { color:var(--xlg-muted); }
+.xlg-pager { display:flex; align-items:center; gap:6px; white-space:nowrap; color:var(--xlg-muted); }
+.xlg-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.xlg-actions button { display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 9px; border-radius:7px; border:1px solid var(--xlg-line); font-size:11.5px; }
+.xlg-actions button:hover { background:var(--color-background-secondary-default); }
+.xlg-h { margin:16px 0 6px; font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--xlg-muted); }
+.xlg-h span { margin-left:5px; padding:0 5px; border-radius:4px; background:var(--color-background-secondary-default); letter-spacing:0; }
+.xlg-box { padding:9px 10px; border-radius:8px; border:1px solid var(--xlg-line); background:var(--color-background-secondary-default); }
+.xlg-kv { border-radius:8px; border:1px solid var(--xlg-line); overflow:hidden; }
+.xlg-kv > div { display:grid; grid-template-columns:96px minmax(0,1fr); align-items:center; min-height:22px; padding:0 10px; }
+.xlg-kv > div + div { border-top:1px solid var(--xlg-line); }
+.xlg-kv > div > span:first-child { color:var(--xlg-muted); }
+.xlg-kv > div > span:last-child { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.xlg-kv .c { color:var(--xlg-dim); } .xlg-kv .c.e { color:var(--xlg-err-ink); }
+@keyframes xlg-new { 0% { opacity:0; transform:translateY(-6px); background:var(--color-background-secondary-default) } 30% { opacity:1; transform:none } 100% { background:transparent } }
+@keyframes xlg-pulse { 50% { box-shadow:0 0 0 5px color-mix(in srgb, var(--color-chart-7-active) 0%, transparent) } }
+@container (max-width:560px) { .xlg-rail, .xlg-seg { display:none } .xlg-th, .xlg-tr { grid-template-columns:78px 50px minmax(0,1fr); } .xlg-th > :nth-child(3), .xlg-tr .xlg-svc { display:none } }
+@media (prefers-reduced-motion: reduce) { .xlg, .xlg * { animation:none !important; transition:none !important; } }`;
+
+  // Newest first: [time, ms, level, service, message html]. The first five stream in live, the rest are already there.
+  const XLG_ROWS = [
+    ['16:16:31', '902', 'INFO', 'web', 'GET /checkout <span class="d">200</span> 21ms'],
+    ['16:16:31', '640', 'ERROR', 'checkout', 'POST /api/checkout <span class="e">504</span> 5012ms'],
+    ['16:16:31', '207', 'WARN', 'checkout', 'Retrying inventory-service request, attempt 2/3'],
+    ['16:16:30', '951', 'ERROR', 'checkout', 'Timeout after 5000ms calling inventory-service (POST /reserve)'],
+    ['16:16:30', '688', 'INFO', 'api', 'GET /api/orders/ord_8f2K1x <span class="d">200</span> 61ms'],
+    ['16:16:30', '412', 'INFO', 'checkout', 'payment.authorized order=ord_8f2K1x amount=129.00 currency=EUR'],
+    ['16:16:30', '150', 'WARN', 'api', 'Slow query on products (842ms): SELECT * FROM products WHERE category = $1'],
+    ['16:16:29', '873', 'INFO', 'worker', 'job email.order_confirmation completed in 312ms'],
+    ['16:16:29', '604', 'ERROR', 'checkout', 'Timeout after 5000ms calling inventory-service (POST /reserve)'],
+    ['16:16:29', '341', 'INFO', 'api', 'GET /api/products?category=sneakers <span class="d">200</span> 42ms'],
+    ['16:16:29', '088', 'INFO', 'web', 'GET / <span class="d">200</span> 12ms'],
+  ];
+  // Histogram buckets [info, warn, error] in pixels, with the incident around buckets 18–23.
+  const XLG_BARS = [26, 22, 28, 30, 24, 20, 28, 30, 25, 25, 28, 24, 26, 28, 27, 25, 29, 24, 12, 10, 14, 13, 16, 12, 28, 26, 27, 30, 26, 28, 24, 29, 22, 27, 26, 27].map((info, i) => [info, [0, 3, 5, 9, 14, 27, 31, 33].includes(i) ? 4 : (i >= 18 && i <= 23 ? 5 : 0), i >= 18 && i <= 23 ? 18 + (i % 3) * 5 : 0]);
+
   /* ---------------------------------------------------------------- demos */
   return [
     { group: G, title: 'Agent Status', kind: 'scene',
@@ -1499,6 +1590,58 @@ export default function pack(h) {
         const big = $('.xds-big', end);
         for (let v = 0; v <= XDS_TOTAL; v += 3) { big.textContent = `${v}s`; await xcWait(t, 30); }
         big.textContent = `${XDS_TOTAL}s`;
+      } },
+
+    { group: G, title: 'Logs Explorer', kind: 'scene',
+      desc: 'Logs explorer by Léo (@sinequanonh, https://x.com/sinequanonh/status/2108225806954799155), cloned with permission from its stills: a live production log view with a query bar, a stacked level histogram marking an incident, newest-first rows streaming in, and a detail panel that opens the failing checkout request with its fields and attributes; click any row.',
+      async run(root, t) {
+        xcStyle('x-logs-explorer-css', XLG_CSS);
+        const el = mk('section', 'xlg'); el.setAttribute('aria-label', 'Logs explorer');
+        const leg = (c, l) => `<span class="xlg-leg"><i style="background:${c}"></i>${l}</span>`;
+        el.innerHTML = `<nav class="xlg-rail" aria-hidden="true"><span class="xlg-app">${xcIcon('sparkles')}</span>${xcIcon('home')}${xcIcon('search')}${xcIcon('layers')}${xcIcon('signal')}<span class="is-on">${xcIcon('listCheck')}</span>${xcIcon('table')}${xcIcon('clock')}${xcIcon('users')}</nav>
+<div class="xlg-main"><div class="xlg-crumb">${xcIcon('panel')}Logs<span>/</span><b>Explorer</b></div>
+<div class="xlg-top"><h3>Logs</h3><div class="xlg-seg" aria-hidden="true"><span>15m</span><span class="is-on">1h</span><span>24h</span><span>7d</span></div><div class="xlg-seg" aria-hidden="true"><span class="is-on">List</span><span>Visualize</span></div><span class="xlg-live" role="status"><i aria-hidden="true"></i>Live</span></div>
+<div class="xlg-q">${xcIcon('search')}<code><span class="k">env:</span>production <span class="n">-healthcheck</span></code><kbd>/</kbd></div>
+<div class="xlg-chart"><div class="xlg-chead"><span><b class="xlg-mono xlg-count">28,364</b> lines · Last 1 hour · newest first</span>${leg('var(--xlg-err)', 'Error')}${leg('var(--xlg-warn)', 'Warn')}${leg('var(--xlg-info)', 'Info')}${leg('var(--xlg-dim)', 'Debug')}</div>
+<div class="xlg-bars" aria-hidden="true">${XLG_BARS.map(([i, w, e]) => `<span><i style="height:${i}px;background:var(--xlg-info)"></i><i style="height:${w}px;background:var(--xlg-warn)"></i><i style="height:${e}px;background:var(--xlg-err)"></i></span>`).join('')}<div class="xlg-inc" style="left:${(18 / 36) * 100}%;width:${(6 / 36) * 100}%"><span>● Incident · api.acme.com down</span></div></div>
+<div class="xlg-axis xlg-mono" aria-hidden="true"><span>15:20</span><span>15:40</span><span>16:00</span><span>16:16</span></div></div>
+<div class="xlg-table"><div class="xlg-th"><span>Time (CEST)</span><span>Level</span><span>Service</span><span>Message</span></div><div class="xlg-rows" role="listbox" aria-label="Log lines, newest first"></div></div></div>
+<aside class="xlg-panel" aria-label="Log line details" aria-hidden="true"></aside>`;
+        root.append(el);
+        const rows = $('.xlg-rows', el), panel = $('.xlg-panel', el), count = $('.xlg-count', el), last = el.querySelector('.xlg-bars > span:last-of-type i');
+        let lines = 28364;
+
+        const openPanel = (r) => {
+          const [time, ms, lvl, svc] = r;
+          panel.innerHTML = `<div class="xlg-ph"><span class="xlg-lvl" data-l="${lvl}">${lvl}</span><span class="xlg-mono">${time}.${ms}</span><span class="xlg-mono dim grow">${svc}</span><span class="xlg-pager xlg-mono">${xcIcon('chevronUp')}${xcIcon('chevronDown')}2 / 200+</span><button type="button" aria-label="Close details">${xcIcon('x')}</button></div>
+<div class="xlg-actions"><button type="button">${xcIcon('listCheck')}Lines around</button><button type="button">${xcIcon('sparkles')}Copy for AI</button><button type="button">${xcIcon('fork')}Same pattern</button></div>
+<div class="xlg-h">Message</div><div class="xlg-box xlg-mono">${r[4]}</div>
+<div class="xlg-h">Fields</div><div class="xlg-kv xlg-mono">${[['time', `Oct 8, ${time}.${ms} CEST`], ['service', svc], ['host', 'api-prod-1'], ['env', 'production'], ['severity', `17 <span class="c e">// ${lvl}</span>`], ['source', 'src_9fK2LmQ4 <span class="c">· Checkout API</span>'], ['pattern', '3f1c9a07be52d1e4']].map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join('')}</div>
+<div class="xlg-h">Attributes<span>12</span></div><div class="xlg-kv xlg-mono">${[['client_ip', '"203.0.113.42"'], ['duration_ms', '"5012" <span class="c">// 5.0 s</span>'], ['http.method', '"POST"'], ['http.route', '"/api/checkout"'], ['http.status_code', '"504" <span class="c e">// Gateway Timeout</span>'], ['http.user_agent', '"Mozilla/5.0 (Macintosh…"'], ['order_id', '"ord_8f2K1x"'], ['request_id', '"req_7Hq2mX9a"'], ['trace_id', '"4bf92f3577b34da6"'], ['upstream', '"inventory-service"'], ['upstream_ms', '"5000" <span class="c e">// timeout</span>'], ['user_id', '"usr_2Rk81"']].map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join('')}</div>`;
+          panel.classList.add('is-open'); panel.setAttribute('aria-hidden', 'false');
+          $('[aria-label="Close details"]', panel).onclick = () => { panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true'); for (const b of rows.children) b.setAttribute('aria-selected', 'false'); };
+        };
+        const addRow = (r, top) => {
+          const b = mk('button', 'xlg-tr'); b.type = 'button'; b.setAttribute('role', 'option'); b.setAttribute('aria-selected', 'false');
+          b.innerHTML = `<span class="xlg-mono">${r[0]}<span class="ms">.${r[1]}</span></span><span class="xlg-lvl" data-l="${r[2]}">${r[2]}</span><span class="xlg-mono xlg-svc">${r[3]}</span><span class="xlg-mono xlg-msg">${r[4]}</span>`;
+          b.onclick = () => { for (const x of rows.children) x.setAttribute('aria-selected', String(x === b)); openPanel(r); };
+          if (top) rows.prepend(b); else rows.append(b);
+          return b;
+        };
+        for (const r of XLG_ROWS.slice(5)) addRow(r, false).style.animation = 'none';
+
+        // Live: the five newest lines arrive on top, the last bucket and the line count grow with them.
+        await xcWait(t, 700);
+        let selected = null;
+        for (const r of XLG_ROWS.slice(0, 5).reverse()) {
+          const b = addRow(r, true);
+          if (r[1] === '640') selected = b;
+          lines += 1; count.textContent = lines.toLocaleString('en-US');
+          last.style.height = `${parseFloat(last.style.height) + 1}px`;
+          await xcWait(t, 650);
+        }
+        await xcWait(t, 900);
+        selected.click();
       } },
   ];
 }
