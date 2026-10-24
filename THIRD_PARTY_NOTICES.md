@@ -16,6 +16,7 @@ lives here rather than in the interface. Check each project's license before red
 | Kit | Kibo UI | Hayden Bleasel, kibo-ui.com |
 | Glow | Cult UI | cult-ui.com |
 | Research | ReUI | reui.io |
+| Agent, Stepper Run (`src/engine/packs/x-clones.js`) | ReUI stepper (MIT), shown by Bob (@bobganiev) | reui.io |
 | Dots | Dot Matrix | dotmatrix (zzzzshawn) |
 | Transitions | Transitions.dev | transitions.dev |
 | Animated | Animate UI | animate-ui.com |

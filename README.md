@@ -4,7 +4,7 @@
 
 **Every way an AI response can arrive.**
 
-227 live streaming, thinking and agent patterns · 10 complete AI chat templates · 11 composers you can install with the shadcn CLI.
+249 live streaming, thinking and agent patterns · 10 complete AI chat templates · 11 composers you can install with the shadcn CLI.
 
 [![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)](https://react.dev)
 [![Vite 7](https://img.shields.io/badge/Vite-7-646cff?logo=vite&logoColor=white)](https://vite.dev)
@@ -31,7 +31,7 @@
 
 ## Features
 
-- **227 response patterns, playing live.** Reasoning blocks, shimmering status lines, tool calls, web search trails, task lists, skeletons, dot-grid loaders, approval cards and full agent timelines, sorted into 14 collections. Every card plays on screen and stops off screen.
+- **249 response patterns, playing live.** Reasoning blocks, shimmering status lines, tool calls, web search trails, task lists, skeletons, dot-grid loaders, approval cards and full agent timelines, sorted into 14 collections. Every card plays on screen and stops off screen.
 - **A rebuild prompt for everything.** Each demo, template and composer opens a Markdown prompt with the exact choreography, timings and source files, ready to paste into an AI coding assistant.
 - **10 AI chat templates.** Assistant, Research, Coding Agent, Support Copilot, Data Analyst, Agent Builder, Canvas, Deep Research, Agent Approvals and Model Compare. Each one plays a scripted conversation, then answers what you type, with a desktop / tablet / mobile preview.
 - **11 interchangeable composers.** Pill, Box, Panel, Dock, Command, Inline, Voice, Halo, Media, Palette and Mention, all behind one `<Composer variant="…" />` API. Pick one for every template at once from any header.
@@ -152,7 +152,7 @@ src/
   router.tsx               route tree, each page lazy-loaded and prefetched while idle
   routes/                  landing, gallery, demo, templates, template, composers, orbs, preview, prompt, 404
   components/              site chrome, demo stage, prompt dialog, palette picker, install button, shadcn ui/
-  engine/                  the 227 response demos (imperative DOM choreographies) and their registry
+  engine/                  the 249 response demos (imperative DOM choreographies) and their registry
   templates/               the 10 chat templates
     kit/                   the chat kit: engine, markdown, parts, model picker, attachments, limits
       composer-kit.tsx     props contract and shared composer behaviour
@@ -178,7 +178,7 @@ scripts/                   build-registry.mjs, collect-classes.mjs
 
 ## How it works
 
-- **Demos.** Each of the 227 demos follows one contract, `{ group, title, desc, kind, run(root, t, ctx) }`. React owns the stage element; the demo owns what is inside it. `t` is a timer scope, so clearing it stops everything a demo scheduled.
+- **Demos.** Each of the 249 demos follows one contract, `{ group, title, desc, kind, run(root, t, ctx) }`. React owns the stage element; the demo owns what is inside it. `t` is a timer scope, so clearing it stops everything a demo scheduled.
 - **Prompts.** A demo's prompt is rebuilt from `run.toString()` and the helpers it uses, so the production build keeps the code as authored: no minification, `esnext` target, no tree-shaking (see `vite.config.ts`).
 - **Templates.** `templates/kit/engine.ts` runs async scripts (think, call tools, stream markdown, ask for approval) as React state. A new message or Stop cancels whatever is playing.
 - **Theme and palettes.** Dark mode is a `.dark` class on `<html>`; a palette is a `data-palette` attribute that swaps the `--color-neutral-*` and `--color-accent-*` scales every semantic token is built from. Both are applied before first paint and synced across tabs and preview frames.
@@ -199,3 +199,5 @@ Issues and pull requests are welcome.
 Streaming UI is released under the [MIT License](LICENSE).
 
 Parts of the code are adapted from open-source projects, each under its own license. Their notices are kept in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Fourteen Agent demos (`src/engine/packs/x-clones.js`) rebuild or adapt components first shown on X, with their authors' permission; each demo credits its author and post in its description and rebuild prompt: [@eliakuratli](https://x.com/eliakuratli/status/2113618712066711970), [@jeetnirnejak](https://x.com/jeetnirnejak/status/2095507715556831429), [@a1x45h](https://x.com/a1x45h/status/2112964394825187349) (two), [@pitus_](https://x.com/pitus_/status/2111519352503873866) (two), [@kvnkld](https://x.com/kvnkld/status/2089693820313366635), [@louisnstudio](https://x.com/louisnstudio/status/2096525796714438833) (with the window layout of [@startupvisuals](https://x.com/startupvisuals/status/2100519773914427610)), [@bobganiev](https://x.com/bobganiev/status/2106396667398533125) (on ReUI's MIT stepper), [@itschatto](https://x.com/itschatto/status/2096962716036472894), [@PostiauxCharles](https://x.com/PostiauxCharles/status/2109606436527366235), [@sinequanonh](https://x.com/sinequanonh/status/2108225806954799155) and [@disarto_max](https://x.com/disarto_max/status/2100625465937424873) (two: a window and a widget, both drawn with the app's chat parts).
