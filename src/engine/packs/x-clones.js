@@ -12,7 +12,8 @@
  *   Deploy Status — Charles Postiaux (@PostiauxCharles), https://x.com/PostiauxCharles/status/2109606436527366235
  *     (three still images: the motion that plays them is ours)
  *   Logs Explorer — Léo (@sinequanonh), https://x.com/sinequanonh/status/2108225806954799155 (stills; motion is ours)
- *   Assistant Chat States — Maxim Kuznetsov (@disarto_max), https://x.com/disarto_max/status/2100625465937424873 (first video)
+ *   Assistant Chat States — Maxim Kuznetsov (@disarto_max), https://x.com/disarto_max/status/2100625465937424873 (first video;
+ *     adapted: drawn with the app's own chat parts rather than as a pixel clone)
  * Measured frame by frame from the posted videos; drawn with the app's semantic tokens so each follows light, dark and
  * the four palettes. Reduced motion: waits resolve at once and animations drop, so each lands on its final state. */
 export default function pack(h) {
@@ -910,129 +911,34 @@ export default function pack(h) {
   const XLG_BARS = [26, 22, 28, 30, 24, 20, 28, 30, 25, 25, 28, 24, 26, 28, 27, 25, 29, 24, 12, 10, 14, 13, 16, 12, 28, 26, 27, 30, 26, 28, 24, 29, 22, 27, 26, 27].map((info, i) => [info, [0, 3, 5, 9, 14, 27, 31, 33].includes(i) ? 4 : (i >= 18 && i <= 23 ? 5 : 0), i >= 18 && i <= 23 ? 18 + (i % 3) * 5 : 0]);
 
   /* -------------------------------------------------- Assistant Chat States */
+  // Drawn with the app's own chat parts (templates/kit): Surface, UserMessage, Reasoning on the AgentLog trail,
+  // Frame cards, Badge, the pill composer. Only what Tailwind classes cannot express lives here.
   const XCH_CSS = `
-.xch { --xch-ease:cubic-bezier(0.22,1,0.36,1); --xch-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary)); --xch-dim:var(--xch-muted); --xch-line:var(--color-border-button-default);
-  --xch-hot:var(--color-status-orange-text); --xch-ok:var(--color-chart-7-active); --xch-err:var(--color-status-rose-text); --xch-blue:var(--color-chart-6-active);
-  --xch-panel:var(--color-background-secondary-default);
-  container-type:inline-size; position:relative; width:440px; max-width:100%; color:var(--color-text-primary); font-family:var(--font-sans); font-size:12.5px; line-height:19px; text-align:start; }
-.dark .xch { --xch-err:var(--color-notification-error-foreground); }
-:where(.xch) button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
-.xch button:focus-visible { outline:2px solid var(--color-border-focus-ring); outline-offset:1px; }
-.xch svg { flex:none; width:13px; height:13px; }
-.xch-mono { font-family:var(--font-mono); font-size:10.5px; letter-spacing:.04em; }
-.xch-win { display:flex; flex-direction:column; height:480px; overflow:hidden; border-radius:16px; border:1px solid var(--xch-line); background:var(--color-background-primary-default);
-  box-shadow:0 26px 60px -30px color-mix(in srgb, var(--color-text-primary) 50%, transparent); transform-origin:50% 50%; transition:opacity .35s var(--xch-ease), transform .45s var(--xch-ease); }
-.xch.is-min .xch-win { opacity:0; transform:scale(.6) translateY(20px); pointer-events:none; }
-.xch-head { display:flex; align-items:center; gap:9px; height:42px; padding:0 10px 0 12px; flex:none; }
-.xch-head b { flex:1; font-weight:500; }
-.xch-hb { display:grid; place-items:center; width:24px; height:24px; border-radius:6px; color:var(--xch-muted); }
-.xch-hb:hover { background:var(--xch-panel); color:var(--color-text-primary); }
-.xch-orb { position:relative; flex:none; width:18px; height:18px; border-radius:999px; border:1.5px solid var(--xch-blue); background:radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--xch-blue) 40%, transparent), transparent 70%); }
-.xch-orb.is-err { border-color:var(--xch-err); background:radial-gradient(circle, color-mix(in srgb, var(--xch-err) 35%, transparent), transparent 70%); }
-.xch-orb.is-big { width:46px; height:46px; border-width:2px; box-shadow:0 0 24px color-mix(in srgb, var(--xch-blue) 45%, transparent), inset 0 0 12px color-mix(in srgb, var(--xch-blue) 50%, transparent); animation:xch-breathe 3s ease-in-out infinite; }
-.xch-feed { flex:1; min-height:0; overflow:hidden auto; display:flex; flex-direction:column; gap:14px; margin:0 6px; padding:6px 8px 12px; border-radius:12px; background:color-mix(in srgb, var(--xch-panel) 55%, transparent); }
-.xch-empty { margin:auto; display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; animation:xch-in .4s var(--xch-ease) both; }
-.xch-empty h4 { margin-top:12px; font-size:15px; font-weight:600; } .xch-empty p { color:var(--xch-muted); font-size:11.5px; }
-.xch-sugs { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; max-width:330px; margin-top:12px; }
-.xch-sug { display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 10px; border-radius:999px; border:1px solid var(--xch-line); font-size:11.5px; color:var(--xch-muted); }
-.xch-sug:hover { color:var(--color-text-primary); background:var(--xch-panel); }
-.xch-sug svg { width:12px; height:12px; color:var(--xch-hot); }
-.xch-user { align-self:flex-end; display:flex; flex-direction:column; align-items:flex-end; gap:6px; max-width:82%; animation:xch-in .35s var(--xch-ease) both; }
-.xch-user p { padding:6px 11px; border-radius:10px; background:var(--color-background-tertiary-default); }
-.xch-bot { display:grid; grid-template-columns:18px minmax(0,1fr); column-gap:10px; animation:xch-in .35s var(--xch-ease) both; }
-.xch-bot > .xch-orb { margin-top:1px; }
-.xch-body { display:flex; flex-direction:column; gap:9px; min-width:0; }
-.xch-work { display:flex; align-items:center; gap:7px; color:var(--xch-muted); }
-.xch-work b { font-weight:400; background:linear-gradient(90deg, var(--xch-muted) 0%, var(--xch-muted) 35%, var(--color-text-primary) 50%, var(--xch-muted) 65%, var(--xch-muted) 100%); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:xch-shimmer 2s linear infinite; }
-.xch-steps { display:flex; flex-direction:column; gap:3px; margin:-3px 0 0 20px; font-size:11.5px; color:var(--xch-muted); }
-.xch-steps > div { display:flex; align-items:center; gap:7px; animation:xch-in .3s var(--xch-ease) both; }
-.xch-steps svg { width:11px; height:11px; color:var(--xch-ok); stroke-width:2.4; }
-.xch-spin { flex:none; width:11px; height:11px; border-radius:999px; border:1.5px solid color-mix(in srgb, var(--xch-hot) 25%, transparent); border-top-color:var(--xch-hot); animation:xch-spin .8s linear infinite; }
-.xch-thought { display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--xch-dim); }
-.xch-thought svg { width:11px; height:11px; }
-.xch-cite { display:inline-grid; place-items:center; min-width:14px; height:14px; margin:0 1px; padding:0 3px; border-radius:4px; vertical-align:1px; background:var(--color-background-tertiary-default); color:var(--xch-muted); font-size:9.5px; font-weight:600; }
-.xch-srcs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
-.xch-src { display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; border:1px solid var(--xch-line); text-align:start; animation:xch-in .3s var(--xch-ease) both; transition:border-color .2s; }
-.xch-src:hover { border-color:var(--xch-hot); }
-.xch-src > i { display:grid; place-items:center; width:22px; height:22px; border-radius:6px; font-style:normal; font-size:9px; font-weight:700; }
-.xch-src b { display:block; font-weight:500; font-size:11.5px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.xch-src span { display:block; font-size:10.5px; color:var(--xch-dim); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.xch-src em { font-style:normal; font-size:10.5px; color:var(--xch-dim); }
-.xch-acts { display:flex; gap:10px; color:var(--xch-dim); } .xch-acts svg { width:12px; height:12px; }
-.xch-card { overflow:hidden; border-radius:10px; border:1px solid var(--xch-line); background:var(--color-background-primary-default); animation:xch-in .35s var(--xch-ease) both; }
-.xch-ch { display:flex; align-items:center; gap:8px; height:32px; padding:0 10px; border-bottom:1px solid var(--xch-line); font-weight:500; }
-.xch-ch .grow { flex:1; } .xch-ch .xch-mono { color:var(--xch-dim); font-weight:400; }
-.xch-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; padding:10px 10px 0; }
-.xch-stats span { display:block; color:var(--xch-dim); } .xch-stats b { font-size:13px; font-weight:500; font-variant-numeric:tabular-nums; } .xch-stats b.up { color:color-mix(in oklab, var(--xch-ok) 70%, var(--color-text-primary)); }
-.xch-bars { display:flex; align-items:flex-end; gap:3px; height:60px; padding:10px 10px 0; }
-.xch-bars i { flex:1; border-radius:3px 3px 0 0; background:color-mix(in srgb, var(--xch-hot) 65%, var(--color-background-primary-default)); transform:scaleY(0); transform-origin:bottom; transition:transform .45s var(--xch-ease); }
-.xch-bars i:last-child { background:var(--xch-hot); }
-.xch-axis { display:flex; justify-content:space-between; padding:5px 10px 8px; color:var(--xch-dim); }
-.xch-chips { display:flex; flex-wrap:wrap; gap:6px; }
-.xch-chip { height:22px; padding:0 9px; white-space:nowrap; border-radius:6px; border:1px solid var(--xch-line); color:var(--xch-muted); }
-.xch-chip[aria-pressed=true] { border-color:color-mix(in srgb, var(--xch-hot) 45%, transparent); background:color-mix(in srgb, var(--xch-hot) 14%, transparent); color:color-mix(in oklab, var(--xch-hot) 75%, var(--color-text-primary)); }
-.xch-doc { padding:10px 12px; display:flex; flex-direction:column; gap:8px; font-size:12px; }
-.xch-doc p:first-child { font-weight:500; } .xch-doc p.sig { color:var(--xch-muted); }
-.xch-file { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 8px 0 6px; border-radius:7px; border:1px solid var(--xch-line); background:var(--color-background-primary-default); font-size:11.5px; }
-.xch-file > i { display:grid; place-items:center; width:15px; height:15px; border-radius:4px; background:var(--xch-err); color:var(--color-background-primary-default); }
-.xch-file > i svg { width:10px; height:10px; }
-.xch-risk { display:grid; grid-template-columns:14px minmax(0,1fr) auto; align-items:center; gap:8px; height:28px; padding:0 10px; animation:xch-in .3s var(--xch-ease) both; }
-.xch-risk + .xch-risk { border-top:1px solid var(--xch-line); }
-.xch-risk span:nth-child(2) { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.xch-risk em { font-style:normal; font-size:10.5px; color:var(--xch-dim); }
-.xch-sev { display:flex; align-items:flex-end; gap:1.5px; height:10px; } .xch-sev i { width:2.5px; border-radius:1px; background:var(--color-background-tertiary-default); }
-.xch-sev[data-s="3"] i { background:var(--xch-err); } .xch-sev[data-s="2"] i:nth-child(-n+2) { background:var(--xch-hot); } .xch-sev[data-s="1"] i:first-child { background:var(--xch-dim); }
-.xch-code { padding:8px 10px 8px 0; font-family:var(--font-mono); font-size:10px; line-height:16px; overflow-x:auto; overscroll-behavior-x:contain; }
-.xch-code div { width:max-content; min-width:100%; }
-.xch-code div { display:grid; grid-template-columns:26px minmax(0,1fr); white-space:pre; animation:xch-in .2s var(--xch-ease) both; }
-.xch-code div > span:first-child { padding-right:8px; text-align:right; color:var(--xch-dim); }
-.xch-code .k { color:color-mix(in oklab, var(--color-chart-5-active) 75%, var(--color-text-primary)); } .xch-code .f { color:color-mix(in oklab, var(--xch-blue) 75%, var(--color-text-primary)); }
-.xch-code .s { color:color-mix(in oklab, var(--xch-ok) 70%, var(--color-text-primary)); } .xch-code .n { color:var(--xch-hot); } .xch-code .c { color:var(--xch-dim); }
-.xch-lang { display:grid; place-items:center; height:16px; padding:0 4px; border-radius:4px; background:color-mix(in srgb, var(--xch-blue) 18%, transparent); color:color-mix(in oklab, var(--xch-blue) 55%, var(--color-text-primary)); font-family:var(--font-mono); font-size:9px; font-weight:700; }
-.xch-stripe { height:6px; margin:10px 10px 4px; border-radius:2px; background:repeating-linear-gradient(90deg, var(--xch-hot) 0 2px, transparent 2px 4px); clip-path:inset(0 calc(100% - var(--p, 0%)) 0 0); transition:clip-path .5s var(--xch-ease); }
-.xch-task { display:flex; align-items:center; gap:8px; height:24px; padding:0 10px; color:var(--xch-muted); }
-.xch-task:last-child { margin-bottom:6px; }
-.xch-task > i { display:grid; place-items:center; width:14px; height:14px; border-radius:999px; border:1.5px solid var(--xch-line); }
-.xch-task.is-done { color:var(--color-text-primary); } .xch-task.is-done > i { border-color:var(--xch-ok); background:var(--xch-ok); color:var(--color-background-primary-default); }
-.xch-task > i svg { width:9px; height:9px; stroke-width:3; }
-.xch-error { display:flex; align-items:center; gap:8px; padding:8px 8px 8px 10px; border-radius:9px; border:1px solid color-mix(in srgb, var(--xch-err) 40%, transparent); background:color-mix(in srgb, var(--xch-err) 9%, transparent); color:var(--xch-err); animation:xch-in .3s var(--xch-ease) both; }
-.xch-error span { flex:1; } .xch-error button { display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:6px; border:1px solid var(--xch-line); color:var(--color-text-primary); }
-.xch-compose { flex:none; margin:8px 8px 0; padding:8px; border-radius:12px; border:1px solid var(--xch-line); background:var(--color-background-primary-default); }
-.xch-input { display:flex; align-items:center; flex-wrap:wrap; gap:6px; min-height:22px; padding:0 4px; }
-.xch-field { min-width:0; flex:1; height:22px; border:0; background:none; outline:none; color:var(--color-text-primary); caret-color:var(--xch-hot); font:inherit; }
-.xch-field::placeholder { color:var(--xch-dim); }
-.xch-slot:empty { display:none; }
-.xch-ctl { display:grid; place-items:center; min-width:22px; height:20px; padding:0 4px; border-radius:5px; color:var(--xch-muted); font:inherit; }
-.xch-ctl:hover, .xch-ctl[aria-pressed=true] { background:var(--xch-panel); color:var(--color-text-primary); }
-.xch-stopped { color:var(--xch-muted); font-style:italic; }
-.xch-compose:focus-within { border-color:color-mix(in srgb, var(--xch-hot) 45%, var(--xch-line)); }
-.xch-tools { display:flex; align-items:center; gap:6px; margin-top:8px; }
-.xch-tool { display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 9px; border-radius:999px; border:1px solid var(--xch-line); color:var(--xch-muted); font-size:11.5px; transition:background-color .2s, color .2s, border-color .2s; }
-.xch-tool.is-round { width:26px; padding:0; justify-content:center; }
-.xch-tool[aria-pressed=true] { border-color:color-mix(in srgb, var(--xch-hot) 45%, transparent); background:color-mix(in srgb, var(--xch-hot) 14%, transparent); color:color-mix(in oklab, var(--xch-hot) 75%, var(--color-text-primary)); }
-.xch-tool .dm { color:var(--xch-err); }
-.xch-send { display:grid; place-items:center; width:28px; height:28px; margin-left:auto; border-radius:999px; background:var(--color-text-primary); color:var(--color-background-primary-default); transition:box-shadow .2s; }
-.xch-send[data-busy] { box-shadow:0 0 0 2px var(--xch-hot); }
-.xch-send svg { stroke-width:2.4; }
-.xch-foot { display:flex; align-items:center; gap:8px; height:30px; padding:0 12px; flex:none; color:var(--xch-dim); }
-.xch-foot .dot { width:6px; height:6px; border-radius:999px; background:var(--xch-ok); }
-.xch-foot[data-tone=run] .dot { background:var(--xch-hot); } .xch-foot[data-tone=err] .dot { background:var(--xch-err); }
-.xch-foot .st { min-width:0; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.xch-kbd { padding:0 4px; border-radius:3px; border:1px solid var(--xch-line); }
-.xch-keys { display:flex; align-items:center; gap:8px; flex:none; }
-@container (max-width:380px) { .xch-model, .xch-keys { display:none } }
-.xch-pill { position:absolute; left:50%; top:50%; display:flex; align-items:center; gap:12px; width:max-content; max-width:calc(100% - 24px); height:52px; padding:0 9px 0 12px; border-radius:999px; white-space:nowrap; border:1px solid var(--xch-line); background:var(--color-background-primary-default);
-  box-shadow:0 18px 40px -20px color-mix(in srgb, var(--color-text-primary) 45%, transparent); transform:translate(-50%,-50%) scale(.8); opacity:0; pointer-events:none; transition:opacity .35s var(--xch-ease), transform .45s var(--xch-ease); }
-.xch.is-min .xch-pill { opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
-.xch-pill .xch-orb { width:26px; height:26px; }
-.xch-pill > div { display:flex; flex-direction:column; gap:1px; min-width:0; }
-.xch-pill b { font-weight:500; line-height:17px; } .xch-pill .xch-mono { display:block; overflow:hidden; text-overflow:ellipsis; line-height:14px; color:var(--xch-dim); }
-.xch-pill button { flex:none; height:24px; padding:0 9px; border-radius:7px; background:color-mix(in srgb, var(--xch-hot) 16%, transparent); color:var(--xch-hot); font-size:10.5px; font-weight:600; }
-@keyframes xch-in { from { opacity:0; transform:translateY(5px) } }
-@keyframes xch-spin { to { transform:rotate(360deg) } }
-@keyframes xch-blink { 50% { opacity:0 } }
-@keyframes xch-breathe { 50% { box-shadow:0 0 34px color-mix(in srgb, var(--xch-blue) 60%, transparent), inset 0 0 16px color-mix(in srgb, var(--xch-blue) 60%, transparent) } }
-@keyframes xch-shimmer { from { background-position:100% 0 } to { background-position:0% 0 } }
+.xch { --xch-ease:cubic-bezier(0.22,1,0.36,1); --xch-muted:color-mix(in oklab, var(--color-text-secondary) 68%, var(--color-text-primary)); container-type:inline-size; text-align:start; }
+/* The kit's secondary grey sits under AA on these surfaces: pull it toward primary text, as the other clones do. */
+.xch .text-text-secondary { color:var(--xch-muted); }
+.xch-in { animation:xch-in .3s var(--xch-ease) both; }
+.xch-dots { display:grid; grid-template-columns:repeat(3,4px); gap:2px; flex:none; }
+.xch-dots i { width:4px; height:4px; border-radius:1px; background:currentColor; opacity:.15; animation:xch-dot 1.1s ease-in-out infinite; }
+.xch-log > li:last-child .xch-rail { display:none; }
+.xch-log path { stroke-dasharray:1; stroke-dashoffset:0; animation:xch-draw .3s linear both; }
+.xch-cite { display:inline-grid; place-items:center; min-width:16px; height:16px; margin:0 1px; padding:0 4px; border-radius:5px; vertical-align:1px;
+  border:1px solid var(--color-border-button-default); background:var(--color-background-primary-default); color:var(--xch-muted); font-size:10.5px; font-weight:500; line-height:1; }
+.xch-bars i { flex:1; border-radius:3px 3px 0 0; background:color-mix(in srgb, var(--color-accent-500) 45%, var(--color-background-primary-default)); transform:scaleY(0); transform-origin:bottom; transition:transform .45s var(--xch-ease); }
+.xch-bars i:last-child { background:var(--color-accent-500); }
+.xch-code { overflow-x:auto; overscroll-behavior-x:contain; padding:10px 12px 10px 0; font-family:var(--font-mono); font-size:11.5px; line-height:18px; }
+.xch-code div { display:grid; grid-template-columns:30px minmax(0,1fr); width:max-content; min-width:100%; white-space:pre; animation:xch-in .2s var(--xch-ease) both; }
+.xch-code div > span:first-child { padding-right:10px; text-align:right; color:var(--xch-muted); user-select:none; }
+.xch-code .k { color:color-mix(in oklab, var(--color-chart-5-active) 70%, var(--color-text-primary)); } .xch-code .f { color:color-mix(in oklab, var(--color-accent-500) 70%, var(--color-text-primary)); }
+.xch-code .s { color:color-mix(in oklab, var(--color-chart-7-active) 65%, var(--color-text-primary)); } .xch-code .n { color:color-mix(in oklab, var(--color-status-orange-text) 80%, var(--color-text-primary)); } .xch-code .c { color:var(--xch-muted); }
+.xch-fill { transform:scaleX(var(--p, 0)); transform-origin:left; transition:transform .5s var(--xch-ease); }
+.xch-seg[aria-pressed=true] { background:var(--color-background-primary-default); color:var(--color-text-primary); box-shadow:var(--shadow-xs); }
+.xch-toggle[aria-pressed=true] { color:color-mix(in oklab, var(--color-accent-500) 55%, var(--color-text-primary)); }
+.xch-attach[aria-pressed=true] { background:color-mix(in srgb, var(--color-accent-500) 18%, var(--color-background-primary-default)); }
+@container (max-width:380px) { .xch-model, .xch-speed { display:none } }
+@keyframes xch-in { from { opacity:0; transform:translateY(4px) } }
+@keyframes xch-dot { 30% { opacity:1 } 60% { opacity:.15 } }
+@keyframes xch-draw { from { stroke-dashoffset:1 } }
 @media (prefers-reduced-motion: reduce) { .xch, .xch * { animation:none !important; transition:none !important; } }`;
 
   // The seven auto-played turns: the question, a toggle, the work steps and the answer's parts.
@@ -1056,6 +962,285 @@ export default function pack(h) {
     '}',
   ];
   const XCH_DIGEST = ['Create saved query for the three metrics', 'Schedule for Mondays at 09:00', 'Render the chart as an image', 'Post to #product via Slack'];
+
+  /** The Assistant chat, as a window (Assistant Chat States) or as a support widget behind a launcher (Assistant Chat Widget). */
+  async function xchRun(root, t, widget = false) {
+    xcStyle('x-assistant-states-css', XCH_CSS);
+    // The kit's shared class strings, so every card and control reads like the templates.
+    const ICON_BTN = 'grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary outline-none transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-4';
+    const FRAME = 'xch-in flex flex-col gap-[3px] rounded-2xl border border-border-button-default bg-background-tertiary-default/70 p-[3px]';
+    const FRAME_HEAD = 'flex min-h-8 items-center gap-2 px-2.5 py-1 text-body-2-semibold text-text-primary [&>svg]:size-4 [&>svg]:text-foreground-icon-secondary';
+    const PANEL = 'relative overflow-hidden rounded-[13px] border border-border-button-default bg-background-primary-default shadow-xs';
+    const BADGE = 'inline-flex h-5 shrink-0 items-center gap-1 rounded-[5px] border px-1.5 text-caption-1-medium whitespace-nowrap';
+    const FILE = 'inline-flex h-7 w-fit items-center gap-1.5 rounded-lg border border-border-button-default bg-background-primary-default px-2 text-caption-1-medium text-text-secondary shadow-xs [&_svg]:size-3.5 [&_svg]:text-text-error-primary';
+    const SUGGESTIONS = ['What changed in the EU AI Act?', 'How did signups trend this quarter?', 'Write a debounce hook', 'Set up a weekly digest'];
+    const empty = `<div class="xch-empty xch-in m-auto flex flex-col items-center gap-4 px-2 text-center"><div class="flex flex-col gap-1.5"><h4 class="text-title-2-medium tracking-[-0.01em] text-text-primary">Good evening</h4><p class="text-body-regular text-text-secondary">What are we working on?</p></div><div class="flex flex-wrap justify-center gap-2">${SUGGESTIONS.map((q) => `<button type="button" class="xch-sug rounded-full bg-background-primary-default px-3.5 py-2 text-body-2-medium text-text-secondary shadow-xs outline-none transition-colors hover:bg-background-primary-hover hover:text-text-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring" data-q="${esc(q)}">${q}</button>`).join('')}</div></div>`;
+    // Window: the chat on its own. Widget: the same chat in a panel that a launcher opens over a page, bottom right.
+    const el = mk('section', widget
+      ? 'xch absolute end-4 bottom-[84px] z-10 flex h-[440px] w-[360px] max-w-[calc(100%-32px)] origin-bottom-right flex-col overflow-hidden rounded-3xl bg-background-secondary-default text-text-primary shadow-[0_24px_60px_-24px_color-mix(in_srgb,var(--color-text-primary)_45%,transparent),inset_0_0_0_1px_var(--color-border-component-detail-container)] transition-[opacity,scale,translate] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-none translate-y-3 scale-90 opacity-0'
+      : 'xch relative flex h-[520px] w-[460px] max-w-full flex-col overflow-hidden rounded-3xl bg-background-secondary-default text-text-primary shadow-[inset_0_0_0_1px_var(--color-border-component-detail-container)]');
+    el.setAttribute('aria-label', 'Assistant');
+    el.innerHTML = `<div class="flex h-12 shrink-0 items-center gap-2 ps-4 pe-2.5"><span class="text-body-2-semibold">Assistant</span><span class="ms-auto flex items-center gap-0.5"><button type="button" class="${ICON_BTN}" data-new aria-label="New chat">${xcIcon('pen')}</button>${widget ? `<button type="button" class="${ICON_BTN}" data-close aria-label="Close assistant">${xcIcon('x')}</button>` : ''}</span></div>
+<div class="xch-feed flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-1 pb-4" aria-live="polite">${empty}</div>
+<form class="xch-compose flex shrink-0 flex-col gap-2 px-3 pb-2.5"><span class="xch-slot empty:hidden"></span><div class="flex h-[52px] w-full items-center gap-2.5 rounded-full border border-border-button-default bg-background-primary-default py-2 pe-2 ps-2 shadow-xs transition-colors focus-within:border-border-button-hover"><button type="button" class="xch-attach flex size-9 shrink-0 items-center justify-center rounded-full bg-ai-chat-composer-add-background outline-none transition-colors hover:bg-ai-chat-composer-add-hover-background focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-5" data-attach aria-pressed="false" aria-label="Attach q3-board-deck.pdf">${xcIcon('plus')}</button><input class="xch-field h-5 min-w-0 flex-1 bg-transparent text-body-regular text-text-primary caret-accent-500 outline-none placeholder:text-text-tertiary" type="text" placeholder="Ask me anything" aria-label="Message" autocomplete="off"><span class="xch-model flex h-8 shrink-0 items-center gap-0.5 rounded-xl ps-2 pe-1 text-body-medium text-text-secondary [&_svg]:size-4">Fable 5${xcIcon('chevronDown')}</span><button type="submit" class="xch-send flex size-9 shrink-0 items-center justify-center rounded-full bg-button-primary text-white outline-none transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-5" aria-label="Send">${xcIcon('arrowUp')}</button></div>
+<div class="flex h-[26px] items-center gap-3 px-1.5"><button type="button" class="xch-toggle flex items-center gap-1 text-body-2-medium text-text-secondary outline-none transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-4" data-tg="search" aria-pressed="false">${xcIcon('globe')}Search</button><button type="button" class="xch-toggle flex items-center gap-1 text-body-2-medium text-text-secondary outline-none transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-4" data-tg="think" aria-pressed="false">${xcIcon('bulb')}Think</button><span class="xch-st ms-auto min-w-0 truncate text-body-2-medium text-text-secondary" role="status">Auto-play</span><button type="button" class="xch-speed flex h-7 shrink-0 items-center rounded-md px-1.5 text-body-2-medium text-text-secondary outline-none transition-colors hover:bg-background-tertiary-default hover:text-text-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring" data-speed aria-label="Playback speed">1×</button><button type="button" class="${ICON_BTN}" data-pause aria-pressed="false" aria-label="Pause auto-play">${xcIcon('pause')}</button></div></form>`;
+    // The widget's page: a quiet app behind the chat, and the round launcher that opens and closes it.
+    let isOpen = !widget, launcher = null;
+    const setOpen = (v) => {
+      isOpen = v;
+      for (const c of ['pointer-events-none', 'translate-y-3', 'scale-90', 'opacity-0']) el.classList.toggle(c, !v);
+      el.inert = !v;
+      launcher.setAttribute('aria-expanded', String(v)); launcher.setAttribute('aria-label', v ? 'Close assistant' : 'Open assistant');
+      launcher.innerHTML = `${xcIcon(v ? 'chevronDown' : 'bubble')}<span class="xch-unread absolute end-0 top-0 hidden size-3 rounded-full border-2 border-background-primary-default bg-status-rose-text"></span>`;
+    };
+    if (widget) {
+      const site = mk('section', 'xch-site relative h-[560px] w-[680px] max-w-full overflow-hidden rounded-3xl border border-border-button-default bg-background-primary-default');
+      site.setAttribute('aria-label', 'App with an assistant widget');
+      site.innerHTML = `<div class="flex h-full flex-col gap-5 p-6" aria-hidden="true"><div class="flex items-center gap-3"><span class="size-7 rounded-lg bg-accent-500"></span><span class="h-3 w-24 rounded-full bg-background-tertiary-default"></span><span class="ms-auto h-8 w-28 rounded-full bg-background-secondary-default"></span></div><div class="flex flex-col gap-2.5 pt-4"><span class="h-6 w-2/3 rounded-lg bg-background-tertiary-default"></span><span class="h-3 w-1/2 rounded-full bg-background-secondary-default"></span></div><div class="grid grid-cols-3 gap-3">${'<span class="h-28 rounded-2xl bg-background-secondary-default"></span>'.repeat(3)}</div><div class="flex flex-col gap-2.5">${['w-full', 'w-11/12', 'w-4/5', 'w-2/3'].map((x) => `<span class="h-3 ${x} rounded-full bg-background-secondary-default"></span>`).join('')}</div></div>`;
+      launcher = mk('button', 'xch-launch absolute end-4 bottom-4 z-20 grid size-[52px] place-items-center rounded-full bg-button-primary text-white shadow-[0_12px_28px_-10px_color-mix(in_srgb,var(--color-text-primary)_55%,transparent)] outline-none transition-transform hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-border-focus-ring focus-visible:ring-offset-2 [&>svg]:size-6');
+      launcher.type = 'button';
+      site.append(el, launcher); root.append(site);
+    } else root.append(el);
+    const feed = $('.xch-feed', el), form = $('.xch-compose', el), field = $('.xch-field', el), slot = $('.xch-slot', el), send = $('.xch-send', el), status = $('.xch-st', el);
+    if (widget) {
+      setOpen(false);
+      launcher.onclick = () => { setOpen(!isOpen); $('.xch-unread', launcher)?.classList.add('hidden'); };
+      $('[data-close]', el).onclick = () => { setOpen(false); launcher.focus(); };
+    }
+    // A reply that lands while the widget is closed marks the launcher.
+    const notify = () => { if (widget && !isOpen) $('.xch-unread', launcher).classList.remove('hidden'); };
+    const pauseBtn = $('[data-pause]', el), speedBtn = $('[data-speed]', el), attachBtn = $('[data-attach]', el);
+
+    // Who drives: the auto-play script until the reader types, clicks a suggestion or starts a new chat.
+    const STOP = new Error('stopped');
+    let auto = true, paused = false, speed = 1, busy = false, phase = '', stopNow = false, attached = '', label = 'Ready', step = 0, queued = '';
+    const follow = () => { feed.scrollTop = feed.scrollHeight; };
+    const paint = () => { status.textContent = auto ? `Auto-play · ${step}/7 · ${paused ? 'Paused' : label}` : label; };
+    const setStatus = (text) => { label = text; paint(); };
+    // Every wait in a turn goes through here: it honours pause and speed, and Stop throws out of the turn.
+    const w = async (ms) => {
+      await xcWait(t, ms / speed);
+      while (paused && auto && !REDUCE) await t.sleep(120);
+      if (stopNow) throw STOP;
+    };
+    const toggle = (k, v) => { const b = $(`[data-tg=${k}]`, el); if (b) b.setAttribute('aria-pressed', String(v)); };
+    const fileChip = (name) => `<span class="${FILE}">${xcIcon('pdf')}${name}</span>`;
+    const setAttach = (name) => { attached = name; attachBtn.setAttribute('aria-pressed', String(!!name)); slot.innerHTML = name ? fileChip(name) : ''; };
+    const cite = (s) => s.replace(/\{(\d)\}/g, '<span class="xch-cite">$1</span>');
+    const stream = async (node, text, ms = 32) => { for (const word of text.split(' ')) { node.insertAdjacentHTML('beforeend', `${cite(word)} `); follow(); await w(ms); } };
+    const para = (body, text) => { const p = mk('p'); body.append(p); return stream(p, text); };
+    const frame = (body, head, inner) => { const c = mk('div', FRAME); c.innerHTML = `<div class="${FRAME_HEAD}">${head}</div><div class="${PANEL}">${inner}</div>`; body.append(c); follow(); return c.lastElementChild; };
+    const metaBadge = (text) => `<span class="${BADGE} ms-auto border-border-button-default bg-background-primary-default font-medium text-text-secondary">${text}</span>`;
+
+    // The seven answers of the video, plus one for anything else the reader asks.
+    const TURNS = [
+      { q: 'What changed in the EU AI Act timeline this month?', match: /ai act|eu\b|regulat|commission/i, tg: 'search', steps: ['Searching the web', 'Reading 4 sources', 'Cross-checking dates'], thought: '3.6s', answer: async (body) => {
+        await para(body, 'Two things moved. The Commission confirmed that general-purpose model obligations apply from 2 August, with the code of practice now final{1}{2}. Separately, eleven member states published their market surveillance authorities ahead of the deadline, so enforcement contacts now exist in most of the EU{3}.');
+        const panel = frame(body, `${xcIcon('globe')}<span>Sources</span>${metaBadge('4')}`, '');
+        for (const [i, [, title, domain]] of XCH_SOURCES.entries()) {
+          panel.insertAdjacentHTML('beforeend', `<button type="button" class="xch-in flex w-full items-center gap-2.5 px-3 py-2 text-start outline-none transition-colors hover:bg-background-primary-hover focus-visible:bg-background-primary-hover${i ? ' border-t border-border-button-default' : ''}"><span class="xch-cite">${i + 1}</span><span class="min-w-0 flex-1 truncate text-body-2-medium text-text-primary">${esc(title)}</span><span class="shrink-0 text-caption-1-regular text-text-secondary">${domain}</span></button>`);
+          follow(); await w(140);
+        }
+        await para(body, 'High-risk system obligations are unchanged and still land in August next year{4}.');
+      } },
+      { q: 'How did weekly signups trend this quarter?', match: /signup|sign-up|trend|quarter|growth/i, tg: 'think', steps: ['Querying analytics', 'Aggregating 13 weeks'], thought: '2.1s', answer: async (body) => {
+        await para(body, 'Signups grew steadily through the quarter, finishing 53% above the first week. The only dip was W33, which tracks a paused campaign.');
+        const max = Math.max(...XCH_WEEKS);
+        const stat = (k, v, up) => `<div class="flex flex-col"><span class="text-caption-1-regular text-text-secondary">${k}</span><span class="text-body-2-semibold tabular-nums ${up ? 'text-state-success-text dark:text-status-lime-text' : 'text-text-primary'}">${v}</span></div>`;
+        const panel = frame(body, `${xcIcon('chart')}<span>Weekly signups</span>`, `<div class="grid grid-cols-4 gap-2 px-3 pt-3">${stat('Total', '13,009')}${stat('vs first week', '+53.2%', true)}${stat('Average', '1,001')}${stat('Peak · W39', '1,244')}</div><div class="xch-bars flex h-[72px] items-end gap-[3px] px-3 pt-3" aria-hidden="true">${XCH_WEEKS.map((v, i) => `<i style="height:${(v / max) * 100}%" title="W${27 + i}: ${v.toLocaleString('en-US')} signups"></i>`).join('')}</div><div class="flex justify-between px-3 pt-1.5 pb-2.5 text-caption-1-regular text-text-secondary"><span>W27</span><span>13,009 signups</span><span>W39</span></div>`);
+        for (const b of panel.querySelectorAll('.xch-bars i')) { b.style.transform = 'none'; await w(45); }
+        await para(body, 'Hover the bars for exact counts. Want this broken down by acquisition channel?');
+      } },
+      { q: 'Draft a launch announcement for the new dashboard', match: /launch|announce|email|draft|blog/i, steps: ['Checking project notes'], thought: '1.9s', answer: async (body) => {
+        await para(body, 'Which channel is this for? I\'ll match the tone and length.');
+        const chips = mk('div', 'xch-in flex w-fit flex-wrap gap-0.5 rounded-full bg-background-tertiary-default p-0.5');
+        chips.setAttribute('role', 'group'); chips.setAttribute('aria-label', 'Channel');
+        chips.innerHTML = ['Email', 'Blog post', 'Social thread'].map((l) => `<button type="button" class="xch-seg rounded-full px-3 py-1 text-body-2-medium whitespace-nowrap text-text-secondary outline-none transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring" aria-pressed="false">${l}</button>`).join('');
+        body.append(chips);
+        for (const b of chips.children) b.onclick = () => { for (const x of chips.children) x.setAttribute('aria-pressed', String(x === b)); };
+        await w(700);
+        if (![...chips.children].some((b) => b.getAttribute('aria-pressed') === 'true')) chips.firstElementChild.setAttribute('aria-pressed', 'true');
+        const channel = $('[aria-pressed=true]', chips).textContent;
+        const panel = frame(body, `${xcIcon('fileText')}<span>Launch announcement</span>${metaBadge(`${channel} · 80 words`)}`, '<div class="flex flex-col gap-2 px-3.5 py-3 text-body-2-regular leading-[1.55]"></div>');
+        const doc = panel.firstElementChild;
+        for (const line of ['Subject: Your new dashboard is live', 'Hi there,', 'Today we\'re rolling out the redesigned dashboard to every workspace. It puts your monitors, usage and spend on one screen, loads twice as fast, and finally works on mobile.', 'Nothing changes about your data or alerts. Open it from the sidebar, or reply to this email if anything looks off — we read every message.']) await para(doc, line);
+        doc.firstElementChild.classList.add('font-medium');
+        doc.insertAdjacentHTML('beforeend', '<p class="text-text-secondary">— The team</p>');
+        await para(body, 'Want a shorter version for the in-app banner as well?');
+      } },
+      { q: 'Summarize the risks flagged in this deck', match: /risk|deck|pdf|board|summar/i, tg: 'think', file: 'q3-board-deck.pdf', steps: ['Reading 24 pages', 'Extracting risk items'], thought: '2.8s', answer: async (body) => {
+        await para(body, 'The deck flags five risks. Two are rated high and both relate to Q4 renewals, so I\'d start there.');
+        const panel = frame(body, `${xcIcon('pdf')}<span class="min-w-0 truncate">Risks in q3-board-deck.pdf</span>${metaBadge('5')}`, '');
+        const SEV = ['', ['Low', 'border-border-button-default bg-background-tertiary-default text-text-secondary'], ['Medium', 'border-transparent bg-status-orange-background text-status-orange-text'], ['High', 'border-transparent bg-status-rose-background text-status-rose-text dark:text-notification-error-foreground']];
+        for (const [i, [s, text, page]] of XCH_RISKS.entries()) {
+          panel.insertAdjacentHTML('beforeend', `<div class="xch-in flex items-center gap-2.5 px-3 py-2 text-body-2-regular${i ? ' border-t border-border-button-default' : ''}"><span class="${BADGE} w-[58px] justify-center ${SEV[s][1]}">${SEV[s][0]}</span><span class="min-w-0 flex-1 truncate">${esc(text)}</span><span class="shrink-0 text-caption-1-regular text-text-secondary tabular-nums">${page}</span></div>`);
+          follow(); await w(220);
+        }
+      } },
+      { q: 'Write a debounce hook', match: /debounce|hook|react|code|typescript/i, steps: ['Writing useDebounce.ts'], thought: '1.4s', answer: async (body) => {
+        await para(body, 'Here\'s a typed hook: it waits until the value stops changing for the delay, then updates, and cancels the pending timer on unmount.');
+        const panel = frame(body, `${xcIcon('code')}<span>useDebounce.ts</span><button type="button" class="${ICON_BTN} ms-auto -me-1" aria-label="Copy code">${xcIcon('copy')}</button>`, '<div class="xch-code"></div>');
+        const code = panel.firstElementChild;
+        for (const [i, line] of XCH_CODE.entries()) { code.insertAdjacentHTML('beforeend', `<div><span>${i + 1}</span><span>${line || ' '}</span></div>`); follow(); await w(90); }
+        await para(body, 'Pair it with a controlled input and pass the debounced value to your fetch.');
+      } },
+      { q: 'Set up a weekly digest of these metrics for the team', match: /digest|schedul|slack|every (monday|week)/i, steps: ['Checking connected apps'], thought: '1.7s', answer: async (body) => {
+        await para(body, 'I\'ll schedule a Monday 9:00 digest with signups, activation and open incidents.');
+        const panel = frame(body, `${xcIcon('calendar')}<span>Weekly metrics digest</span><span class="xch-n ms-auto text-caption-1-medium text-text-secondary tabular-nums">0/4</span>`, `<div class="mx-3 mt-3 h-1 overflow-hidden rounded-full bg-background-tertiary-default"><div class="xch-fill h-full rounded-full bg-accent-500"></div></div><ul class="flex flex-col py-1.5">${XCH_DIGEST.map((d) => `<li class="xch-task flex items-center gap-2.5 px-3 py-1.5 text-body-2-regular text-text-secondary"><span class="grid size-4 shrink-0 place-items-center rounded-full border border-border-button-default text-white [&_svg]:size-2.5"></span>${esc(d)}</li>`).join('')}</ul>`);
+        for (const [i, task] of [...panel.querySelectorAll('.xch-task')].entries()) {
+          await w(650);
+          task.classList.replace('text-text-secondary', 'text-text-primary');
+          const box = task.firstElementChild; box.className = 'grid size-4 shrink-0 place-items-center rounded-full bg-accent-500 text-white [&_svg]:size-2.5'; box.innerHTML = xcIcon('check');
+          $('.xch-n', panel.parentElement).textContent = `${i + 1}/4`; $('.xch-fill', panel).style.setProperty('--p', String((i + 1) / 4));
+        }
+      } },
+      { q: 'Translate the digest into German and Japanese', match: /translat|german|japanese|french|language/i, steps: ['Translating 2 versions'], thought: '5.5s', answer: async (body) => {
+        // The first attempt fails: the error offers Retry (auto-play presses it), then the answer streams.
+        const thought = $('.xch-thought', body); thought.hidden = true;
+        const err = mk('div', 'xch-in flex items-center gap-2.5 rounded-xl border border-border-error-default bg-background-tertiary-error px-3 py-2 text-body-2-medium text-status-rose-text dark:text-notification-error-foreground [&>svg]:size-4');
+        err.innerHTML = `${xcIcon('alert')}<span class="min-w-0 flex-1">The model is over capacity right now. Nothing was sent.</span><button type="button" class="flex shrink-0 items-center gap-1.5 rounded-lg border border-border-button-default bg-background-primary-default px-2.5 py-1 text-body-2-medium text-text-primary shadow-xs outline-none hover:bg-background-primary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-3.5">${xcIcon('rotate')}Retry</button>`;
+        body.prepend(err); setStatus('Error'); follow();
+        let retried = false; $('button', err).onclick = () => { retried = true; };
+        for (let waited = 0; !retried && (auto ? waited < 1800 : true); waited += 100) await w(100);
+        err.remove(); thought.hidden = false; setStatus('Streaming');
+        await para(body, 'Done — both translations are attached to the digest as alternate versions. German keeps the numbers in the original format; Japanese uses full-width digits to match the team\'s convention.');
+      } },
+    ];
+    const FALLBACK = { steps: ['Thinking'], thought: '0.8s', answer: async (body) => {
+      await para(body, 'This window plays seven scripted answers. Ask about the EU AI Act, weekly signups, a launch email, the risks in a deck (attach it with +), a debounce hook, a weekly digest or a translation, and I\'ll show that one.');
+    } };
+
+    // Agent Thinking while the steps run on the AgentLog trail, then a folded "Thought for" disclosure.
+    const thinking = (body) => {
+      const box = mk('div', 'xch-work flex flex-col');
+      box.innerHTML = `<div class="flex items-center gap-2.5 py-1 text-text-secondary" style="--sui-agent-thinking-tone:var(--color-text-secondary)"><span class="xch-dots" aria-hidden="true">${Array.from({ length: 9 }, (_, i) => `<i style="animation-delay:${((i % 3) + Math.floor(i / 3)) * 0.11}s"></i>`).join('')}</span><span class="xch-label sui-agent-thinking-label text-body-2-medium">Thinking</span><span class="xch-sec font-mono text-caption-1-regular text-text-secondary tabular-nums">0.0s</span></div><ul class="xch-log ms-[7px] mt-1 flex flex-col"></ul>`;
+      body.append(box);
+      const t0 = performance.now(), sec = $('.xch-sec', box);
+      const id = t.every(100, () => { sec.textContent = `${((performance.now() - t0) / 1000).toFixed(1)}s`; });
+      return {
+        step(text) {
+          $('.xch-label', box).textContent = text;
+          $('.xch-log', box).insertAdjacentHTML('beforeend', `<li class="xch-in relative ps-4"><span aria-hidden="true" class="absolute inset-y-0 start-0 w-3 text-foreground-icon-quaternary"><svg width="12" height="15" viewBox="0 0 12 15" fill="none" class="absolute top-0 start-0"><path d="M0.5 0 V8 Q0.5 14 6.5 14 H11.5" stroke="currentColor" pathLength="1"/></svg><span class="xch-rail absolute top-2 bottom-0 start-0 w-px bg-current"></span></span><div class="py-[3px] text-body-2-regular text-text-secondary">${esc(text)}</div></li>`);
+        },
+        done(thought) {
+          t.stop(id);
+          const log = $('.xch-log', box); log.hidden = true;
+          const btn = mk('button', 'xch-thought flex w-fit items-center gap-2 py-1 text-body-2-medium text-text-secondary outline-none transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-4');
+          btn.type = 'button'; btn.setAttribute('aria-expanded', 'false');
+          btn.innerHTML = `${xcIcon('bulb')}Thought for ${thought}${xcIcon('chevronDown')}`;
+          btn.onclick = () => { log.hidden = !log.hidden; btn.setAttribute('aria-expanded', String(!log.hidden)); btn.lastElementChild.style.transform = log.hidden ? '' : 'rotate(180deg)'; };
+          box.firstElementChild.replaceWith(btn);
+        },
+        cancel() { t.stop(id); box.remove(); },
+      };
+    };
+
+    // One turn: optionally type the question, send it, show the work, stream the answer. Stop ends it early.
+    const runTurn = async (turn, q, typed) => {
+      if (busy) return;
+      busy = true; stopNow = false;
+      try {
+        if (typed) {
+          phase = 'typing'; setStatus('Typing');
+          if (turn.tg) toggle(turn.tg, true);
+          if (turn.file) setAttach(turn.file);
+          field.value = '';
+          for (const ch of q) { field.value += ch; await w(22); }
+          await w(250);
+        }
+        phase = 'answering';
+        const file = attached; field.value = ''; setAttach('');
+        $('.xch-empty', feed)?.remove();
+        const u = mk('div', 'xch-in ms-auto flex max-w-[85%] flex-col items-end gap-1.5');
+        u.innerHTML = `${file ? fileChip(file) : ''}<div class="rounded-2xl bg-background-primary-default px-3.5 py-[11px] text-body-regular leading-6 break-words text-text-primary shadow-card"></div>`;
+        u.lastElementChild.textContent = q; feed.append(u);
+        send.innerHTML = xcIcon('stop'); send.setAttribute('aria-label', 'Stop'); setStatus('Sending'); follow();
+        await w(400);
+        const body = mk('div', 'xch-in flex flex-col gap-3 text-body-regular leading-6 text-text-primary'); feed.append(body);
+        const work = thinking(body);
+        try {
+          for (const s of turn.steps) { work.step(s); setStatus(s); follow(); await w(900); }
+          await w(250);
+          work.done(turn.thought);
+          setStatus('Streaming');
+          await turn.answer(body);
+          setStatus('Done'); notify();
+        } catch (e) {
+          if (e !== STOP) throw e;
+          if (!$('.xch-thought', body)) work.cancel();
+          body.querySelector('.border-border-error-default')?.remove();
+          body.insertAdjacentHTML('beforeend', '<p class="text-body-2-regular text-text-secondary italic">Stopped.</p>');
+          setStatus('Stopped');
+        }
+        body.insertAdjacentHTML('beforeend', `<div class="-ms-1 -mt-1 flex items-center gap-0.5"><button type="button" class="${ICON_BTN}" aria-label="Copy">${xcIcon('copy')}</button><button type="button" class="${ICON_BTN}" aria-label="Good response">${xcIcon('thumbUp')}</button><button type="button" class="${ICON_BTN}" aria-label="Bad response">${xcIcon('thumbDown')}</button><button type="button" class="${ICON_BTN}" aria-label="Regenerate">${xcIcon('rotate')}</button></div>`);
+        follow();
+      } catch (e) {
+        if (e !== STOP) throw e;
+        field.value = ''; setAttach(''); setStatus('Ready');
+      } finally {
+        busy = false; stopNow = false; phase = '';
+        if (queued) { const next = queued; queued = ''; t.sleep(0).then(() => runTurn(pick(next), next, false)); }
+        send.innerHTML = xcIcon('arrowUp'); send.setAttribute('aria-label', 'Send');
+        if (auto) { toggle('search', false); toggle('think', false); }
+      }
+    };
+    // Translation first: "translate the digest" is about translating, not scheduling.
+    const pick = (q) => [TURNS[6], ...TURNS.slice(0, 6)].find((x) => x.match.test(q)) || FALLBACK;
+
+    // The reader takes over: auto-play stops (it drops a question it was still typing) and every control is theirs.
+    const takeover = () => {
+      if (!auto) return;
+      auto = false; paused = false; pauseBtn.hidden = true; speedBtn.hidden = true;
+      toggle('search', false); toggle('think', false);
+      if (phase === 'typing') stopNow = true;
+      paint();
+    };
+    field.addEventListener('focus', takeover);
+    field.addEventListener('keydown', takeover);
+    form.onsubmit = (e) => {
+      e.preventDefault(); takeover();
+      const q = field.value.trim();
+      // Mid-answer: an empty field means Stop; a typed question stops the answer, then goes out.
+      if (busy) { stopNow = true; queued = q; return; }
+      if (q) runTurn(pick(q), q, false);
+    };
+    feed.addEventListener('click', (e) => {
+      const s = e.target.closest('.xch-sug'); if (!s) return;
+      takeover(); const q = s.dataset.q;
+      const go = () => (busy ? t.sleep(100).then(go) : runTurn(pick(q), q, false));
+      go();
+    });
+    attachBtn.onclick = () => { takeover(); setAttach(attached ? '' : 'q3-board-deck.pdf'); };
+    for (const b of el.querySelectorAll('[data-tg]')) b.onclick = () => { takeover(); b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); };
+    $('[data-new]', el).onclick = () => {
+      takeover(); if (busy) stopNow = true;
+      const reset = () => (busy ? t.sleep(100).then(reset) : (feed.innerHTML = empty, setStatus('Ready')));
+      reset();
+    };
+    pauseBtn.onclick = () => {
+      if (!auto) return;
+      paused = !paused; pauseBtn.setAttribute('aria-pressed', String(paused));
+      pauseBtn.innerHTML = xcIcon(paused ? 'play' : 'pause'); pauseBtn.setAttribute('aria-label', paused ? 'Resume auto-play' : 'Pause auto-play');
+      paint();
+    };
+    speedBtn.onclick = () => { speed = speed === 1 ? 2 : 1; speedBtn.textContent = `${speed}×`; };
+
+    // Auto-play: the widget opens itself first, then the seven turns of the video play one after another.
+    if (widget) { await xcWait(t, 900); if (auto) setOpen(true); }
+    await xcWait(t, 1200);
+    for (const [i, turn] of TURNS.entries()) {
+      if (!auto) break;
+      while (paused && auto && !REDUCE) await t.sleep(120);
+      step = i + 1;
+      await runTurn(turn, turn.q, true);
+      if (!auto) break;
+      await xcWait(t, 900 / speed);
+    }
+    // Once the reader has taken over, never hand the stage back to the replay loop while they are using it.
+    if (!auto) await new Promise(() => {});
+    // A quiet moment after auto-play: if the reader starts now, keep their conversation.
+    for (let idle = 0; idle < 3000; idle += 200) { await t.sleep(200); if (!auto) await new Promise(() => {}); }
+  }
 
   /* ---------------------------------------------------------------- demos */
   return [
@@ -1808,224 +1993,11 @@ export default function pack(h) {
       } },
 
     { group: G, title: 'Assistant Chat States', kind: 'scene',
-      desc: 'Assistant window by Maxim Kuznetsov (@disarto_max, https://x.com/disarto_max/status/2100625465937424873, first video), cloned with permission: seven auto-played turns walk the chat states, from the empty greeting through cited search, a chart, a drafted email, a PDF read, a code block and a scheduled digest to an over-capacity error and its retry; type, click a suggestion, pause, speed up or stop at any time and the window answers you.',
-      async run(root, t) {
-        xcStyle('x-assistant-states-css', XCH_CSS);
-        const SUGGESTIONS = [['globe', 'What changed in the EU AI Act?'], ['chart', 'How did signups trend this quarter?'], ['code', 'Write a debounce hook'], ['calendar', 'Set up a weekly digest']];
-        const empty = `<div class="xch-empty"><span class="xch-orb is-big" aria-hidden="true"></span><h4>Good evening</h4><p>What are we working on?</p><div class="xch-sugs">${SUGGESTIONS.map(([i, l]) => `<button type="button" class="xch-sug" data-q="${esc(l)}">${xcIcon(i)}${l}</button>`).join('')}</div></div>`;
-        const el = mk('section', 'xch'); el.setAttribute('aria-label', 'Assistant');
-        el.innerHTML = `<div class="xch-win"><div class="xch-head"><span class="xch-orb" aria-hidden="true"></span><b>Assistant</b><button type="button" class="xch-hb" data-new aria-label="New chat">${xcIcon('bubble')}</button><button type="button" class="xch-hb" aria-label="Commands">${xcIcon('command')}</button><button type="button" class="xch-hb" aria-label="Settings">${xcIcon('sliders')}</button><button type="button" class="xch-hb" data-min aria-label="Minimise">${xcIcon('minus')}</button></div>
-<div class="xch-feed" aria-live="polite">${empty}</div>
-<form class="xch-compose"><div class="xch-input"><span class="xch-slot"></span><input class="xch-field" type="text" placeholder="Ask anything..." aria-label="Message" autocomplete="off"></div><div class="xch-tools"><button type="button" class="xch-tool is-round" data-attach aria-pressed="false" aria-label="Attach q3-board-deck.pdf">${xcIcon('plus')}</button><button type="button" class="xch-tool" data-tg="search" aria-pressed="false">${xcIcon('globe')}Search</button><button type="button" class="xch-tool" data-tg="think" aria-pressed="false">${xcIcon('bulb')}Think</button><span class="xch-tool xch-model"><span class="dm">${xcIcon('diamond')}</span>Nova Pro${xcIcon('chevronDown')}</span><span style="margin-left:auto;color:var(--xch-muted)">${xcIcon('mic')}</span><button type="submit" class="xch-send" style="margin-left:8px" aria-label="Send">${xcIcon('arrowUp')}</button></div></form>
-<div class="xch-foot xch-mono" data-tone="ok"><span class="dot" aria-hidden="true"></span><span class="st" role="status">AUTO-PLAY · READY</span><button type="button" class="xch-ctl" data-speed aria-label="Playback speed">1×</button><button type="button" class="xch-ctl" data-pause aria-pressed="false" aria-label="Pause auto-play">${xcIcon('pause')}</button><span class="xch-keys"><span class="xch-kbd">⌘K</span><span>COMMANDS</span><span class="xch-kbd">⌘\\</span><span>PANEL</span></span></div></div>
-<div class="xch-pill"><span class="xch-orb" aria-hidden="true"></span><div><b>Assistant</b><span class="xch-mono xch-pst"></span></div><button type="button" data-open>OPEN</button></div>`;
-        root.append(el);
-        const feed = $('.xch-feed', el), form = $('.xch-compose', el), field = $('.xch-field', el), slot = $('.xch-slot', el), send = $('.xch-send', el), foot = $('.xch-foot', el);
-        const pauseBtn = $('[data-pause]', el), speedBtn = $('[data-speed]', el), attachBtn = $('[data-attach]', el);
+      desc: 'Adapted with permission from the Assistant window in Maxim Kuznetsov\'s UI explorations (@disarto_max, https://x.com/disarto_max/status/2100625465937424873, first video) and drawn with this app\'s chat parts: seven auto-played turns walk the chat states, from the empty greeting through cited search, a chart, a drafted email, a PDF read, a code block and a scheduled digest to an over-capacity error and its retry; type, click a suggestion, pause, speed up or stop at any time and the window answers you.',
+      run: (root, t) => xchRun(root, t) },
 
-        // Who drives: the auto-play script until the reader types, clicks a suggestion or starts a new chat.
-        const STOP = new Error('stopped');
-        let auto = true, paused = false, speed = 1, busy = false, phase = '', stopNow = false, attached = '', label = 'READY', step = 0, lastTouch = 0;
-        const follow = () => { feed.scrollTop = feed.scrollHeight; };
-        const paint = () => { const s = auto ? `AUTO-PLAY · ${step}/7 · ${paused ? 'PAUSED' : label}` : `MANUAL · ${label}`; $('.st', foot).textContent = s; $('.xch-pst', el).textContent = s; };
-        const setFoot = (tone, status) => { foot.dataset.tone = tone; label = status; paint(); };
-        // Every wait in a turn goes through here: it honours pause and speed, and Stop throws out of the turn.
-        const w = async (ms) => {
-          await xcWait(t, ms / speed);
-          while (paused && auto && !REDUCE) await t.sleep(120);
-          if (stopNow) throw STOP;
-        };
-        const toggle = (k, v) => { const b = $(`[data-tg=${k}]`, el); if (b) b.setAttribute('aria-pressed', String(v)); };
-        const setAttach = (name) => { attached = name; attachBtn.setAttribute('aria-pressed', String(!!name)); slot.innerHTML = name ? `<span class="xch-file"><i>${xcIcon('pdf')}</i>${name}</span>` : ''; };
-        const cite = (s) => s.replace(/\{(\d)\}/g, '<span class="xch-cite">$1</span>');
-        const stream = async (node, text, ms = 32) => { for (const word of text.split(' ')) { node.insertAdjacentHTML('beforeend', `${cite(word)} `); follow(); await w(ms); } };
-        const para = (body, text) => { const p = mk('p'); body.append(p); return stream(p, text); };
-        const card = (body, head, inner) => { const c = mk('div', 'xch-card'); c.innerHTML = `<div class="xch-ch">${head}</div>${inner}`; body.append(c); follow(); return c; };
-
-        // The seven answers of the video, plus one for anything else the reader asks.
-        const TURNS = [
-          { q: 'What changed in the EU AI Act timeline this month?', match: /ai act|eu\b|regulat|commission/i, tg: 'search', steps: ['Searching the web', 'Reading 4 sources', 'Cross-checking dates'], thought: '3.6s', answer: async (body) => {
-            await para(body, 'Two things moved. The Commission confirmed that general-purpose model obligations apply from 2 August, with the code of practice now final{1}{2}. Separately, eleven member states published their market surveillance authorities ahead of the deadline, so enforcement contacts now exist in most of the EU{3}.');
-            const grid = mk('div', 'xch-srcs'); body.append(grid);
-            for (const [i, [ab, title, domain, tone]] of XCH_SOURCES.entries()) {
-              const c = { blue: 'var(--xch-blue)', green: 'var(--xch-ok)', orange: 'var(--xch-hot)', purple: 'var(--color-chart-5-active)' }[tone];
-              grid.insertAdjacentHTML('beforeend', `<button type="button" class="xch-src"><i style="background:color-mix(in srgb, ${c} 18%, transparent);color:color-mix(in oklab, ${c} 50%, var(--color-text-primary))">${ab}</i><span><b>${esc(title)}</b><span>${domain}</span></span><em>${i + 1}</em></button>`);
-              follow(); await w(140);
-            }
-            await para(body, 'High-risk system obligations are unchanged and still land in August next year{4}.');
-          } },
-          { q: 'How did weekly signups trend this quarter?', match: /signup|sign-up|trend|quarter|growth/i, tg: 'think', steps: ['Querying analytics', 'Aggregating 13 weeks'], thought: '2.1s', answer: async (body) => {
-            await para(body, 'Signups grew steadily through the quarter, finishing 53% above the first week. The only dip was W33, which tracks a paused campaign.');
-            const max = Math.max(...XCH_WEEKS);
-            const c = card(body, `${xcIcon('chart')}<span class="grow">Weekly signups</span>`, `<div class="xch-stats xch-mono"><div><span>TOTAL</span><b>13,009</b></div><div><span>VS FIRST WEEK</span><b class="up">+53.2%</b></div><div><span>AVERAGE</span><b>1,001</b></div><div><span>PEAK · W39</span><b>1,244</b></div></div><div class="xch-bars">${XCH_WEEKS.map((v, i) => `<i style="height:${(v / max) * 100}%" title="W${27 + i}: ${v.toLocaleString('en-US')} signups"></i>`).join('')}</div><div class="xch-axis xch-mono"><span>W27</span><span>13,009 SIGNUPS</span><span>W39</span></div>`);
-            for (const b of c.querySelectorAll('.xch-bars i')) { b.style.transform = 'none'; await w(45); }
-            await para(body, 'Hover the bars for exact counts. Want this broken down by acquisition channel?');
-          } },
-          { q: 'Draft a launch announcement for the new dashboard', match: /launch|announce|email|draft|blog/i, steps: ['Checking project notes'], thought: '1.9s', answer: async (body) => {
-            await para(body, 'Which channel is this for? I\'ll match the tone and length.');
-            const chips = mk('div', 'xch-chips xch-mono'); chips.innerHTML = ['EMAIL', 'BLOG POST', 'SOCIAL THREAD'].map((l) => `<button type="button" class="xch-chip" aria-pressed="false">${l}</button>`).join(''); body.append(chips);
-            for (const b of chips.children) b.onclick = () => { for (const x of chips.children) x.setAttribute('aria-pressed', String(x === b)); };
-            await w(700);
-            if (![...chips.children].some((b) => b.getAttribute('aria-pressed') === 'true')) chips.firstElementChild.setAttribute('aria-pressed', 'true');
-            const channel = $('[aria-pressed=true]', chips).textContent;
-            const c = card(body, `${xcIcon('fileText')}<span class="grow">Launch announcement</span><span class="xch-mono">${channel} · 80 WORDS</span>${xcIcon('copy')}${xcIcon('pen')}`, '<div class="xch-doc"></div>');
-            const doc = $('.xch-doc', c);
-            for (const line of ['Subject: Your new dashboard is live', 'Hi there,', 'Today we\'re rolling out the redesigned dashboard to every workspace. It puts your monitors, usage and spend on one screen, loads twice as fast, and finally works on mobile.', 'Nothing changes about your data or alerts. Open it from the sidebar, or reply to this email if anything looks off — we read every message.']) await para(doc, line);
-            doc.insertAdjacentHTML('beforeend', '<p class="sig">— The team</p>');
-            await para(body, 'Want a shorter version for the in-app banner as well?');
-          } },
-          { q: 'Summarize the risks flagged in this deck', match: /risk|deck|pdf|board|summar/i, tg: 'think', file: 'q3-board-deck.pdf', steps: ['Reading 24 pages', 'Extracting risk items'], thought: '2.8s', answer: async (body) => {
-            await para(body, 'The deck flags five risks. Two are rated high and both relate to Q4 renewals, so I\'d start there.');
-            const c = card(body, `<span class="xch-file" style="border:0;padding:0;height:auto"><i>${xcIcon('pdf')}</i></span><span class="grow">Risks in q3-board-deck.pdf</span>`, '');
-            for (const [s, text, page] of XCH_RISKS) {
-              c.insertAdjacentHTML('beforeend', `<div class="xch-risk"><span class="xch-sev" data-s="${s}" aria-label="${['', 'Low', 'Medium', 'High'][s]} severity"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px"></i></span><span>${esc(text)}</span><em class="xch-mono">${page}</em></div>`);
-              follow(); await w(220);
-            }
-          } },
-          { q: 'Write a debounce hook', match: /debounce|hook|react|code|typescript/i, steps: ['Writing useDebounce.ts'], thought: '1.4s', answer: async (body) => {
-            await para(body, 'Here\'s a typed hook: it waits until the value stops changing for the delay, then updates, and cancels the pending timer on unmount.');
-            const c = card(body, `<span class="xch-lang">TS</span><span class="grow">useDebounce.ts</span>${xcIcon('copy')}`, '<div class="xch-code"></div>');
-            const code = $('.xch-code', c);
-            for (const [i, line] of XCH_CODE.entries()) { code.insertAdjacentHTML('beforeend', `<div><span>${i + 1}</span><span>${line || ' '}</span></div>`); follow(); await w(90); }
-            await para(body, 'Pair it with a controlled input and pass the debounced value to your fetch.');
-          } },
-          { q: 'Set up a weekly digest of these metrics for the team', match: /digest|schedul|slack|every (monday|week)/i, steps: ['Checking connected apps'], thought: '1.7s', answer: async (body) => {
-            await para(body, 'I\'ll schedule a Monday 9:00 digest with signups, activation and open incidents.');
-            const c = card(body, `${xcIcon('calendar')}<span class="grow">Weekly metrics digest</span><span class="xch-mono xch-n">0/4</span>`, `<div class="xch-stripe" aria-hidden="true"></div>${XCH_DIGEST.map((d) => `<div class="xch-task"><i aria-hidden="true"></i>${esc(d)}</div>`).join('')}`);
-            for (const [i, task] of [...c.querySelectorAll('.xch-task')].entries()) {
-              await w(650);
-              task.classList.add('is-done'); task.firstElementChild.innerHTML = xcIcon('check');
-              $('.xch-n', c).textContent = `${i + 1}/4`; $('.xch-stripe', c).style.setProperty('--p', `${((i + 1) / 4) * 100}%`);
-            }
-          } },
-          { q: 'Translate the digest into German and Japanese', match: /translat|german|japanese|french|language/i, steps: ['Translating 2 versions'], thought: '5.5s', answer: async (body, bot) => {
-            // First attempt fails: the orb turns red, the error offers Retry, then the answer streams.
-            const orb = $('.xch-orb', bot), thought = $('.xch-thought', body); orb.classList.add('is-err'); thought.hidden = true;
-            const err = mk('div', 'xch-error'); err.innerHTML = `${xcIcon('alert')}<span>The model is over capacity right now. Nothing was sent.</span><button type="button">${xcIcon('rotate')}Retry</button>`;
-            body.prepend(err); setFoot('err', 'ERROR'); follow();
-            let retried = false; $('button', err).onclick = () => { retried = true; };
-            for (let waited = 0; !retried && (auto ? waited < 1800 : true); waited += 100) await w(100);
-            err.remove(); orb.classList.remove('is-err'); thought.hidden = false; setFoot('run', 'STREAMING');
-            await para(body, 'Done — both translations are attached to the digest as alternate versions. German keeps the numbers in the original format; Japanese uses full-width digits to match the team\'s convention.');
-          } },
-        ];
-        const FALLBACK = { steps: ['Thinking'], thought: '0.8s', answer: async (body) => {
-          await para(body, 'This window plays seven scripted answers. Ask about the EU AI Act, weekly signups, a launch email, the risks in a deck (attach it with +), a debounce hook, a weekly digest or a translation, and I\'ll show that one.');
-        } };
-
-        // One turn: optionally type the question, send it, show the work, stream the answer. Stop ends it early.
-        const runTurn = async (turn, q, typed) => {
-          if (busy) return;
-          busy = true; stopNow = false;
-          try {
-            if (typed) {
-              phase = 'typing'; setFoot('run', 'TYPING');
-              if (turn.tg) toggle(turn.tg, true);
-              if (turn.file) setAttach(turn.file);
-              field.value = '';
-              for (const ch of q) { field.value += ch; await w(22); }
-              await w(250);
-            }
-            phase = 'answering';
-            const file = attached; field.value = ''; setAttach('');
-            $('.xch-empty', feed)?.remove();
-            const u = mk('div', 'xch-user'); u.innerHTML = `${file ? `<span class="xch-file"><i>${xcIcon('pdf')}</i>${file}</span>` : ''}<p></p>`; $('p', u).textContent = q; feed.append(u);
-            send.innerHTML = xcIcon('stop'); send.dataset.busy = ''; send.setAttribute('aria-label', 'Stop'); setFoot('run', 'SENDING'); follow();
-            await w(400);
-            const bot = mk('div', 'xch-bot'); bot.innerHTML = '<span class="xch-orb" aria-hidden="true"></span><div class="xch-body"></div>'; feed.append(bot);
-            const body = $('.xch-body', bot);
-            try {
-              const work = mk('div'); work.innerHTML = '<div class="xch-work"><span class="xch-spin" aria-hidden="true"></span><b></b></div><div class="xch-steps"></div>'; body.append(work);
-              for (const s of turn.steps) {
-                $('b', work).textContent = `${s}...`; setFoot('run', s.toUpperCase());
-                const row = mk('div'); row.innerHTML = `<span class="xch-spin" aria-hidden="true"></span>${esc(s)}`; $('.xch-steps', work).append(row); follow();
-                await w(900);
-                row.firstElementChild.outerHTML = xcIcon('check');
-              }
-              await w(250);
-              work.outerHTML = `<div class="xch-thought">${xcIcon('chevronRight')}Thought for ${turn.thought}</div>`;
-              setFoot('run', 'STREAMING');
-              await turn.answer(body, bot);
-              setFoot('ok', 'DONE');
-            } catch (e) {
-              if (e !== STOP) throw e;
-              body.querySelector('.xch-work')?.remove();
-              $('.xch-error', body)?.remove(); $('.xch-orb', bot).classList.remove('is-err');
-              body.insertAdjacentHTML('beforeend', '<p class="xch-stopped">Stopped.</p>');
-              setFoot('ok', 'STOPPED');
-            }
-            body.insertAdjacentHTML('beforeend', `<div class="xch-acts" aria-hidden="true">${xcIcon('copy')}${xcIcon('thumbUp')}${xcIcon('thumbDown')}${xcIcon('rotate')}</div>`);
-            follow();
-          } catch (e) {
-            if (e !== STOP) throw e;
-            field.value = ''; setAttach(''); setFoot('ok', 'READY');
-          } finally {
-            busy = false; stopNow = false; phase = '';
-            send.innerHTML = xcIcon('arrowUp'); send.removeAttribute('data-busy'); send.setAttribute('aria-label', 'Send');
-            if (auto) { toggle('search', false); toggle('think', false); }
-          }
-        };
-        // Translation first: "translate the digest" is about translating, not scheduling.
-        const pick = (q) => [TURNS[6], ...TURNS.slice(0, 6)].find((x) => x.match.test(q)) || FALLBACK;
-
-        // The reader takes over: auto-play stops (it drops a question it was still typing) and every control is theirs.
-        const takeover = () => {
-          lastTouch = Date.now();
-          if (!auto) return;
-          auto = false; paused = false; pauseBtn.setAttribute('aria-pressed', 'false'); pauseBtn.innerHTML = xcIcon('pause');
-          if (phase === 'typing') stopNow = true;
-          paint();
-        };
-        field.addEventListener('focus', takeover);
-        field.addEventListener('keydown', takeover);
-        form.onsubmit = (e) => {
-          e.preventDefault(); takeover();
-          if (busy) { if (phase === 'answering') stopNow = true; return; }
-          const q = field.value.trim();
-          if (q) runTurn(pick(q), q, false);
-        };
-        feed.addEventListener('click', (e) => {
-          const s = e.target.closest('.xch-sug'); if (!s) return;
-          takeover(); const q = s.dataset.q;
-          const go = () => (busy ? t.sleep(100).then(go) : runTurn(pick(q), q, false));
-          go();
-        });
-        attachBtn.onclick = () => { takeover(); setAttach(attached ? '' : 'q3-board-deck.pdf'); };
-        for (const b of el.querySelectorAll('[data-tg]')) b.onclick = () => { takeover(); b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); };
-        $('[data-new]', el).onclick = () => {
-          takeover(); if (busy) stopNow = true;
-          const reset = () => (busy ? t.sleep(100).then(reset) : (feed.innerHTML = empty, setFoot('ok', 'READY')));
-          reset();
-        };
-        pauseBtn.onclick = () => {
-          if (!auto) return;
-          paused = !paused; pauseBtn.setAttribute('aria-pressed', String(paused));
-          pauseBtn.innerHTML = xcIcon(paused ? 'play' : 'pause'); pauseBtn.setAttribute('aria-label', paused ? 'Resume auto-play' : 'Pause auto-play');
-          paint();
-        };
-        speedBtn.onclick = () => { speed = speed === 1 ? 2 : 1; speedBtn.textContent = `${speed}×`; };
-        $('[data-min]', el).onclick = () => el.classList.add('is-min');
-        $('[data-open]', el).onclick = () => el.classList.remove('is-min');
-
-        // Auto-play: the seven turns of the video, folding into the pill once after the third.
-        await xcWait(t, 1200);
-        for (const [i, turn] of TURNS.entries()) {
-          if (!auto) break;
-          while (paused && auto && !REDUCE) await t.sleep(120);
-          step = i + 1;
-          await runTurn(turn, turn.q, true);
-          if (!auto) break;
-          if (i === 2) {
-            el.classList.add('is-min'); setFoot('ok', 'MINIMISED');
-            await xcWait(t, 1800 / speed);
-            el.classList.remove('is-min');
-          }
-          await xcWait(t, 900 / speed);
-        }
-        // Once the reader has taken over, never hand the stage back to the replay loop while they are using it.
-        if (!auto) await new Promise(() => {});
-        // A quiet moment after auto-play: if the reader starts now, keep their conversation.
-        for (let idle = 0; idle < 3000; idle += 200) { await t.sleep(200); if (!auto) await new Promise(() => {}); }
-      } },
+    { group: G, title: 'Assistant Chat Widget', kind: 'scene',
+      desc: 'The Assistant Chat States conversation (adapted with permission from Maxim Kuznetsov, @disarto_max, https://x.com/disarto_max/status/2100625465937424873) as a support widget: a round launcher in the bottom-right corner of an app opens the chat panel over the page, auto-play runs the seven turns, the panel closes to the launcher and a dot marks a reply that lands while it is shut; type, click a suggestion, pause or stop at any time.',
+      run: (root, t) => xchRun(root, t, true) },
   ];
 }

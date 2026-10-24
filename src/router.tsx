@@ -3,7 +3,7 @@ import { RootLayout } from '@/routes/root-layout';
 import { NotFound, RouteError } from '@/routes/not-found';
 
 /* Every page is its own chunk. The template iframes (/preview/:slug) then load only the template, not the
- * response engine and its 246 demos that the gallery and landing need; the main window prefetches the pages
+ * response engine and its 247 demos that the gallery and landing need; the main window prefetches the pages
  * while idle (prefetchRoutes) so switching from the navbar never waits on a download. */
 const page = {
   landing: () => import('@/routes/landing-page'),

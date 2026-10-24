@@ -1,6 +1,6 @@
 // After vite build, write one index.html per public route so a crawler that does not run
 // JavaScript still sees that route's title, description and canonical URL. The body stays
-// the SPA shell. Demo pages are not pre-rendered: there are 246 of them and their copy
+// the SPA shell. Demo pages are not pre-rendered: there are 247 of them and their copy
 // lives in the engine, which this script cannot import (import.meta.glob).
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
