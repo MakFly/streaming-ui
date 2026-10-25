@@ -527,33 +527,48 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
 
   return (
     <Surface className="h-full w-full">
-      <div className="flex h-11 shrink-0 items-end gap-1 ps-2 pe-1.5">
-        <div role="tablist" aria-label="Browser tabs" className="scrollbar-none flex min-w-0 flex-1 items-end gap-0.5 overflow-x-auto">
-          {b.tabs.map((t) => {
+      {/* Chrome in three tones: the tab strip on the surface, the active tab and toolbar as one raised block
+       * (concave feet join the tab to the bar), and a recessed address field. The page sits on the full background. */}
+      <div className="flex h-11 shrink-0 items-end gap-1 pe-1.5">
+        <div role="tablist" aria-label="Browser tabs" className="scrollbar-none flex min-w-0 flex-1 items-end overflow-x-auto px-2.5">
+          {b.tabs.map((t, i) => {
             const p = t.hist[t.pos];
             const src = p === NEW_TAB ? null : SOURCES[p];
             const on = t.id === b.activeId;
+            // A hairline between two resting tabs, as browsers draw it; none beside the active one.
+            const divider = !on && i < b.tabs.length - 1 && b.tabs[i + 1].id !== b.activeId;
             return (
               <div
                 key={t.id}
                 role="tab"
                 aria-selected={on}
                 className={cn(
-                  'animate-in fade-in-0 slide-in-from-bottom-1 flex h-8 w-[180px] min-w-[92px] shrink items-center gap-1 rounded-t-[10px] ps-2.5 pe-1 text-caption-1-medium duration-200',
-                  on ? 'bg-background-primary-default text-text-primary' : 'text-text-secondary hover:bg-background-tertiary-default',
+                  'group/tab animate-in fade-in-0 slide-in-from-bottom-1 relative flex h-8 w-[180px] min-w-[92px] shrink items-center gap-1 rounded-t-[10px] ps-2.5 pe-1 text-caption-1-medium duration-200',
+                  on
+                    ? 'z-10 bg-background-primary-default text-text-primary before:absolute before:bottom-0 before:-left-2.5 before:size-2.5 before:bg-[radial-gradient(circle_at_0_0,transparent_10px,var(--color-background-primary-default)_10.5px)] after:absolute after:-right-2.5 after:bottom-0 after:size-2.5 after:bg-[radial-gradient(circle_at_100%_0,transparent_10px,var(--color-background-primary-default)_10.5px)]'
+                    : cn('text-text-secondary transition-colors hover:text-text-primary', divider && 'after:absolute after:inset-y-2 after:right-0 after:w-px after:bg-separator-border-strong'),
                 )}
               >
+                {!on && <span aria-hidden="true" className="absolute inset-x-0.5 inset-y-1 -z-10 rounded-lg transition-colors group-hover/tab:bg-black/[0.05] dark:group-hover/tab:bg-white/[0.06]" />}
                 <button type="button" onClick={() => b.select(t.id)} className="flex min-w-0 flex-1 items-center gap-2 outline-none">
-                  {src ? <Favicon s={src} className="ring-0" /> : <Globe className="size-3.5 shrink-0 text-foreground-icon-tertiary" />}
+                  {src ? <Favicon s={src} className="ring-1 ring-black/10 dark:ring-white/20" /> : <Globe className="size-3.5 shrink-0 text-foreground-icon-tertiary" />}
                   <span className="truncate">{src ? src.title : 'New tab'}</span>
                 </button>
-                <button type="button" aria-label="Close tab" onClick={() => b.closeTab(t.id)} className="grid size-5 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary [&_svg]:size-3">
+                <button
+                  type="button"
+                  aria-label="Close tab"
+                  onClick={() => b.closeTab(t.id)}
+                  className={cn(
+                    'grid size-5 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-[color,background-color,opacity] outline-none hover:bg-black/[0.06] hover:text-foreground-icon-primary focus-visible:opacity-100 dark:hover:bg-white/10 [&_svg]:size-3',
+                    !on && 'opacity-0 group-hover/tab:opacity-100',
+                  )}
+                >
                   <X />
                 </button>
               </div>
             );
           })}
-          <IconButton label="New tab" onClick={b.newTab} className="mb-0.5">
+          <IconButton label="New tab" onClick={b.newTab} className="mb-0.5 ms-1.5">
             <Plus />
           </IconButton>
         </div>
@@ -562,7 +577,7 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
         </IconButton>
       </div>
 
-      <div className="flex h-11 shrink-0 items-center gap-0.5 border-b border-separator-border bg-background-primary-default px-2">
+      <div className="flex h-11 shrink-0 items-center gap-0.5 border-b border-separator-border-strong bg-background-primary-default px-2">
         <IconButton label="Back" onClick={b.back} className={navBtn(b.canBack)}>
           <ArrowLeft />
         </IconButton>
@@ -572,7 +587,7 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
         <IconButton label={loading ? 'Stop' : 'Reload'} onClick={loading ? () => setLoading(false) : b.reload}>
           {loading ? <X /> : <RotateCw />}
         </IconButton>
-        <div className="mx-1 flex h-8 min-w-0 flex-1 items-center gap-2 rounded-full bg-background-tertiary-default px-3 text-body-2-regular">
+        <div className="mx-1 flex h-8 min-w-0 flex-1 items-center gap-2 rounded-full bg-background-secondary-default px-3 text-body-2-regular">
           {s ? <Lock className="size-3.5 shrink-0 text-foreground-icon-tertiary" /> : <Search className="size-3.5 shrink-0 text-foreground-icon-tertiary" />}
           <span className="min-w-0 truncate">
             {s ? (
@@ -586,13 +601,13 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
           </span>
         </div>
         {s && (
-          <a href={urlOf(s)} target="_blank" rel="noreferrer" aria-label="Open in a new window" title="Open in a new window" className="grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary [&_svg]:size-4">
+          <a href={urlOf(s)} target="_blank" rel="noreferrer" aria-label="Open in a new window" title="Open in a new window" className="grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary dark:hover:bg-background-primary-hover [&_svg]:size-4">
             <ExternalLink />
           </a>
         )}
       </div>
 
-      <div className="relative min-h-0 flex-1 bg-background-primary-default">
+      <div className="relative min-h-0 flex-1 bg-background-full">
         <div key={b.nav} aria-hidden="true" className={cn('absolute inset-x-0 top-0 z-10 h-0.5 bg-accent-500', loading ? 'tpl-load' : 'opacity-0 transition-opacity duration-300')} />
         <div ref={scroller} className="scrollbar-thin relative h-full overflow-y-auto" aria-busy={loading}>
           {loading ? <PageSkeleton /> : s ? <SourcePage key={b.nav} s={s} n={b.page! + 1} onGo={b.go} /> : b.page === NEW_TAB ? <StartPage key={b.nav} onGo={b.go} /> : null}
