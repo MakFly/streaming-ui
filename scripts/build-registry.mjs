@@ -42,7 +42,8 @@ const ORB = 'src/components/thinking-orb';
 const ORB_CREDIT = 'Jakub Antalik (libraries.dev/orbs), made with help from Alexandr Brinza. MIT, from the thinking-orbs package.';
 const orbFile = (path, type = 'registry:component') => ({ path: `${ORB}/${path}`, type, target: `components/thinking-orb/${path}` });
 const ORB_ENGINE = readdirSync(ORB, { recursive: true })
-  .map(String)
+  .map((f) => String(f).replaceAll('\\', '/')) // Windows lists engine\core.ts: the registry and its import checks want posix paths
+
   .filter((f) => /\.tsx?$/.test(f) && f !== 'orb-status.tsx')
   .sort();
 
