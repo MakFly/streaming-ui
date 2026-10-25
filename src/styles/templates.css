@@ -49,11 +49,18 @@
 }
 .tpl-reveal { animation: tpl-reveal .42s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Streamed answer blocks (BoardUI multi-agent chat): each paragraph, heading, list item or code card
+ * mounts once with opacity 0, blur 5px, y 4px and settles in 420ms on the line ease; text then only grows. */
+@keyframes tpl-stream-in {
+  from { opacity: 0; filter: blur(5px); transform: translateY(4px); }
+}
+.tpl-stream-in { animation: tpl-stream-in .42s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
 @keyframes tpl-guide { from { stroke-dashoffset: 1; } }
 .tpl-guide { stroke-dasharray: 1; animation: tpl-guide .14s linear both; }
 
 @media (prefers-reduced-motion: reduce) {
   .sui-agent-thinking-label { color: var(--sui-agent-thinking-tone); background-image: none; animation: none; }
   .sui-agent-thinking-star { animation: none; transform: none; opacity: 0.7; }
-  .tpl-reveal, .tpl-guide, .tpl-scan, .tpl-tile-in { animation: none !important; }
+  .tpl-reveal, .tpl-stream-in, .tpl-guide, .tpl-scan, .tpl-tile-in { animation: none !important; }
 }

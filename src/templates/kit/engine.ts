@@ -123,10 +123,13 @@ export function useChatEngine({ intro, reply }: { intro?: Script; reply: (api: C
             const words = markdown.split(/(?<=\s)/);
             let shown = 0;
             for (let i = 0; i < words.length; i += 2) {
-              shown += words[i].length + (words[i + 1]?.length ?? 0);
+              const chunk = words[i] + (words[i + 1] ?? '');
+              shown += chunk.length;
               const n = shown;
               patchPart(msgId, id, (p) => (p.kind === 'text' ? { ...p, shown: n } : p));
-              await sleep(2000 / wps);
+              // Breathe like BoardUI: a beat after a sentence, a longer one before the next block.
+              const pause = /\n\s*$/.test(chunk) ? 160 : /[.!?:]\s*$/.test(chunk) ? 100 : 0;
+              await sleep(2000 / wps + pause);
             }
             patchPart(msgId, id, (p) => (p.kind === 'text' ? { ...p, shown: markdown.length, done: true } : p));
           },

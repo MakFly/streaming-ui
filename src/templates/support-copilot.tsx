@@ -215,7 +215,6 @@ export default function SupportCopilotTemplate() {
           <FramePanel>
             <p className="px-3 py-2.5 text-body-2-regular leading-6 text-text-primary">
               {text.slice(0, shown)}
-              {!p.data.done && <span className="sui-caret ms-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 bg-text-primary" />}
             </p>
           </FramePanel>
           {Boolean(p.data.done) && (
