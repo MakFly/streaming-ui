@@ -6,7 +6,7 @@ import type { ComposerExtension } from '../variant-types';
 
 import { VoiceComposerView } from './voice';
 
-/* The /composers showcase for Voice: picker glyph, scripted demo, spec sheet and comparison cells. */
+/* The /composers showcase for Voice: picker glyph, scripted demo and comparison cells. */
 
 /* ------------------------------------------------------------------ glyph, demo, spec */
 
@@ -75,33 +75,6 @@ export const voice: ComposerExtension = {
         </>
       ),
     }),
-  },
-  spec: {
-    anatomy: ['Attachment strip', 'Add button', 'Keyboard toggle', 'Orb: glow, two level rings, swirling sphere', 'Model slot', 'Send / Stop', 'Transcript line with level bars (or the textarea when typing)', 'Tools row under the composer', 'Status line'],
-    behaviour: [
-      { keys: ['Hold', 'Space'], text: 'talks while the composer has focus (not while typing); release sends' },
-      { keys: ['Esc'], text: 'cancels a hold and restores the draft; stops while busy' },
-      { keys: ['Enter'], text: 'on the orb toggles listening; in the textarea, sends' },
-      { keys: ['Shift', 'Enter'], text: 'inserts a newline in keyboard mode' },
-      { keys: null, text: 'States: idle, listening (rings follow the level, transcript types in), thinking (fast swirl, dashed ring), speaking. Tapping the orb while busy stops. Uses the Web Speech API when present, else a simulated transcript; reduced motion freezes the level.' },
-    ],
-    bestFor: 'Hands-busy and mobile flows (cooking, driving, quick questions) where talking beats typing, with the keyboard one tap away.',
-    usage: `<Composer
-  variant="voice"
-  value={draft}
-  onChange={setDraft}
-  onSend={send}
-  onStop={stop}
-  busy={busy}
-  placeholder="Type instead"
-  model={<ModelPicker value={model} onChange={setModel} />}
-  status={
-    <>
-      <span><Mic /> Hold Space to talk</span>
-      <span>{count} messages</span>
-    </>
-  }
-/>`,
   },
   compare: {
     Input: 'Push-to-talk orb, textarea on demand',

@@ -59,6 +59,16 @@
           "path": "src/templates/kit/icon.tsx",
           "type": "registry:component",
           "target": "components/composer/icon.tsx"
+        },
+        {
+          "path": "src/templates/kit/mention-menu.tsx",
+          "type": "registry:component",
+          "target": "components/composer/mention-menu.tsx"
+        },
+        {
+          "path": "src/templates/kit/mention-field.tsx",
+          "type": "registry:component",
+          "target": "components/composer/mention-field.tsx"
         }
       ]
     },
@@ -278,6 +288,9 @@
       "type": "registry:component",
       "title": "Composer (all variants)",
       "description": "The eleven composers behind one <Composer variant=\"…\" /> switch, with a provider that lets a picker swap them everywhere.",
+      "dependencies": [
+        "lucide-react"
+      ],
       "registryDependencies": [
         "https://streaming-ui.pulseview.app/r/composer-pill.json",
         "https://streaming-ui.pulseview.app/r/composer-box.json",
@@ -296,6 +309,11 @@
           "path": "src/templates/kit/composers.tsx",
           "type": "registry:component",
           "target": "components/composer/composers.tsx"
+        },
+        {
+          "path": "src/templates/kit/reply.tsx",
+          "type": "registry:component",
+          "target": "components/composer/reply.tsx"
         },
         {
           "path": "src/templates/kit/composer-variant.tsx",

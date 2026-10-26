@@ -4,7 +4,7 @@ import type { Script } from '../engine';
 
 import { HaloComposerView } from './halo';
 
-/* The /composers showcase for Halo: picker glyph, scripted demo, spec sheet and comparison cells. */
+/* The /composers showcase for Halo: picker glyph, scripted demo and comparison cells. */
 
 /* ------------------------------------------------------------------ glyph */
 
@@ -72,43 +72,6 @@ export const halo: ComposerExtension = {
     intro,
     suggestions: ['Make it a 5-day trip', 'Where should I stay?', 'Enhance: what to pack'],
     content,
-  },
-  spec: {
-    anatomy: [
-      'Glowing conic rim + blurred glow behind it',
-      'Attachment strip',
-      'Growing textarea with a typed, cycling placeholder',
-      'Add button',
-      'Enhance button (rewrites the draft)',
-      'Tools slot',
-      'Model slot',
-      'Send / Stop',
-      'Status line under the card',
-    ],
-    behaviour: [
-      { keys: ['Enter'], text: 'sends: the text dissolves into drifting characters (~0.5s), then the message leaves' },
-      { keys: ['Shift', 'Enter'], text: 'inserts a newline' },
-      { keys: ['Esc'], text: 'stops while busy' },
-      { keys: null, text: 'Empty field: example prompts are typed letter by letter, held, then erased. Enhance on an empty field starts from the example on show.' },
-      { keys: null, text: 'Rim: calm at rest, full on focus, spinning fast and bright while busy. Reduced motion: still rim, prompts swap whole, no vanish.' },
-    ],
-    bestFor: 'Landing and empty states that should invite a first prompt: the moving rim and typed examples teach what to ask, Enhance helps short drafts.',
-    usage: `<Composer
-  variant="halo"
-  value={draft}
-  onChange={setDraft}
-  onSend={send}
-  onStop={stop}
-  busy={busy}
-  placeholder="Ask anything"
-  model={<ModelPicker value={model} onChange={setModel} />}
-  status={
-    <>
-      <span><Sparkles /> Enhance turns a draft into a full prompt</span>
-      <span>{count} messages</span>
-    </>
-  }
-/>`,
   },
   compare: {
     Input: 'Growing textarea',

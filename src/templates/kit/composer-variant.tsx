@@ -30,20 +30,25 @@ const isVariant = (v: string | null): v is ComposerVariant => COMPOSER_VARIANTS.
 const Ctx = createContext<{ choice: ComposerChoice; setChoice: (c: ComposerChoice) => void }>({ choice: 'auto', setChoice: () => {} });
 
 export function ComposerVariantProvider({ children }: { children: ReactNode }) {
+  // A forced `?composer=` wins for the life of the frame: a choice made in another tab must not replace it.
+  const [forced] = useState(() => {
+    const param = new URLSearchParams(window.location.search).get('composer');
+    return isVariant(param) ? param : null;
+  });
   const [choice, setState] = useState<ComposerChoice>(() => {
-    const forced = new URLSearchParams(window.location.search).get('composer');
-    if (isVariant(forced)) return forced;
+    if (forced) return forced;
     const saved = storage.get(KEY, 'auto');
     return isVariant(saved) ? saved : 'auto';
   });
 
   useEffect(() => {
+    if (forced) return;
     const onStorage = (e: StorageEvent) => {
       if (e.key === KEY) setState(isVariant(e.newValue) ? e.newValue : 'auto');
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [forced]);
 
   const setChoice = useCallback((c: ComposerChoice) => {
     setState(c);

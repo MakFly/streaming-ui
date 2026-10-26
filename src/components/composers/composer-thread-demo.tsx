@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { BookOpen, FileCode, FolderGit2, GitBranch, Globe, ImageIcon, PenLine, Pencil, RotateCcw, ShieldCheck, Terminal, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatEngine, type ChatScriptApi, type Script } from '@/templates/kit/engine';
 import { COMPOSER_VARIANTS, type BaseVariant, type ComposerVariant } from '@/templates/kit/composer-variant';
 import { EXTENSIONS, isExtension } from '@/templates/kit/variants';
+import { renderMentionLinks } from '@/templates/kit/mention-menu';
 import { AssistantMessage, Badge, ChatSurface, Composer, HeaderButton, ModelPicker, Suggestions, UserMessage, textOf } from '@/templates/kit/parts';
 
 /* One composer variant inside a small live thread, for the /composers showcase. Each variant gets its own
@@ -138,7 +139,30 @@ Switch to **Agent** and I can start with step 1.`,
 };
 
 /** Demo for any variant: the originals' scripts above, the later ones from their own file (kit/variants/*). Cached, so *  the intro and reply keep their identity across renders (both are effect dependencies). */const extDemos = new Map<ComposerVariant, Demo>();function demoOf(variant: ComposerVariant): Demo {  if (!isExtension(variant)) return DEMOS[variant];  let d = extDemos.get(variant);  if (!d) {    const e = EXTENSIONS[variant].demo;    const name = COMPOSER_VARIANTS.find((v) => v.id === variant)!.name;    d = { intro: e.intro, reply: e.reply ?? replyFor(name), suggestions: e.suggestions };    extDemos.set(variant, d);  }  return d;}
-const toolIcon = (name: string) => ({ Read: <FileCode />, Edit: <Pencil />, Ran: <Terminal />, Generate: <ImageIcon /> })[name] ?? <FileCode />;
+/** The intro's first question, without playing it: a dry run that skips the waits and stops at the first send.
+ *  A draft typed by hand (media types its prompt, then sends it with flags) wins over the sent text. */
+class Prompted {
+  constructor(readonly text: string) {}
+}
+async function promptOf(intro: Script): Promise<string> {
+  let typed = '';
+  const stop = (text: string) => {
+    throw new Prompted(typed || text);
+  };
+  try {
+    await intro({
+      sleep: async () => {},
+      setDraft: (t) => void (t && (typed = t)),
+      user: async (text) => stop(text),
+      assistant: () => stop(''),
+    });
+  } catch (e) {
+    if (e instanceof Prompted) return e.text;
+  }
+  return typed;
+}
+
+const toolIcon =(name: string) => ({ Read: <FileCode />, Edit: <Pencil />, Ran: <Terminal />, Generate: <ImageIcon /> })[name] ?? <FileCode />;
 
 /* ------------------------------------------------------------------ composer content per variant */
 
@@ -168,15 +192,52 @@ function ToolChip({ on, onToggle, icon, children, tone = 'neutral' }: { on: bool
  * `active`: only the demo in view plays, so a single composer is busy at a time.
  * It starts its intro when it becomes active; leaving mid-intro resets it, to replay whole on the way back.
  */
-export function ComposerThreadDemo({ variant, active = true, className }: { variant: ComposerVariant; active?: boolean; className?: string }) {
+export function ComposerThreadDemo({
+  variant,
+  active = true,
+  className,
+  modelPicker,
+  width = 'max-w-none',
+  autoplay = true,
+  tools = true,
+  mentions,
+}: {
+  variant: ComposerVariant;
+  active?: boolean;
+  className?: string;
+  /** Unset: each demo's own anatomy (some leave the model slot empty). true: the picker in every model slot; false: none (/playground). */
+  modelPicker?: boolean;
+  /** false: the composer without its tool chip (/playground's Writing coach switch). */
+  tools?: boolean;
+  /** The @ menu, for composers that offer it (Box). */
+  mentions?: boolean;
+  /** The thread column (ChatSurface `width`): full width on /composers, a centred column on /playground. */
+  width?: string;
+  /** false (/playground): the intro's question waits in the composer for the visitor to send, nothing plays on its own. */
+  autoplay?: boolean;
+}) {
   const demo = demoOf(variant);
   const meta = COMPOSER_VARIANTS.find((v) => v.id === variant)!;
   const chat = useChatEngine({ reply: demo.reply });
   const played = useRef(false);
-  const { run, reset, busy } = chat;
+  const { run, reset, busy, setDraft } = chat;
   const busyRef = useRef(busy);
   busyRef.current = busy;
+  // Without autoplay: the question the composer was given, so sending it as is gets the intro's own answer.
+  const prepared = useRef('');
+  const prefill = useCallback(
+    () =>
+      void promptOf(demo.intro).then((t) => {
+        prepared.current = t;
+        setDraft(t);
+      }),
+    [demo.intro, setDraft],
+  );
   useEffect(() => {
+    if (!autoplay) {
+      if (active) prefill();
+      return;
+    }
     if (active && !played.current) {
       played.current = true;
       void run(demo.intro);
@@ -184,18 +245,48 @@ export function ComposerThreadDemo({ variant, active = true, className }: { vari
       played.current = false;
       reset();
     }
-  }, [active, demo.intro, run, reset]);
+  }, [active, autoplay, demo.intro, run, reset, prefill]);
+  // Unmounting cancels the engine's run (StrictMode does it once on mount in dev): let the intro play again on
+  // remount, instead of staying "played" with nothing on screen and the composer stuck on Stop.
+  useEffect(
+    () => () => {
+      played.current = false;
+    },
+    [],
+  );
   const [model, setModel] = useState('Fable 5');
+  const send = (text: string) => {
+    if (prepared.current && text.trim() === prepared.current.trim() && !chat.messages.length) {
+      // The intro from its first send on: the question goes out as scripted, no typing and no waits before it.
+      prepared.current = '';
+      setDraft('');
+      let sent = false;
+      void run((api) =>
+        demo.intro({
+          ...api,
+          sleep: (ms) => (sent ? api.sleep(ms) : Promise.resolve()),
+          setDraft: (t) => sent && api.setDraft(t),
+          user: (t, opts) => {
+            sent = true;
+            return api.user(t, { ...opts, type: false });
+          },
+        }),
+      );
+      return;
+    }
+    chat.send(text);
+  };
   const [tool, setTool] = useState(true);
   const last = chat.messages[chat.messages.length - 1];
   const count = chat.messages.length;
 
   const replay = () => {
     chat.reset();
-    void chat.run(demo.intro);
+    if (autoplay) void chat.run(demo.intro);
+    else prefill();
   };
 
-  const picker = <ModelPicker value={model} onChange={setModel} className="hidden sm:flex" />;
+  const picker = modelPicker !== false ? <ModelPicker value={model} onChange={setModel} /> : undefined;
   const content: Record<BaseVariant, { model?: ReactNode; tools?: ReactNode; status?: ReactNode; placeholder?: string }> = {
     pill: {
       model: picker,
@@ -265,12 +356,13 @@ export function ComposerThreadDemo({ variant, active = true, className }: { vari
     },
   };
 
-  const decorate = isExtension(variant) ? EXTENSIONS[variant].demo.renderText : undefined;
+  // A composer's own mention look (Mention's chips), or the file links that go with Box's @ menu.
+  const decorate = isExtension(variant) ? EXTENSIONS[variant].demo.renderText : mentions ? renderMentionLinks : undefined;
 
   return (
     <ChatSurface
       dep={chat.messages}
-      width="max-w-none"
+      width={width}
       className={cn('h-[520px] flex-none rounded-3xl', className)}
       columnClassName="gap-5 px-4 sm:px-6"
       header={
@@ -284,16 +376,18 @@ export function ComposerThreadDemo({ variant, active = true, className }: { vari
           </HeaderButton>
         </>
       }
-      footer={<Composer variant={variant} lock value={chat.draft} onChange={chat.setDraft} onSend={chat.send} onStop={chat.stop} busy={chat.busy} {...(isExtension(variant) ? EXTENSIONS[variant].demo.content({ picker, count }) : content[variant])} context={Math.min(92, 31 + chat.messages.length * 7)} branch="Main" project="project-sea" />}
+      footer={
+        <Composer variant={variant} lock reply={chat.replyTo} onClearReply={chat.clearReply} value={chat.draft} onChange={chat.setDraft} onSend={send} onStop={chat.stop} busy={chat.busy} {...(isExtension(variant) ? EXTENSIONS[variant].demo.content({ picker, count }) : content[variant])} {...(modelPicker ? { model: picker } : {})} {...(tools ? {} : { tools: undefined })} mentions={mentions} context={Math.min(92, 31 + chat.messages.length * 7)} branch="Main" project="project-sea" />
+      }
     >
       {chat.messages.map((m, i) =>
         m.role === 'user' ? (
-          <UserMessage key={m.id}>{decorate ? decorate(textOf(m)) : textOf(m)}</UserMessage>
+          <UserMessage key={m.id} replyTo={m.replyTo}>{decorate ? decorate(textOf(m)) : textOf(m)}</UserMessage>
         ) : (
-          <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} toolIcon={toolIcon} decorate={decorate} textClassName={variant === 'command' ? 'text-body-2-regular leading-6' : undefined} />
+          <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} onReply={chat.startReply} toolIcon={toolIcon} decorate={decorate} textClassName={variant === 'command' ? 'text-body-2-regular leading-6' : undefined} />
         ),
       )}
-      {last?.role === 'assistant' && last.done && !chat.busy && <Suggestions items={demo.suggestions} onPick={chat.send} decorate={decorate} />}
+      {last?.role === 'assistant' && last.done && !chat.busy && <Suggestions items={demo.suggestions} onPick={send} decorate={decorate} />}
     </ChatSurface>
   );
 }

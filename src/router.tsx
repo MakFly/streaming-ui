@@ -13,8 +13,11 @@ const page = {
   templates: () => import('@/routes/templates-page'),
   template: () => import('@/routes/template-page'),
   preview: () => import('@/routes/template-preview'),
+  composerPreview: () => import('@/routes/composer-preview'),
   composers: () => import('@/routes/composers-page'),
   orbs: () => import('@/routes/orbs-page'),
+  modelPicker: () => import('@/routes/model-picker-page'),
+  playground: () => import('@/routes/playground-page'),
 };
 const promptIn = (from: 'gallery' | 'demo' | 'template') => async () => {
   const { PromptRoute } = await page.prompt();
@@ -25,7 +28,7 @@ const promptIn = (from: 'gallery' | 'demo' | 'template') => async () => {
 export function prefetchRoutes() {
   if (window.self !== window.top || window.location.pathname.includes('/preview/')) return;
   const run = () => {
-    for (const load of [page.landing, page.gallery, page.templates, page.composers, page.orbs, page.demo, page.template, page.prompt]) void load();
+    for (const load of [page.landing, page.gallery, page.templates, page.composers, page.orbs, page.modelPicker, page.playground, page.demo, page.template, page.prompt]) void load();
   };
   if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 3000 });
   else setTimeout(run, 1500);
@@ -44,7 +47,10 @@ export function prefetchRoutes() {
  * /templates/:slug/prompt         template page + Prompt dialog
  * /composers                     the eleven composers, each in a live thread (#pill … #command, #compare)
  * /orbs                          thinking-orb loaders: nine-state showcase and a playground
+ * /model-picker                  the composers' model picker on its own: demo, install and prompt
+ * /playground                    every piece together, the combination in the URL (?composer= &thinking= &response=…)
  * /preview/:slug                  bare template, no site chrome (what the iframes load)
+ * /preview/composer/:variant      bare playground chat thread (the playground's tablet and mobile frames)
  * *                               404
  *
  * The gallery is one layout route with every variant as a child, so switching library or opening a prompt keeps it mounted:
@@ -81,11 +87,15 @@ export const router = createBrowserRouter(
         },
         { path: 'composers', lazy: async () => ({ Component: (await page.composers()).ComposersPage }) },
         { path: 'orbs', lazy: async () => ({ Component: (await page.orbs()).OrbsPage }) },
+        { path: 'model-picker', lazy: async () => ({ Component: (await page.modelPicker()).ModelPickerPage }) },
         { path: '*', element: <NotFound /> },
       ],
     },
+    // Outside the root layout: a full-screen builder with its own header.
+    { path: '/playground', lazy: async () => ({ Component: (await page.playground()).PlaygroundPage }), errorElement: <RouteError /> },
     // Outside the root layout: no navbar inside the preview iframes.
     { path: '/preview/:slug', lazy: async () => ({ Component: (await page.preview()).TemplatePreview }), errorElement: <RouteError /> },
+    { path: '/preview/composer/:variant', lazy: async () => ({ Component: (await page.composerPreview()).ComposerPreview }), errorElement: <RouteError /> },
   ],
   { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' },
 );

@@ -5,6 +5,7 @@ import { ThinkingOrb, type OrbSize, type OrbState } from '@/components/thinking-
 import { OrbStatus } from '@/components/thinking-orb/orb-status';
 import { InstallButton } from '@/components/composers/install-button';
 import { ORBS, applyHead } from '@/seo/routes';
+import { useTheme } from '@/providers/theme-provider';
 
 /* `/orbs`: the thinking orbs of Jakub Antalik (libraries.dev/orbs, MIT), installable from our registry as
  * `thinking-orb` and `orb-status`. The nine-state showcase, then a playground to pick a state and a size.
@@ -25,14 +26,16 @@ const COPY: Partial<Record<OrbState, string>> = { weaving: 'planning', breathing
 const STATES: OrbState[] = ['working', 'searching', 'solving', 'listening', 'connecting', 'composing', 'breathing', 'weaving', 'shaping'];
 const SIZES: OrbSize[] = [64, 20, 32];
 
+// The site's theme, not prefers-color-scheme: `auto` falls back to the OS when <html> has no `.dark`, and light mode has none.
 function Showcase() {
+  const { theme } = useTheme();
   const cell = 'flex items-center justify-center overflow-hidden rounded-2xl bg-(--orbs-cell) max-[860px]:min-h-[200px]';
   return (
     <section aria-label="States" className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3 max-[860px]:grid-cols-1">
         {HERO_PILLS.map((p) => (
           <div key={p.state} className={`${cell} h-[314px] px-10 py-12 max-[860px]:h-auto`}>
-            <OrbStatus state={p.state} label={p.label} variant="pill" />
+            <OrbStatus state={p.state} label={p.label} variant="pill" theme={theme} />
           </div>
         ))}
       </div>
@@ -42,7 +45,7 @@ function Showcase() {
           const copy = COPY[state] ?? state;
           return (
             <div key={state} className={`${cell} p-8 ${large ? 'row-span-2' : ''} max-[860px]:row-auto`}>
-              <OrbStatus state={state} label={large ? `${cap(copy)}….` : `Agent ${copy}…`} variant={large ? 'pill' : 'chip'} />
+              <OrbStatus state={state} label={large ? `${cap(copy)}….` : `Agent ${copy}…`} variant={large ? 'pill' : 'chip'} theme={theme} />
             </div>
           );
         })}
@@ -106,6 +109,7 @@ function Snippet({ code }: { code: string }) {
 }
 
 function Playground() {
+  const { theme } = useTheme();
   const [state, setState] = useState<OrbState>('listening');
   const [size, setSize] = useState<OrbSize>(64);
   const [playing, setPlaying] = useState(false);
@@ -118,7 +122,7 @@ function Playground() {
       </p>
       <div className="grid grid-cols-[minmax(0,1fr)_244px] gap-3 max-[860px]:grid-cols-1">
         <div className="relative flex min-h-[380px] items-center justify-center overflow-hidden rounded-2xl bg-(--orbs-stage) min-[861px]:h-[586px]">
-          <ThinkingOrb state={state} size={size} paused={!playing} />
+          <ThinkingOrb state={state} size={size} theme={theme} paused={!playing} />
           <button type="button" onClick={() => setPlaying((p) => !p)} aria-pressed={playing} className="orbs-play absolute bottom-5 left-1/2 z-[5] -translate-x-1/2 text-body-2-medium leading-4">
             {playing ? 'Pause' : 'Play'}
           </button>

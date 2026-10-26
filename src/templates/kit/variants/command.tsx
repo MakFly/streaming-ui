@@ -21,7 +21,7 @@ export function CommandComposerView(p: VariantProps) {
   const kbd = 'rounded border border-border-button-default bg-background-tertiary-default px-1 font-mono text-[10.5px] text-text-secondary';
   return (
     <div className={cn('flex w-full flex-col gap-1.5', p.className)}>
-      <div className="relative rounded-xl border border-border-button-default bg-background-primary-default font-mono shadow-xs transition-colors focus-within:border-border-button-hover">
+      <div className="relative rounded-xl border border-border-button-default bg-background-primary-default font-mono shadow-xs">
         {p.busy && (
           <div className="absolute inset-x-3 -top-px h-px overflow-hidden" aria-hidden>
             <div className="tpl-scan h-full w-1/3 bg-gradient-to-r from-transparent via-accent-500 to-transparent" />

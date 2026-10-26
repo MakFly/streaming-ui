@@ -254,15 +254,15 @@ export default function CanvasTemplate() {
             </span>
           </>
         }
-        footer={<Composer variant="dock" value={chat.draft} onChange={chat.setDraft} onSend={chat.send} onStop={chat.stop} busy={chat.busy} placeholder="Ask for a change" />}
+        footer={<Composer reply={chat.replyTo} onClearReply={chat.clearReply} variant="dock" value={chat.draft} onChange={chat.setDraft} onSend={chat.send} onStop={chat.stop} busy={chat.busy} placeholder="Ask for a change" />}
       >
         {chat.messages.map((m, i) =>
           m.role === 'user' ? (
-            <UserMessage key={m.id} onEdit={() => chat.setDraft(textOf(m))}>
+            <UserMessage key={m.id} replyTo={m.replyTo} onEdit={() => chat.setDraft(textOf(m))}>
               {textOf(m)}
             </UserMessage>
           ) : (
-            <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} renderCustom={renderCustom} textClassName="text-body-2-regular leading-6" />
+            <AssistantMessage key={m.id} message={m} onReply={chat.startReply} isLast={i === chat.messages.length - 1} renderCustom={renderCustom} textClassName="text-body-2-regular leading-6" />
           ),
         )}
       </ChatSurface>

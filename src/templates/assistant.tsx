@@ -152,14 +152,14 @@ export default function AssistantTemplate() {
   };
 
   const composer = (
-    <Composer
+    <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
       context={Math.min(92, 12 + chat.messages.length * 7)}
       value={chat.draft}
       onChange={chat.setDraft}
       onSend={chat.send}
       onStop={chat.stop}
       busy={chat.busy}
-      model={<ModelPicker value={model} onChange={setModel} className="hidden sm:flex" />}
+      model={<ModelPicker value={model} onChange={setModel} />}
       status={
         <>
           <span className="flex items-center gap-1">
@@ -220,11 +220,11 @@ export default function AssistantTemplate() {
         ) : (
           chat.messages.map((m, i) =>
             m.role === 'user' ? (
-              <UserMessage key={m.id} onEdit={() => chat.setDraft(textOf(m))}>
+              <UserMessage key={m.id} replyTo={m.replyTo} onEdit={() => chat.setDraft(textOf(m))}>
                 {textOf(m)}
               </UserMessage>
             ) : (
-              <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} onRegenerate={() => lastUser && chat.send(textOf(lastUser))} />
+              <AssistantMessage key={m.id} message={m} onReply={chat.startReply} isLast={i === chat.messages.length - 1} onRegenerate={() => lastUser && chat.send(textOf(lastUser))} />
             ),
           )
         )}

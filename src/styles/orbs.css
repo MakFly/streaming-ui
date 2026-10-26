@@ -1,9 +1,7 @@
 /* /orbs: the thinking-orbs showcase and playground, measured on libraries.dev/orbs.
- * Showcase cells keep the reference's fixed dark surface in both themes (its light theme does the same);
- * the playground follows the theme. The pill, chip and shimmer live in components/thinking-orb/orb-status.tsx. Host tokens wherever one matches, raw values only where none does. */
+ * Showcase cells and the playground follow the theme; the page hands the site theme to every orb and pill. The pill, chip and shimmer live in components/thinking-orb/orb-status.tsx. Host tokens wherever one matches, raw values only where none does. */
 .orbs-page {
-  --orbs-cell: var(--color-neutral-900);
-
+  --orbs-cell: var(--color-background-secondary-default);
   --orbs-stage: var(--color-background-secondary-default);
   --orbs-panel: var(--color-white);
   --orbs-panel-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 4px 42px 0 rgb(0 0 0 / 0.04), inset 0 0 0 1px rgb(0 0 0 / 0.08);
@@ -21,6 +19,7 @@
 }
 
 .dark .orbs-page {
+  --orbs-cell: var(--color-neutral-900);
   --orbs-panel: #1b1b1b;
   --orbs-panel-shadow: 0 2px 6px 0 rgb(0 0 0 / 0.05), 0 4px 42px 0 rgb(0 0 0 / 0.24), inset 0 0 0 1px rgb(255 255 255 / 0.04), inset 0 1px 0 0 rgb(255 255 255 / 0.02);
   --orbs-title: #fbfbfb;

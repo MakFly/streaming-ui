@@ -35,6 +35,8 @@
     "registry:check": "bun run registry:build && git diff --exit-code -- registry.json registry public/r"
   },
   "dependencies": {
+    "@ai-sdk/react": "^4.0.158",
+    "ai": "^7.0.154",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

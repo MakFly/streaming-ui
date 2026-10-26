@@ -14,6 +14,9 @@ const PAGES = [
   { label: 'Responses', to: paths.gallery(), icon: 'layout-grid-line' },
   { label: 'Templates', to: paths.templates(), icon: 'robot-2-line' },
   { label: 'Composers', to: paths.composers(), icon: 'quill-pen-line' },
+  { label: 'Orbs', to: paths.orbs(), icon: 'loader-4-line' },
+  { label: 'Model picker', to: paths.modelPicker(), icon: 'cpu-line' },
+  { label: 'Playground', to: paths.playground(), icon: 'magic-line' },
   { label: 'Collections', to: '/#libraries', icon: 'stack-line' },
   { label: 'Prompts', to: '/#prompts', icon: 'markdown-line' },
 ];

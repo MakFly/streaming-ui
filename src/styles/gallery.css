@@ -6,6 +6,10 @@
  * ---------------------------------------------------------------------- */
 @property --sui-reveal-fade { syntax: "<length>"; inherits: false; initial-value: 0px; }
 
+/* A demo scrolled out of view stops its script (DemoStage) and freezes its CSS loops too (shimmers, stars, carets),
+ * which would otherwise keep running for every card already passed. */
+.sui-stage[data-offscreen], .sui-stage[data-offscreen] *, .sui-stage[data-offscreen] *::before, .sui-stage[data-offscreen] *::after { animation-play-state: paused !important; }
+
 html, body { height: 100%; }
 body { background-color: var(--color-background-full); color: var(--color-text-primary); font-family: var(--font-sans); }
 

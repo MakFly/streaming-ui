@@ -81,16 +81,16 @@ export function ComposerPlayground({ ref, bare, className }: { ref?: Ref<{ resta
           <div className="mt-auto" />
           {chat.messages.map((m, i) =>
             m.role === 'user' ? (
-              <UserMessage key={m.id}>{textOf(m)}</UserMessage>
+              <UserMessage key={m.id} replyTo={m.replyTo}>{textOf(m)}</UserMessage>
             ) : m.parts.length ? (
-              <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} className="px-1" />
+              <AssistantMessage key={m.id} message={m} onReply={chat.startReply} isLast={i === chat.messages.length - 1} className="px-1" />
             ) : null,
           )}
           {last?.role === 'assistant' && last.done && !chat.busy && <Suggestions items={SUGGESTIONS} onPick={chat.send} />}
         </div>
         <div className="flex flex-col gap-2">
           {thinking && <AgentThinking small className="animate-in fade-in-0 px-1.5" />}
-          <Composer
+          <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
             variant="pill"
             lock
             value={chat.draft}
@@ -105,7 +105,7 @@ export function ComposerPlayground({ ref, bare, className }: { ref?: Ref<{ resta
             onStop={chat.stop}
             busy={chat.busy}
             context={Math.min(92, 57 + chat.messages.length * 4)}
-            model={<ModelPicker value={model} onChange={setModel} className="hidden sm:flex" />}
+            model={<ModelPicker value={model} onChange={setModel} />}
             status={
               <>
                 <span className="flex items-center gap-3">

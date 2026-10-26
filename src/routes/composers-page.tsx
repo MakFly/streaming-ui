@@ -1,11 +1,11 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { Check, ExternalLink } from 'lucide-react';
 import { PageShell } from '@/components/page-shell';
 import { ComposerThreadDemo } from '@/components/composers/composer-thread-demo';
-import { ComposerCompare, ComposerSpec } from '@/components/composers/composer-spec';
+import { ComposerCompare } from '@/components/composers/composer-spec';
 import { InstallButton } from '@/components/composers/install-button';
-import { Icon } from '@/components/icon';
+import { PromptButton } from '@/components/prompt-button';
 import { COMPOSER_VARIANTS, ComposerVariantProvider, useComposerChoice, type ComposerVariant } from '@/templates/kit/composer-variant';
 import { ThinkingChoice } from '@/templates/kit/thinking-style';
 import { paths } from '@/lib/paths';
@@ -13,7 +13,7 @@ import { COMPOSERS, applyHead } from '@/seo/routes';
 import { cn } from '@/lib/utils';
 
 /* `/composers` — the five interchangeable composers of the chat templates, each typing into its own live
- * thread, with its anatomy and usage beside it and a comparison at the end. "Use in every template" sets the
+ * thread at full width, with a comparison at the end. "Use in every template" sets the
  * same shared choice as the picker in the template headers. The demos lock their variant, so that choice
  * never changes what this page shows. */
 
@@ -37,30 +37,12 @@ function useActiveSection(ids: readonly string[]) {
   return active;
 }
 
-const PromptDialog = lazy(() => import('@/components/prompt-dialog'));
+const loadBuilder = () => import('@/templates/composer-prompt');
 
 /** The composer's rebuild prompt (sources, install, usage), in the same dialog as demos and templates. */
 function ComposerPrompt({ variant }: { variant: (typeof COMPOSER_VARIANTS)[number] }) {
-  const [open, setOpen] = useState(false);
-  const load = useCallback(() => import('@/templates/composer-prompt').then((m) => m.buildComposerPrompt(variant.id)), [variant.id]);
-  return (
-    <>
-      <button type="button" onClick={() => setOpen(true)} className="flex h-8 items-center gap-1.5 rounded-lg border border-border-button-default bg-background-primary-default px-2.5 text-body-2-medium text-text-primary shadow-xs transition-colors hover:bg-background-primary-hover">
-        <Icon name="markdown-line" className="size-4" /> Prompt
-      </button>
-      {open && (
-        <Suspense fallback={null}>
-          <PromptDialog
-            title={`${variant.name} composer`}
-            fileName={`${variant.id}-composer.prompt.md`}
-            downloadName={`${variant.id}-composer.prompt.md`}
-            load={load}
-            onClose={() => setOpen(false)}
-          />
-        </Suspense>
-      )}
-    </>
-  );
+  const load = useCallback(() => loadBuilder().then((m) => m.buildComposerPrompt(variant.id)), [variant.id]);
+  return <PromptButton title={`${variant.name} composer`} fileName={`${variant.id}-composer.prompt.md`} downloadName={`${variant.id}-composer.prompt.md`} load={load} />;
 }
 
 function UseEverywhere({ variant }: { variant: ComposerVariant }) {
@@ -155,10 +137,7 @@ function Content() {
                 <InstallButton item={`composer-${v.id}`} />
               </div>
             </div>
-            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-              <ComposerThreadDemo variant={v.id} active={active === v.id} />
-              <ComposerSpec variant={v.id} />
-            </div>
+            <ComposerThreadDemo variant={v.id} active={active === v.id} />
           </section>
         ))}
 

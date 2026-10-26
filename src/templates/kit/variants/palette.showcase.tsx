@@ -4,7 +4,7 @@ import type { ComposerExtension } from '../variant-types';
 
 import { PaletteComposerView } from './palette';
 
-/* The /composers showcase for Palette: picker glyph, scripted demo, spec sheet and comparison cells. */
+/* The /composers showcase for Palette: picker glyph, scripted demo and comparison cells. */
 
 /* ------------------------------------------------------------------ glyph, demo, spec */
 
@@ -61,35 +61,6 @@ export const palette: ComposerExtension = {
         </>
       ),
     }),
-  },
-  spec: {
-    anatomy: ['Search row: icon, single-line query, model slot (Stop while busy)', 'Attachment strip', 'List (opens on focus, ~5 rows, scrolls): Ask AI · query, Commands, Recent', 'Actions list for the active row (⌘K)', 'Action bar: Quick AI label · Ask AI Tab · Run ↵ · Actions ⌘K', 'Tools row under the palette', 'Status line under the palette'],
-    behaviour: [
-      { keys: ['↑', '↓'], text: 'move the active row (aria-activedescendant); hover does too' },
-      { keys: ['↵'], text: 'runs the active row: Ask AI sends the query, a command sends “Command: query” (its canned prompt when the field is empty or the query names it)' },
-      { keys: ['Tab'], text: 'always sends the raw query to AI' },
-      { keys: ['⌘', 'K'], text: 'swaps the list for the active row’s actions: run, ask AI, edit in the field, attach, clear' },
-      { keys: ['esc'], text: 'stops while busy; otherwise closes actions, then clears the query' },
-      { keys: null, text: 'Busy: the list folds away and Stop replaces the model. The list folds when the field is empty and unfocused.' },
-    ],
-    bestFor: 'Launchers, spotlight overlays and ⌘K entry points, where one query either runs a canned command or goes straight to AI.',
-    usage: `<Composer
-  variant="palette"
-  value={draft}
-  onChange={setDraft}
-  onSend={send}
-  onStop={stop}
-  busy={busy}
-  placeholder="Ask AI or search commands…"
-  model={<ModelPicker value={model} onChange={setModel} />}
-  context={context}
-  status={
-    <>
-      <span><Command /> K for actions</span>
-      <span>{count} messages</span>
-    </>
-  }
-/>`,
   },
   compare: {
     Input: 'Single-line search',

@@ -122,10 +122,10 @@ export function AgentThinking({
  */
 export function ComposerLoader({ radius, children, className, surfaceClassName }: { active: boolean; radius?: number; children: ReactNode; className?: string; surfaceClassName?: string }) {
   return (
-    <div className={cn('group/cl relative', className)}>
+    <div className={cn('relative', className)}>
       <span
         aria-hidden
-        className={cn('absolute inset-0 border border-border-button-default bg-background-primary-default shadow-xs transition-[border-color,box-shadow] duration-200 group-focus-within/cl:border-border-button-hover group-focus-within/cl:shadow-sm', surfaceClassName)}
+        className={cn('absolute inset-0 border border-border-button-default bg-background-primary-default shadow-xs', surfaceClassName)}
         style={{ borderRadius: radius ?? 9999 }}
       />
       <div className="relative">{children}</div>

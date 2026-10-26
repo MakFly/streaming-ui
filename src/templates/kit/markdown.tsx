@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 /* Minimal markdown for streamed answers: headings, paragraphs, lists, quotes, fenced code, inline code,
  * bold, links and [n] citation chips. It parses whatever prefix has arrived, so half-written blocks
- * (an unclosed code fence, a list still growing) render sensibly; each block blurs in once. */
+ * (an unclosed code fence, a list still growing) render sensibly; each block blurs in once (BoardUI line motion, .tpl-stream-in). */
 
 hljs.registerLanguage('ts', typescript);
 hljs.registerLanguage('tsx', typescript);
@@ -191,35 +191,29 @@ export function CodeBlock({
   );
 }
 
-const Caret = () => <span className="sui-caret ms-0.5 inline-block h-[1.05em] w-[2px] translate-y-[3px] rounded-full bg-text-primary align-baseline" />;
-
-/** Renders `text`; a caret trails the last block while `streaming`. `cite` overrides the [n] chip; `decorate` enriches plain text. */
-export function Markdown({ text, streaming, cite, decorate, className }: { text: string; streaming?: boolean; cite?: (n: number) => ReactNode; decorate?: Decorate; className?: string }) {
+/** Renders `text`. No caret while `streaming` (BoardUI): new blocks blur in, then only grow. `cite` overrides the [n] chip; `decorate` enriches plain text. */
+export function Markdown({ text, cite, decorate, className }: { text: string; streaming?: boolean; cite?: (n: number) => ReactNode; decorate?: Decorate; className?: string }) {
   const blocks = parse(text);
   return (
     <div className={cn('flex flex-col gap-3 text-body-regular leading-7 text-text-primary', className)}>
       {blocks.map((b, i) => {
-        const tail = streaming && i === blocks.length - 1 ? <Caret /> : null;
         switch (b.t) {
           case 'h':
             return (
-              <p key={i} className={cn('tpl-reveal text-text-primary', b.level === 1 ? 'text-title-3-semibold' : 'text-headline-semibold', i > 0 && 'pt-2')}>
+              <p key={i} className={cn('tpl-stream-in text-text-primary', b.level === 1 ? 'text-title-3-semibold' : 'text-headline-semibold', i > 0 && 'pt-2')}>
                 {inline(b.text, cite, decorate)}
-                {tail}
               </p>
             );
           case 'p':
             return (
-              <p key={i} className="tpl-reveal text-pretty">
+              <p key={i} className="tpl-stream-in text-pretty">
                 {inline(b.text, cite, decorate)}
-                {tail}
               </p>
             );
           case 'quote':
             return (
-              <blockquote key={i} className="tpl-reveal border-s-2 border-separator-border ps-4 text-text-secondary">
+              <blockquote key={i} className="tpl-stream-in border-s-2 border-separator-border ps-4 text-text-secondary">
                 {inline(b.text, cite, decorate)}
-                {tail}
               </blockquote>
             );
           case 'ul':
@@ -228,23 +222,17 @@ export function Markdown({ text, streaming, cite, decorate, className }: { text:
             return (
               <List key={i} className={cn('flex flex-col gap-1.5 ps-5 marker:text-text-tertiary', b.t === 'ul' ? 'list-disc' : 'list-decimal')}>
                 {b.items.map((it, j) => (
-                  <li key={j} className="tpl-reveal ps-1">
+                  <li key={j} className="tpl-stream-in ps-1">
                     {inline(it, cite, decorate)}
-                    {tail && j === b.items.length - 1 ? tail : null}
                   </li>
                 ))}
               </List>
             );
           }
           case 'code':
-            return <CodeBlock key={i} className="tpl-reveal my-1" lang={b.lang} code={b.code} caret={streaming && b.open} />;
+            return <CodeBlock key={i} className="tpl-stream-in my-1" lang={b.lang} code={b.code} />;
         }
       })}
-      {streaming && blocks.length === 0 && (
-        <p>
-          <Caret />
-        </p>
-      )}
     </div>
   );
 }

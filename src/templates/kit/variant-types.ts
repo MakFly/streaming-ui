@@ -4,7 +4,7 @@ import type { VariantProps } from './composer-kit';
 import type { Decorate } from './markdown';
 
 /* The contract every composer in kit/variants/* fulfils: the composer itself plus what the /composers page
- * shows for it (a schematic for the picker, a scripted demo, a spec sheet and its comparison cells). One file
+ * shows for it (a schematic for the picker, a scripted demo and its comparison cells). One file
  * per variant, registered in kit/variants/index.ts. */
 
 /** What the /composers demo hands a variant: the demo's model picker and how many messages the thread has. */
@@ -19,15 +19,6 @@ export interface DemoContent {
   tools?: ReactNode;
   status?: ReactNode;
   placeholder?: string;
-}
-
-export interface ComposerSpecData {
-  anatomy: string[];
-  /** Key chips followed by what they do; `null` keys render the line as plain text. */
-  behaviour: { keys: string[] | null; text: string }[];
-  bestFor: string;
-  /** A realistic <Composer variant="…" /> snippet (tsx). */
-  usage: string;
 }
 
 /** Rows of the comparison table on /composers ("Default in templates" is computed). */
@@ -62,6 +53,5 @@ export interface ComposerExtension {
     /** Renders plain text in the thread (user bubbles and answers) the way the composer shows it. */
     renderText?: Decorate;
   };
-  spec: ComposerSpecData;
   compare: Record<CompareRow, ReactNode>;
 }

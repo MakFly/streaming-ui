@@ -74,21 +74,54 @@ function ScriptStage({ demo, ref, className, frame = true }: { demo: Demo; ref?:
 
   useImperativeHandle(ref, () => ({ restart: () => void start() }), [start]);
 
-  // Play while near the viewport, stop when scrolled away.
+  // Play while near the viewport, stop when scrolled away. Starting builds the demo's DOM: it waits for an idle
+  // moment (150ms at most) instead of running in the scroll frame, so cards entering together don't stall it.
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
+    let pending: (() => void) | null = null;
+    const cancel = () => {
+      pending?.();
+      pending = null;
+    };
+    const schedule = () => {
+      if (pending) return;
+      const run = () => {
+        pending = null;
+        if (state.current.onscreen && !state.current.running) void start();
+      };
+      if (typeof window.requestIdleCallback === 'function') {
+        const id = window.requestIdleCallback(run, { timeout: 150 });
+        pending = () => window.cancelIdleCallback(id);
+      } else {
+        const id = window.setTimeout(run, 16);
+        pending = () => window.clearTimeout(id);
+      }
+    };
+    // Web Animations started from script (the Motion library's demos) ignore the CSS pause: held here instead.
+    let held: Animation[] = [];
     const io = new IntersectionObserver(
       ([entry]) => {
         state.current.onscreen = entry.isIntersecting;
-        if (entry.isIntersecting && !state.current.running) void start();
-        else if (!entry.isIntersecting && state.current.running) stop();
+        // Off screen, its CSS loops pause as well (gallery.css), not only the script's timers.
+        el.toggleAttribute('data-offscreen', !entry.isIntersecting);
+        if (entry.isIntersecting) {
+          held.forEach((a) => a.playState === 'paused' && a.play());
+          held = [];
+          if (!state.current.running) schedule();
+        } else {
+          held = el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && !(a instanceof CSSAnimation) && !(a instanceof CSSTransition));
+          held.forEach((a) => a.pause());
+          cancel();
+          if (state.current.running) stop();
+        }
       },
       { rootMargin: '200px 0px' },
     );
     io.observe(el);
     return () => {
       io.disconnect();
+      cancel();
       stop();
     };
   }, [start, stop]);

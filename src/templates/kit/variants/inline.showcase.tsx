@@ -4,7 +4,7 @@ import type { Script } from '../engine';
 
 import { InlineComposerView } from './inline';
 
-/* The /composers showcase for Inline: picker glyph, scripted demo, spec sheet and comparison cells. */
+/* The /composers showcase for Inline: picker glyph, scripted demo and comparison cells. */
 
 function InlineGlyph() {
   return (
@@ -76,28 +76,6 @@ export const inline: ComposerExtension = {
         </>
       ),
     }),
-  },
-  spec: {
-    anatomy: ['Sparkle glyph (spinner while busy)', 'Selection chip, removable (“No selection” otherwise)', 'Single-line input', 'Edit / Ask segment', 'Model slot (small, sm and up)', 'Send / Stop', 'Key-hint row with attach', 'Tools row and status under the bar'],
-    behaviour: [
-      { keys: ['⌘', 'K'], text: 'focuses the bar from anywhere (Ctrl+K off Mac)' },
-      { keys: ['↵'], text: 'submits in the current mode' },
-      { keys: ['⌥', '↵'], text: 'switches to Ask and submits' },
-      { keys: ['Tab'], text: 'on an empty field, accepts the suggested instruction' },
-      { keys: ['Esc'], text: 'stops while busy, else drops the chip, else leaves the bar' },
-      { keys: null, text: 'The last text selected outside the bar becomes the chip and is sent as a > quote above the instruction. Busy: a spinner replaces the glyph.' },
-    ],
-    bestFor: 'Editing or questioning a specific passage in place: docs, editors, code views. One line, so not for long prompts.',
-    usage: `<Composer
-  variant="inline"
-  value={draft}
-  onChange={setDraft}
-  onSend={send}
-  onStop={stop}
-  busy={busy}
-  placeholder="Select text, then ⌘K to edit it"
-  model={<ModelPicker value={model} onChange={setModel} />}
-/>`,
   },
   compare,
 };

@@ -4,7 +4,7 @@ import type { ComposerExtension } from '../variant-types';
 
 import { MediaComposerView, withFlags } from './media';
 
-/* The /composers showcase for Media: picker glyph, scripted demo, spec sheet and comparison cells. */
+/* The /composers showcase for Media: picker glyph, scripted demo and comparison cells. */
 
 /* ------------------------------------------------------------------ glyph */
 
@@ -83,43 +83,6 @@ export const media: ComposerExtension = {
         </>
       ),
     }),
-  },
-  spec: {
-    anatomy: [
-      'Reference strip above the prompt (Composer Attachments: 56px tiles, upload ring), drop target on the card',
-      'Growing textarea',
-      'Aspect-ratio chip: grid of six ratio boxes drawn to scale',
-      'Stylize chip: Stylize and Chaos sliders',
-      'Style chip: Auto, Photo, Illustration, 3D, Anime swatches',
-      'Batch segmented ×1 / ×2 / ×4',
-      'Tools slot after the chips',
-      'Model slot + Send / Stop',
-      'Status line under the card',
-    ],
-    behaviour: [
-      { keys: ['Enter'], text: 'sends the prompt with its flags appended (--ar --stylize --chaos --style --n)' },
-      { keys: ['Shift', 'Enter'], text: 'inserts a newline' },
-      { keys: ['Esc'], text: 'stops while busy; inside a chip popover it closes the popover first' },
-      { keys: null, text: 'Busy: Send turns into Stop. Dropping images over the card shows a dashed target and queues one reference per image into the attachment strip.' },
-    ],
-    bestFor: 'Image and media generation, where every prompt carries a handful of render parameters that should stay visible.',
-    usage: `<Composer
-  variant="media"
-  value={draft}
-  onChange={setDraft}
-  // receives "a koi pond at dawn --ar 16:9 --stylize 250 --chaos 10 --style photo --n 4"
-  onSend={generate}
-  onStop={stop}
-  busy={busy}
-  placeholder="Describe the image you want"
-  model={<ModelPicker value={model} onChange={setModel} />}
-  status={
-    <>
-      <span><Image /> Drop images as references</span>
-      <span>{credits} credits left</span>
-    </>
-  }
-/>`,
   },
   compare: {
     Input: 'Growing textarea + reference strip',
