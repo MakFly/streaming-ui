@@ -78,7 +78,9 @@ export const DemoCard = memo(function DemoCard({ demo, compact, library }: { dem
   const stage = useRef<DemoStageHandle>(null);
   const promptTo = paths.galleryPrompt(demo.slug, library);
   return (
-    <section id={demo.slug} className="flex min-w-0 scroll-mt-28 flex-col gap-2 pt-10">
+    // content-visibility: the browser skips style, layout and paint for cards far from the viewport (249 on the
+    // page); `auto 540px` holds a grid card's height until one has rendered, then its real one, so the scrollbar holds.
+    <section id={demo.slug} className="flex min-w-0 scroll-mt-28 flex-col gap-2 pt-10 [contain-intrinsic-size:auto_540px] [content-visibility:auto]">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <DemoMeta demo={demo} compact={compact} linkTitle />
         <DemoActions promptTo={promptTo} onRestart={() => stage.current?.restart()} />

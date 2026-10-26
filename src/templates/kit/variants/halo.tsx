@@ -6,7 +6,7 @@ import { withAttachments, AddButton, Field, SendButton, Status, useField, type V
 
 /* Halo (Glow rim): a rounded card inside a glowing conic rim. Rather than painting the rim
  * with a shader, it is a conic-gradient whose start angle is an animated @property, plus a blurred copy
- * behind it for the glow. Calm at rest, brighter on focus, fast and bright while busy. Empty, the field types and
+ * behind it for the glow. Lit only while busy (fast and bright), plain at rest and on focus. Empty, the field types and
  * erases example prompts; Enhance rewrites the draft into a richer prompt; sending dissolves the text into
  * drifting characters before the message leaves. Reduced motion: still rim, prompts swap whole, no vanish. */
 
@@ -180,17 +180,14 @@ export function HaloComposerView(p: VariantProps) {
   return (
     <div className={cn('flex w-full flex-col gap-1.5', p.className)}>
       <style>{CSS}</style>
-      <div data-busy={p.busy ? '' : undefined} className="tpl-halo group/halo relative isolate">
-        {/* Glow: a blurred copy of the rim, calm at rest, brighter on focus and while busy. */}
+      <div data-busy={p.busy ? '' : undefined} className="tpl-halo relative isolate">
+        {/* Glow: a blurred copy of the rim, only while busy; at rest and on focus the rim stays plain. */}
         <div
           aria-hidden
-          className={cn(
-            'tpl-halo-ring pointer-events-none absolute -inset-1 -z-10 rounded-[28px] blur-xl transition-opacity duration-500',
-            p.busy ? 'opacity-80 dark:opacity-90' : 'opacity-0 group-focus-within/halo:opacity-55 dark:group-focus-within/halo:opacity-70',
-          )}
+          className={cn('tpl-halo-ring pointer-events-none absolute -inset-1 -z-10 rounded-[28px] blur-xl transition-opacity duration-500', p.busy ? 'opacity-80 dark:opacity-90' : 'opacity-0')}
         />
         <div className="relative overflow-hidden rounded-3xl bg-border-button-default p-[1.5px] shadow-xs">
-          <div aria-hidden className={cn('tpl-halo-ring absolute inset-0 transition-opacity duration-500', p.busy ? 'opacity-100' : 'opacity-0 group-focus-within/halo:opacity-100')} />
+          <div aria-hidden className={cn('tpl-halo-ring absolute inset-0 transition-opacity duration-500', p.busy ? 'opacity-100' : 'opacity-0')} />
           <form
             onSubmit={(e) => {
               e.preventDefault();

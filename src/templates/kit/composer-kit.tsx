@@ -22,6 +22,8 @@ export interface ComposerProps {
   status?: ReactNode;
   /** Context window used, 0–100: the context ring, which opens the Agent Limits Card. */
   context?: number;
+  /** Box: its field takes @mentions of files, people, sources and tools, as chips (an @ button and menu). */
+  mentions?: boolean;
   /** Branch and project for the Panel's top rail. */
   branch?: string;
   project?: string;

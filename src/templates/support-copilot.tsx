@@ -127,6 +127,8 @@ function Inbox({ onPick }: { onPick?: () => void }) {
 }
 
 /** Marker: a centred label between hairlines. */
+const isMac = () => typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform);
+
 const Marker = ({ children }: { children: React.ReactNode }) => (
   <div className="flex items-center gap-3 text-caption-1-medium text-text-tertiary">
     <span className="h-px flex-1 bg-separator-border" />
@@ -197,6 +199,7 @@ export default function SupportCopilotTemplate() {
     return () => clearTimeout(id);
   }, [thread]);
 
+  const [sendKeys] = useState(() => (isMac() ? '⌘↵' : 'Ctrl ↵'));
   const send = () => {
     if (!replyText.trim()) return;
     setThread((t) => [...t, { from: 'agent', text: replyText.trim(), time: 'now' }]);
@@ -283,7 +286,7 @@ export default function SupportCopilotTemplate() {
           </>
         }
         footer={
-          <div className="flex flex-col rounded-[22px] border border-border-button-default bg-background-primary-default shadow-xs transition-[border-color,box-shadow] focus-within:border-border-button-hover focus-within:shadow-sm">
+          <div className="flex flex-col rounded-[22px] border border-border-button-default bg-background-primary-default shadow-xs">
             <div className="flex items-center gap-1 px-2 pt-2">
               {([['reply', 'Reply', Mail], ['note', 'Internal note', Lock]] as const).map(([k, l, I]) => (
                 <button
@@ -301,6 +304,13 @@ export default function SupportCopilotTemplate() {
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               rows={3}
+              // An email reply: Enter starts a new line, Ctrl/⌘ + Enter sends (as in a help desk).
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
               placeholder={mode === 'reply' ? 'Write a reply, or insert the copilot draft' : 'Only your team sees internal notes'}
               className="scrollbar-thin resize-none bg-transparent px-4 py-2 text-body-2-regular leading-6 text-text-primary outline-none placeholder:text-text-tertiary"
             />
@@ -311,8 +321,11 @@ export default function SupportCopilotTemplate() {
               <button type="button" onClick={() => setPane('copilot')} className="flex h-7 items-center gap-1.5 rounded-lg px-2 text-caption-1-medium text-accent-500 transition-colors hover:bg-accent-500/10">
                 <Sparkles className="size-3.5" /> Ask Copilot
               </button>
-              <button type="button" onClick={send} disabled={!replyText.trim()} className="ms-auto flex h-8 items-center gap-1.5 rounded-full bg-text-primary ps-3.5 pe-3 text-body-2-medium text-background-primary-default transition-opacity disabled:opacity-30">
-                Send <Send className="size-3.5" />
+              <button type="button" onClick={send} disabled={!replyText.trim()} title={`Send (${sendKeys})`} aria-keyshortcuts={isMac() ? 'Meta+Enter' : 'Control+Enter'} className="ms-auto flex h-8 items-center gap-1.5 rounded-full bg-text-primary ps-3.5 pe-3 text-body-2-medium text-background-primary-default transition-opacity disabled:opacity-30">
+                Send
+                {/* The shortcut, where there is a keyboard to press it. */}
+                <kbd className="hidden rounded-md bg-background-primary-default/15 px-1.5 font-sans text-caption-2-medium text-background-primary-default/75 sm:inline">{sendKeys}</kbd>
+                <Send className="size-3.5" />
               </button>
             </div>
           </div>
@@ -343,12 +356,12 @@ export default function SupportCopilotTemplate() {
             </Badge>
           </>
         }
-        footer={<Composer variant="dock" value={copilot.draft} onChange={copilot.setDraft} onSend={copilot.send} onStop={copilot.stop} busy={copilot.busy} placeholder="Ask Copilot" />}
+        footer={<Composer variant="dock" reply={copilot.replyTo} onClearReply={copilot.clearReply} value={copilot.draft} onChange={copilot.setDraft} onSend={copilot.send} onStop={copilot.stop} busy={copilot.busy} placeholder="Ask Copilot" />}
       >
         <CustomerCard />
         {copilot.messages.map((m, i) =>
           m.role === 'user' ? (
-            <UserMessage key={m.id}>{textOf(m)}</UserMessage>
+            <UserMessage key={m.id} replyTo={m.replyTo}>{textOf(m)}</UserMessage>
           ) : (
             <AssistantMessage
               key={m.id}
@@ -356,6 +369,7 @@ export default function SupportCopilotTemplate() {
               isLast={i === copilot.messages.length - 1}
               renderCustom={renderCustom}
               actions={false}
+              onReply={(r) => copilot.startReply({ ...r, label: 'Copilot' })}
               textClassName="text-body-2-regular leading-6"
               toolIcon={(n) => (n.includes('help') ? <BookOpen /> : <CreditCard />)}
             />

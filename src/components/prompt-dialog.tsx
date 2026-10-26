@@ -1,13 +1,61 @@
 import { useEffect, useMemo, useState } from 'react';
 import hljs from 'highlight.js/lib/core';
 import markdown from 'highlight.js/lib/languages/markdown';
+import bash from 'highlight.js/lib/languages/bash';
+import typescript from 'highlight.js/lib/languages/typescript';
+import javascript from 'highlight.js/lib/languages/javascript';
+import css from 'highlight.js/lib/languages/css';
+import json from 'highlight.js/lib/languages/json';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/icon';
 
-hljs.registerLanguage('markdown', markdown);
+// Every language the prompts fence (typescript covers ts/tsx, javascript covers js/jsx/mjs through their aliases).
+for (const [name, lang] of Object.entries({ markdown, bash, typescript, javascript, css, json })) hljs.registerLanguage(name, lang);
 
 const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+/**
+ * hljs's markdown grammar paints a fenced block in one colour. Split on the fences instead: the prose stays
+ * Markdown, each block's body is highlighted in the language its fence names (plain text when unknown).
+ * A fence closes on a line of exactly its own backticks, so blocks quoting ``` inside (longer fences) stay whole.
+ */
+function highlightPrompt(prompt: string) {
+  // 30–50 ms for a 50 KB prompt: reopening the same prompt (or StrictMode's second pass) reuses the result.
+  const hit = highlighted.get(prompt);
+  if (hit !== undefined) return hit;
+  const html = highlightFences(prompt);
+  highlighted.set(prompt, html);
+  if (highlighted.size > 8) highlighted.delete(highlighted.keys().next().value!);
+  return html;
+}
+const highlighted = new Map<string, string>();
+
+function highlightFences(prompt: string) {
+  const lines = prompt.split('\n');
+  const out: string[] = [];
+  let prose: string[] = [];
+  const flush = () => {
+    if (prose.length) out.push(hljs.highlight(prose.join('\n'), { language: 'markdown', ignoreIllegals: true }).value);
+    prose = [];
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const open = lines[i].match(/^(`{3,})([\w+-]*)\s*$/);
+    const close = open ? lines.findIndex((l, j) => j > i && l.trimEnd() === open[1]) : -1;
+    if (!open || close < 0) {
+      prose.push(lines[i]);
+      continue;
+    }
+    flush();
+    const body = lines.slice(i + 1, close).join('\n');
+    const lang = open[2] && hljs.getLanguage(open[2]) ? open[2] : null;
+    const code = lang ? hljs.highlight(body, { language: lang, ignoreIllegals: true }).value : escapeHtml(body);
+    out.push([`<span class="hljs-code">${escapeHtml(lines[i])}</span>`, ...(close > i + 1 ? [code] : []), `<span class="hljs-code">${escapeHtml(lines[close])}</span>`].join('\n'));
+    i = close;
+  }
+  flush();
+  return out.join('\n');
+}
 
 async function copyText(text: string) {
   try {
@@ -56,7 +104,7 @@ export default function PromptDialog({ title, href, hrefLabel, fileName, downloa
   const html = useMemo(() => {
     if (!prompt) return '';
     try {
-      return hljs.highlight(prompt, { language: 'markdown', ignoreIllegals: true }).value;
+      return highlightPrompt(prompt);
     } catch {
       return escapeHtml(prompt);
     }

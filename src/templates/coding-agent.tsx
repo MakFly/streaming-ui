@@ -340,7 +340,7 @@ export default function CodingAgentTemplate() {
           </>
         }
         footer={
-          <Composer
+          <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
             variant="command"
             context={Math.min(90, 8 + chat.messages.length * 6)}
             branch="feat/dark-mode"
@@ -374,11 +374,11 @@ export default function CodingAgentTemplate() {
       >
         {chat.messages.map((m, i) =>
           m.role === 'user' ? (
-            <UserMessage key={m.id} onEdit={() => chat.setDraft(textOf(m))}>
+            <UserMessage key={m.id} replyTo={m.replyTo} onEdit={() => chat.setDraft(textOf(m))}>
               {textOf(m)}
             </UserMessage>
           ) : (
-            <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} renderCustom={renderCustom} toolIcon={toolIcon} textClassName="text-body-2-regular leading-6" />
+            <AssistantMessage key={m.id} message={m} onReply={chat.startReply} isLast={i === chat.messages.length - 1} renderCustom={renderCustom} toolIcon={toolIcon} textClassName="text-body-2-regular leading-6" />
           ),
         )}
       </ChatSurface>

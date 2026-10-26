@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowDown, Brain, Check, ChevronDown, ChevronRight, Copy, LoaderCircle, Moon, Pencil, RefreshCw, Sun, TextCursorInput, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { Brain, Check, ChevronDown, ChevronRight, Copy, Flag, LoaderCircle, Moon, MoreHorizontal, Pencil, RefreshCw, Reply, Sun, TextCursorInput, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react';
 import { useTheme } from '@/providers/theme-provider';
 import { PalettePicker } from '@/components/palette-picker';
 import { cn } from '@/lib/utils';
@@ -10,11 +10,12 @@ import { ThinkingIndicator, ThinkingPicker } from './thinking-style';
 import { COMPOSER_VARIANTS, useComposerChoice, type ComposerChoice } from './composer-variant';
 import { EXTENSIONS, isExtension } from './variants';
 import { Markdown, type Decorate } from './markdown';
-import type { Message, Part } from './engine';
+import type { Message, Part, ReplyRef } from './engine';
+import { Quote } from './reply';
 
 /* Building blocks shared by every chat template:
  * - shell and surfaces of an agent chat (rounded-3xl cards on the full background, glass header),
- * - thread anatomy (44–48rem column, bubble-less assistant turns, action bar, scroll-to-bottom),
+ * - thread anatomy (44–48rem column, bubble-less assistant turns, action bar),
  * - agent steps, frames and badges (Trace, Frame, light badges). */
 
 /* ------------------------------------------------------------------ small primitives */
@@ -73,8 +74,8 @@ export function Badge({ tone = 'neutral', round, dot, children, className }: { t
 }
 
 /** Frame: a muted tray (header / footer chrome) around white inset panels with concentric radii. */
-export function Frame({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('tpl-reveal flex flex-col gap-[3px] rounded-2xl border border-border-button-default bg-background-tertiary-default/70 p-[3px]', className)}>{children}</div>;
+export function Frame({ children, className, messageId }: { children: ReactNode; className?: string; /** Makes the frame a reply target: a quote of it scrolls back here. */ messageId?: string }) {
+  return <div data-message-id={messageId} className={cn('tpl-reveal flex flex-col gap-[3px] rounded-2xl border border-border-button-default bg-background-tertiary-default/70 p-[3px]', className)}>{children}</div>;
 }
 export function FrameHeader({ icon, title, children, className }: { icon?: ReactNode; title: ReactNode; children?: ReactNode; className?: string }) {
   return (
@@ -251,7 +252,7 @@ export function useThreadScroll<T extends HTMLElement>(dep: unknown) {
 
 /**
  * A chat surface: glass header that frosts once content scrolls under it, a centred column,
- * a docked footer and a scroll-to-bottom button riding above it.
+ * and a footer floating over the thread's bottom on its own glass.
  */
 export function ChatSurface({
   header,
@@ -272,37 +273,58 @@ export function ChatSurface({
   className?: string;
   columnClassName?: string;
 }) {
-  const { ref, scrolled, atBottom, toBottom } = useThreadScroll<HTMLDivElement>(dep);
+  const { ref, scrolled } = useThreadScroll<HTMLDivElement>(dep);
+  // The footer floats over the thread (ChatGPT-style): the column keeps its height free at the bottom, so the
+  // last line still ends above the composer and only scrolled-up content passes under the glass.
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerH, setFooterH] = useState(0);
+  useLayoutEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setFooterH(el.offsetHeight));
+    ro.observe(el);
+    setFooterH(el.offsetHeight);
+    return () => ro.disconnect();
+    // Truthiness, not `!= null`: templates pass `footer={!empty && composer}`, and `false` must count as no footer.
+  }, [!!footer]);
   return (
-    <Surface className={cn('flex-1', className)}>
+    // --chat-glass: the surface colour the glass tints with (a caller that repaints the surface sets it too).
+    <Surface className={cn('flex-1 [--chat-glass:var(--color-background-secondary-default)]', className)}>
       {header && (
         <header
           className={cn(
             // Rounded itself: a backdrop-filter layer escapes the parent's overflow clip in Chromium and would square the corners.
-            'absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-1.5 border-b px-2.5 transition-[background-color,border-color,backdrop-filter] duration-300 rounded-t-2xl sm:rounded-t-3xl sm:px-3',
-            scrolled ? 'border-separator-border bg-white/20 backdrop-blur-[20px] backdrop-saturate-150 dark:bg-black/20' : 'border-transparent backdrop-blur-0',
+            'absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-1.5 rounded-t-2xl px-2.5 sm:rounded-t-3xl sm:px-3',
           )}
         >
+          {/* The glass, the bottom one mirrored: once the thread scrolls under, blur and tint fade out over 2rem below
+              the bar instead of stopping on a hard edge. Solid where transparency is turned down. */}
+          <div
+            aria-hidden
+            className={cn(
+              'pointer-events-none absolute inset-x-0 top-0 -bottom-8 -z-10 rounded-[inherit] bg-[linear-gradient(to_top,transparent,color-mix(in_srgb,var(--chat-glass)_78%,transparent)_2rem)] backdrop-blur-md backdrop-saturate-150 transition-opacity duration-300 [mask-image:linear-gradient(to_top,transparent,black_2rem)] [@media(prefers-reduced-transparency:reduce)]:bg-[linear-gradient(to_top,transparent,var(--chat-glass)_2rem)]',
+              scrolled ? 'opacity-100' : 'opacity-0',
+            )}
+          />
           {header}
         </header>
       )}
       <div ref={ref} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
-        <div className={cn('mx-auto flex w-full flex-col gap-6 px-4 pb-8', width, header ? 'pt-[68px]' : 'pt-5', empty && 'min-h-full justify-center pb-24', columnClassName)}>{children}</div>
+        <div
+          className={cn('mx-auto flex w-full flex-col gap-6 px-4 pb-8', width, header ? 'pt-[68px]' : 'pt-5', empty && 'min-h-full justify-center pb-24', columnClassName)}
+          style={footer ? { paddingBottom: footerH + (empty ? 48 : 32) } : undefined}
+        >
+          {children}
+        </div>
       </div>
       {footer && (
-        <div className="relative shrink-0 px-2.5 pb-2.5 sm:px-3 sm:pb-3">
-          <button
-            type="button"
-            aria-label="Scroll to bottom"
-            onClick={toBottom}
-            className={cn(
-              'absolute -top-11 left-1/2 z-10 grid size-8 -translate-x-1/2 place-items-center rounded-full border border-border-button-default bg-background-primary-default text-foreground-icon-secondary shadow-dropdown transition-[opacity,translate] duration-200 hover:text-foreground-icon-primary',
-              atBottom ? 'pointer-events-none translate-y-1 opacity-0' : 'opacity-100',
-            )}
-          >
-            <ArrowDown className="size-4" />
-          </button>
-          <div className={cn('mx-auto w-full', width)}>{footer}</div>
+        <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-10 rounded-[inherit] px-2.5 pb-2.5 sm:px-3 sm:pb-3">
+          {/* The glass: blur and tint fade in over 2rem above the composer, so lines slide under it instead of being cut. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 -top-8 bottom-0 rounded-[inherit] bg-[linear-gradient(to_bottom,transparent,color-mix(in_srgb,var(--chat-glass)_78%,transparent)_2rem)] backdrop-blur-md backdrop-saturate-150 [mask-image:linear-gradient(to_bottom,transparent,black_2rem)] [@media(prefers-reduced-transparency:reduce)]:bg-[linear-gradient(to_bottom,transparent,var(--chat-glass)_2rem)]"
+          />
+          <div className={cn('relative mx-auto w-full', width)}>{footer}</div>
         </div>
       )}
     </Surface>
@@ -313,9 +335,30 @@ export function ChatSurface({
 
 /** User turn: right-aligned in a 72px-gutter grid, edit button beside the bubble on hover.
  *  The bubble is a white card on the grey chat surface. */
-export function UserMessage({ children, onEdit, className }: { children: ReactNode; onEdit?: () => void; className?: string }) {
+/** One line of a message for a reply: its text without Markdown marks, cut at a word. */
+export function excerptOf(m: Message | string, max = 120) {
+  const t = (typeof m === 'string' ? m : textOf(m)).replace(/[*_`#>]/g, '').replace(/^\s*[-•]\s+/gm, '').replace(/\s+/g, ' ').trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  return `${cut.slice(0, cut.lastIndexOf(' ') > 60 ? cut.lastIndexOf(' ') : max).trimEnd()}…`;
+}
+
+/** Scrolls to a quoted message and flashes it, so the reader sees what the reply answers. */
+export function revealMessage(id: string) {
+  const el = document.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(id)}"]`);
+  if (!el) return;
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  el.animate([{ backgroundColor: 'color-mix(in srgb, var(--color-accent-500) 14%, transparent)' }, { backgroundColor: 'transparent' }], { duration: 1400, easing: 'ease-out' });
+}
+
+export { Quote, ReplyChip } from './reply';
+
+/** A message as the quote of a reply: its id, one line of it, and who said it. */
+export const replyRefOf = (m: Message, label?: string): ReplyRef => ({ id: m.id, text: excerptOf(m), label });
+
+export function UserMessage({ children, onEdit, replyTo, className }: { children: ReactNode; onEdit?: () => void; /** The message this one answers: shown as a quote that scrolls back to it. */ replyTo?: ReplyRef; className?: string }) {
   return (
-    <div className={cn('group/user animate-in fade-in-0 slide-in-from-bottom-1 grid grid-cols-[minmax(72px,1fr)_auto] duration-200', className)}>
+    <div className={cn('group/user animate-in fade-in-0 slide-in-from-bottom-1 grid grid-cols-[minmax(72px,1fr)_minmax(0,auto)] duration-200', className)}>
       <div className="relative col-start-2 max-w-full">
         {onEdit && (
           <span className="absolute start-0 top-1/2 -translate-x-full -translate-y-1/2 pe-1.5 opacity-0 transition-opacity group-hover/user:opacity-100 rtl:translate-x-full">
@@ -324,7 +367,14 @@ export function UserMessage({ children, onEdit, className }: { children: ReactNo
             </IconButton>
           </span>
         )}
-        <div className="rounded-2xl bg-background-primary-default px-3.5 py-[11px] text-body-regular leading-6 break-words whitespace-pre-wrap text-text-primary shadow-card">{children}</div>
+        <div className="rounded-2xl bg-background-primary-default px-3.5 py-[11px] text-body-regular leading-6 break-words whitespace-pre-wrap text-text-primary shadow-card">
+          {replyTo && (
+            <button type="button" onClick={() => revealMessage(replyTo.id)} title="Show the quoted message" className="mb-1.5 flex w-[18rem] max-w-full cursor-pointer rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring sm:w-[22rem]">
+              <Quote text={replyTo.text} />
+            </button>
+          )}
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -332,8 +382,49 @@ export function UserMessage({ children, onEdit, className }: { children: ReactNo
 
 export const textOf = (m: Message) => m.parts.map((p) => (p.kind === 'text' ? p.text : '')).join('\n\n');
 
-/** Action bar: copy (check swap), feedback, regenerate. Hidden on older turns until hover. */
-export function ActionBar({ message, isLast, onRegenerate, extra }: { message: Message; isLast?: boolean; onRegenerate?: () => void; extra?: ReactNode }) {
+/** The action bar's last button: "…" opens the less frequent actions (Markdown copy, read aloud, report). */
+function MoreActions({ message, onReport }: { message: Message; onReport: () => void }) {
+  const item = 'flex items-center gap-2 rounded-md py-1.5 text-body-2-regular [&_svg]:size-4 [&_svg]:text-foreground-icon-tertiary';
+  return (
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="More actions"
+              className="grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-[color,background-color,scale] outline-none hover:bg-background-tertiary-default hover:text-foreground-icon-primary dark:hover:bg-background-primary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring active:scale-90 data-[state=open]:bg-background-tertiary-default data-[state=open]:text-foreground-icon-primary [&_svg]:size-4"
+            >
+              <MoreHorizontal />
+            </button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>More</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="start" className="w-48 p-1">
+        <DropdownMenuItem className={item} onSelect={() => void navigator.clipboard?.writeText(textOf(message)).catch(() => {})}>
+          <Copy /> Copy as Markdown
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className={item}
+          onSelect={() => {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(textOf(message).replace(/[*_`#>-]/g, '')));
+          }}
+        >
+          <Volume2 /> Read aloud
+        </DropdownMenuItem>
+        <DropdownMenuItem className={item} onSelect={onReport}>
+          <Flag /> Report a problem
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Action bar: copy (check swap), feedback, regenerate, then "…" for the rest. Hidden on older turns until hover. */
+export function ActionBar({ message, isLast, onRegenerate, onReply, extra }: { message: Message; isLast?: boolean; onRegenerate?: () => void; /** Shows Reply: quote this message in the composer. */ onReply?: () => void; extra?: ReactNode }) {
   const [copied, setCopied] = useState(false);
   const [vote, setVote] = useState<'up' | 'down' | null>(null);
   return (
@@ -354,12 +445,18 @@ export function ActionBar({ message, isLast, onRegenerate, extra }: { message: M
       <IconButton label="Bad response" active={vote === 'down'} onClick={() => setVote((v) => (v === 'down' ? null : 'down'))}>
         <ThumbsDown />
       </IconButton>
+      {onReply && (
+        <IconButton label="Reply" onClick={onReply}>
+          <Reply />
+        </IconButton>
+      )}
       {onRegenerate && (
         <IconButton label="Regenerate" onClick={onRegenerate}>
           <RefreshCw />
         </IconButton>
       )}
       {extra}
+      <MoreActions message={message} onReport={() => setVote('down')} />
     </div>
   );
 }
@@ -457,6 +554,7 @@ export function AssistantMessage({
   toolIcon,
   actions = true,
   onRegenerate,
+  onReply,
   className,
   textClassName,
   decorate,
@@ -467,13 +565,15 @@ export function AssistantMessage({
   toolIcon?: (name: string) => ReactNode;
   actions?: boolean;
   onRegenerate?: () => void;
+  /** Adds Reply to the action bar (quote this answer in the composer). */
+  onReply?: (ref: ReplyRef) => void;
   className?: string;
   textClassName?: string;
   /** Enriches plain text runs, e.g. mention chips. */
   decorate?: Decorate;
 }) {
   return (
-    <div className={cn('group/message flex min-w-0 flex-col gap-3', className)}>
+    <div data-message-id={message.id} className={cn('group/message flex min-w-0 flex-col gap-3 rounded-lg', className)}>
       {message.parts.map((p) => {
         if (p.kind === 'thinking') return <Reasoning key={p.id} part={p} />;
         if (p.kind === 'tool') return <TraceRow key={p.id} part={p} icon={toolIcon?.(p.name)} />;
@@ -481,7 +581,15 @@ export function AssistantMessage({
         return <div key={p.id}>{renderCustom?.(p)}</div>;
       })}
       {message.parts.length === 0 && !message.done && <ThinkingIndicator className="py-1" small />}
-      {actions && message.done && message.parts.some((p) => p.kind === 'text') && <ActionBar message={message} isLast={isLast} onRegenerate={onRegenerate} />}
+      {actions && message.done && message.parts.some((p) => p.kind === 'text') && <ActionBar message={message} isLast={isLast} onRegenerate={onRegenerate} onReply={onReply && (() => onReply({ id: message.id, text: excerptOf(message) }))} />}
+      {/* No action bar (Support Copilot's drafts carry their own buttons): Reply alone, revealed the same way. */}
+      {!actions && onReply && message.done && message.parts.some((p) => p.kind === 'text') && (
+        <div className={cn('-ms-1 -mt-2 flex transition-opacity duration-200', !isLast && 'opacity-0 group-hover/message:opacity-100 focus-within:opacity-100')}>
+          <IconButton label="Reply" onClick={() => onReply({ id: message.id, text: excerptOf(message) })}>
+            <Reply />
+          </IconButton>
+        </div>
+      )}
     </div>
   );
 }
@@ -495,7 +603,7 @@ export { ModelPicker } from './model-picker';
 export { Composer } from './composers';
 
 /** Tiny schematic of each composer, drawn with the same tokens, for the picker. */
-function ComposerGlyph({ id }: { id: ComposerChoice }) {
+export function ComposerGlyph({ id }: { id: ComposerChoice }) {
   // The later composers draw their own schematic (kit/variants/*).
   if (id !== 'auto' && isExtension(id)) {
     const G = EXTENSIONS[id].Glyph;

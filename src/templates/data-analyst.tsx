@@ -287,7 +287,7 @@ export default function DataAnalystTemplate() {
   const renderCustom = (p: Extract<Part, { kind: 'custom' }>) => (p.type === 'receipt' ? <ReceiptView r={p.data as unknown as Receipt} /> : null);
 
   const composer = (
-    <Composer
+    <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
       variant="panel"
       context={Math.min(88, 22 + chat.messages.length * 9)}
       branch="Main"
@@ -341,11 +341,11 @@ export default function DataAnalystTemplate() {
         ) : (
           chat.messages.map((m, i) =>
             m.role === 'user' ? (
-              <UserMessage key={m.id} onEdit={() => chat.setDraft(textOf(m))}>
+              <UserMessage key={m.id} replyTo={m.replyTo} onEdit={() => chat.setDraft(textOf(m))}>
                 {textOf(m)}
               </UserMessage>
             ) : (
-              <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} renderCustom={renderCustom} onRegenerate={() => lastUser && chat.send(textOf(lastUser))} />
+              <AssistantMessage key={m.id} message={m} onReply={chat.startReply} isLast={i === chat.messages.length - 1} renderCustom={renderCustom} onRegenerate={() => lastUser && chat.send(textOf(lastUser))} />
             ),
           )
         )}

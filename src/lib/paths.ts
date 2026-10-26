@@ -12,8 +12,14 @@ export const paths = {
   composers: (variant?: string) => (variant ? `/composers#${variant}` : '/composers'),
   /** Thinking-orb loaders: the nine states and a playground. */
   orbs: () => '/orbs',
+  /** The composers' model picker on its own: demo, install and prompt. */
+  modelPicker: () => '/model-picker',
+  /** Every piece together: composer, model picker, thinking style, palette, responses, templates. */
+  playground: () => '/playground',
   /** Bare template, no site chrome: what the preview iframes load. */
   templatePreview: (slug: string) => `/preview/${slug}`,
+  /** Bare playground chat thread: what the playground's tablet and mobile frames load. */
+  composerPreview: (variant: string) => `/preview/composer/${variant}`,
 };
 
 export type GalleryView = 'grid' | 'list';

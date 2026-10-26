@@ -115,7 +115,7 @@ export function Chat() {
     ),
     '',
   );
-  L.push(`\`${Name}\` owns its attachment queue (the + button) and clears it on send. Optional slots: \`model\` (a model picker), \`tools\` (chips), \`status\` (two spans for the line under the composer), \`context\` (0–100, the ring that opens the limits card).`, '');
+  L.push(`\`${Name}\` owns its attachment queue (the + button) and clears it on send. Optional slots: \`model\` (a model picker: ours is \`npx shadcn@latest add ${window.location.origin}/r/model-picker.json\`, a provider rail whose logos name themselves in an instant tooltip on hover), \`tools\` (chips), \`status\` (two spans for the line under the composer), \`context\` (0–100, the ring that opens the limits card).`, '');
   L.push('## Files (verbatim — copy each one to its path)', '');
   L.push('### `src/lib/utils.ts`', '', fence(utils, 'ts'), '');
   for (const { path, code } of sources) L.push(`### \`${path}\``, '', fence(code, path.endsWith('x') ? 'tsx' : 'ts'), '');

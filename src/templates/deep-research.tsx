@@ -3,7 +3,7 @@ import { Bot, Check, Clock, Download, FileSearch, Globe, Layers, ListTree, Loade
 import { cn } from '@/lib/utils';
 import { useChatEngine, type ChatScriptApi, type Part } from './kit/engine';
 import { Cite, Markdown } from './kit/markdown';
-import { ActionBar, Badge, Canvas, ChatSurface, Composer, Frame, FrameFooter, FrameHeader, FramePanel, HeaderButton, Reasoning, Suggestions, HeaderTools, UserMessage, Welcome, textOf } from './kit/parts';
+import { ActionBar, Badge, Canvas, ChatSurface, Composer, Frame, FrameFooter, FrameHeader, FramePanel, HeaderButton, Reasoning, Suggestions, HeaderTools, UserMessage, Welcome, replyRefOf, textOf } from './kit/parts';
 
 /* Deep Research — the agent splits the question, then runs four browser agents in parallel (the usual
  * deep-research layout). Each lane shows its live page, progress and finds; then a
@@ -165,7 +165,7 @@ export default function DeepResearchTemplate() {
     const toc = m.parts.find((p): p is Extract<Part, { kind: 'custom' }> => p.kind === 'custom' && p.type === 'toc')?.data.items as string[] | undefined;
     const text = m.parts.find((p): p is Extract<Part, { kind: 'text' }> => p.kind === 'text');
     return (
-      <div className="group/message flex flex-col gap-5">
+      <div data-message-id={m.id} className="group/message flex flex-col gap-5 rounded-lg">
         {m.parts.map((p) => {
           if (p.kind === 'thinking') return <Reasoning key={p.id} part={p} />;
           if (p.kind === 'custom' && p.type === 'lanes') return <Lanes key={p.id} lanes={p.data.lanes as Lane[]} />;
@@ -219,13 +219,13 @@ export default function DeepResearchTemplate() {
             )}
           </Frame>
         )}
-        {text?.done && <ActionBar message={m} isLast={isLast} />}
+        {text?.done && <ActionBar message={m} isLast={isLast} onReply={() => chat.startReply(replyRefOf(m, 'Report'))} />}
       </div>
     );
   };
 
   const composer = (
-    <Composer
+    <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
       variant="box"
       value={chat.draft}
       onChange={chat.setDraft}
@@ -273,7 +273,7 @@ export default function DeepResearchTemplate() {
           </Welcome>
         ) : (
           chat.messages.map((m, i) => (
-            <Fragment key={m.id}>{m.role === 'user' ? <UserMessage onEdit={() => chat.setDraft(textOf(m))}>{textOf(m)}</UserMessage> : report(m, i === chat.messages.length - 1)}</Fragment>
+            <Fragment key={m.id}>{m.role === 'user' ? <UserMessage replyTo={m.replyTo} onEdit={() => chat.setDraft(textOf(m))}>{textOf(m)}</UserMessage> : report(m, i === chat.messages.length - 1)}</Fragment>
           ))
         )}
       </ChatSurface>

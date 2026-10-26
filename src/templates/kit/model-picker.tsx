@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Popover } from 'radix-ui';
+import { useMemo, useState, type ReactNode } from 'react';
+import { Popover, Tooltip } from 'radix-ui';
 import { RotateCcw } from 'lucide-react';
 import { Icon } from './icon';
 import { cn } from '@/lib/utils';
@@ -79,6 +79,28 @@ const providerOf = (model: string) => PROVIDERS.find((p) => p.models.includes(mo
 
 const popoverCls =
   'z-50 outline-none transition duration-150 ease-out data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=top]:origin-bottom-left data-[side=bottom]:origin-top-left';
+
+/**
+ * Instant tooltip, under the picker's own 0 ms provider (see ModelPicker): it shows on hover without the site's
+ * delay, and sliding from one trigger to the next swaps it with no entry animation.
+ */
+function Tip({ label, side = 'top', children }: { label: string; side?: 'top' | 'right'; children: ReactNode }) {
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          side={side}
+          sideOffset={6}
+          collisionPadding={8}
+          className="z-50 w-fit rounded-md bg-text-primary px-2 py-1 text-caption-1-medium whitespace-nowrap text-background-primary-default animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=instant-open]:animate-none"
+        >
+          {label}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+}
 
 /** Radio: 14px, 0.875px border at rest; an accent gradient and a 5px dot that scales in when checked. */
 function Radio({ on }: { on: boolean }) {
@@ -177,33 +199,35 @@ function EffortBadge({ effort, onEffort, canFast, fast, onFast }: { effort: numb
             {/* Fast toggle on the left (only for models that offer it), reset on the right. */}
             <div className="-mb-0.5 flex items-center gap-1 ps-2 pe-0.5">
               {canFast && (
-                <button
-                  type="button"
-                  aria-pressed={on}
-                  aria-label="Fast mode"
-                  title={on ? 'Fast mode on' : 'Fast mode'}
-                  onClick={() => onFast(!on)}
-                  className={cn('-ms-1.5 grid size-6 shrink-0 cursor-pointer place-items-center rounded-md outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-border-focus-ring', on ? 'bg-accent-500/12 text-accent-500' : 'text-foreground-icon-tertiary hover:bg-background-tertiary-default dark:hover:bg-background-primary-hover hover:text-foreground-icon-secondary')}
-                >
-                  <Bolt className="size-4" />
-                </button>
+                <Tip label={on ? 'Fast mode on' : 'Fast mode'}>
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    aria-label="Fast mode"
+                    onClick={() => onFast(!on)}
+                    className={cn('-ms-1.5 grid size-6 shrink-0 cursor-pointer place-items-center rounded-md outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-border-focus-ring', on ? 'bg-accent-500/12 text-accent-500' : 'text-foreground-icon-tertiary hover:bg-background-tertiary-default dark:hover:bg-background-primary-hover hover:text-foreground-icon-secondary')}
+                  >
+                    <Bolt className="size-4" />
+                  </button>
+                </Tip>
               )}
               <p className="min-w-0 flex-1 truncate text-body-medium text-text-secondary">
                 {on ? 'Fast' : 'Effort'} <EffortLabel effort={effort} className={cn('align-bottom transition-colors duration-150', on ? 'text-accent-500' : 'text-text-primary')} />
               </p>
               {(effort !== DEFAULT_EFFORT || on) && (
-                <button
-                  type="button"
-                  aria-label="Reset effort"
-                  title="Reset"
-                  onClick={() => {
-                    onEffort(DEFAULT_EFFORT);
-                    onFast(false);
-                  }}
-                  className="animate-in fade-in-0 grid size-6 shrink-0 cursor-pointer place-items-center rounded-md text-foreground-icon-tertiary outline-none transition-colors duration-150 hover:bg-background-tertiary-default hover:text-foreground-icon-secondary focus-visible:ring-2 focus-visible:ring-border-focus-ring"
-                >
-                  <RotateCcw className="size-3.5" />
-                </button>
+                <Tip label="Reset">
+                  <button
+                    type="button"
+                    aria-label="Reset effort"
+                    onClick={() => {
+                      onEffort(DEFAULT_EFFORT);
+                      onFast(false);
+                    }}
+                    className="animate-in fade-in-0 grid size-6 shrink-0 cursor-pointer place-items-center rounded-md text-foreground-icon-tertiary outline-none transition-colors duration-150 hover:bg-background-tertiary-default hover:text-foreground-icon-secondary focus-visible:ring-2 focus-visible:ring-border-focus-ring"
+                  >
+                    <RotateCcw className="size-3.5" />
+                  </button>
+                </Tip>
               )}
             </div>
             {on && <p className="animate-in fade-in-0 slide-in-from-top-1 ps-2 pt-1.5 text-caption-1-regular text-text-tertiary duration-200">Same model, faster output · billed at a higher rate</p>}
@@ -260,6 +284,7 @@ export function ModelPicker({
   onEffortChange,
   fast: fastProp,
   onFastChange,
+  defaultOpen = false,
   className,
 }: {
   value: string;
@@ -269,12 +294,14 @@ export function ModelPicker({
   /** Fast mode, for models that offer it; kept here unless the caller controls it. */
   fast?: boolean;
   onFastChange?: (v: boolean) => void;
+  /** Open on mount (the /model-picker showcase); it then opens and closes as usual. */
+  defaultOpen?: boolean;
   className?: string;
 }) {
   const [ownFast, setOwnFast] = useState(false);
   const fastWanted = fastProp ?? ownFast;
   const setFast = onFastChange ?? setOwnFast;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [tab, setTab] = useState(() => providerOf(value).id);
   const [searching, setSearching] = useState(false);
   const [q, setQ] = useState('');
@@ -305,134 +332,138 @@ export function ModelPicker({
   };
 
   return (
-    <Popover.Root
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o);
-        if (o) setTab(selected.id);
-        else closeSearch();
-      }}
-    >
-      <Popover.Trigger
-        className={cn(
-          'ease flex h-8 shrink-0 cursor-pointer items-center justify-center gap-0.5 rounded-xl bg-background-primary-default py-1.5 ps-2 pe-1 outline-none transition-colors duration-150 hover:bg-background-primary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring',
-          className,
-        )}
+    // One 0 ms provider for every tooltip in the picker (the effort popover's too: portals keep context).
+    // Labels are not hoverable, so there is no grace area to cross: the next logo's tooltip opens on the first move.
+    <Tooltip.Provider delayDuration={0} disableHoverableContent>
+      <Popover.Root
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          if (o) setTab(selected.id);
+          else closeSearch();
+        }}
       >
-        <BoltSlot on={fastOn} className="ms-0.5" />
-        <span className="px-0.5 text-body-medium whitespace-nowrap text-text-secondary">{value}</span>
-        <Icon name="arrow-down-s-line" className={cn('ease size-[18px] text-foreground-icon-secondary transition-transform duration-200', open && 'rotate-180')} />
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          // Follow the trigger every frame: it slides when the fast bolt appears, and a popover that only
-          // re-measures on resize would catch up later in a single jump.
-          updatePositionStrategy="always"
-          side="top"
-          align="start"
-          sideOffset={8}
-          collisionPadding={16}
-          aria-label="Models"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          className={cn(popoverCls, 'relative h-[282px] w-[341px] max-w-[calc(100vw-32px)] overflow-clip rounded-[20px] border border-border-button-default bg-background-primary-default shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_8px_rgba(0,0,0,0.02)]')}
+        <Popover.Trigger
+          className={cn(
+            'ease flex h-8 shrink-0 cursor-pointer items-center justify-center gap-0.5 rounded-xl bg-background-primary-default py-1.5 ps-2 pe-1 outline-none transition-colors duration-150 hover:bg-background-primary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring',
+            className,
+          )}
         >
-          <div className="size-full">
-            <div role="tablist" aria-label="Providers" aria-orientation="vertical" className="absolute start-0.5 top-0.5 h-[276px] w-[42px] overflow-y-auto rounded-[17px] bg-composer-panel-rail-background p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="flex w-9 flex-col gap-1.5">
-                {PROVIDERS.map((p) => {
-                  const on = !searching && tab === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={on}
-                      aria-label={p.name}
-                      title={p.name}
-                      onClick={() => {
-                        closeSearch();
-                        setTab(p.id);
-                      }}
-                      className={cn('ease flex h-[30px] w-9 shrink-0 cursor-pointer items-center justify-center rounded-[50px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-border-focus-ring', on ? 'bg-background-tertiary-default' : 'hover:bg-background-tertiary-default/50')}
-                    >
-                      <img alt="" aria-hidden="true" width={p.size} height={p.size} src={logo(p.file)} className="shrink-0 dark:invert" style={{ width: p.size, height: p.size }} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="absolute start-[52px] end-2 top-2 bottom-0 flex flex-col">
-              <div className="flex h-5 items-center justify-between gap-[5px] px-0.5">
-                {searching ? (
-                  <>
-                    <input
-                      autoFocus
-                      value={q}
-                      onChange={(e) => setQ(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape' && q) {
-                          e.preventDefault();
-                          setQ('');
-                        }
-                      }}
-                      placeholder="Search models"
-                      aria-label="Search models"
-                      className="h-5 min-w-0 flex-1 bg-transparent text-body-medium text-text-primary caret-accent-500 outline-none placeholder:text-text-tertiary"
-                    />
-                    <button type="button" aria-label="Close search" onClick={closeSearch} className="flex shrink-0 cursor-pointer items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
-                      <Icon name="close-line" className="size-4 text-foreground-icon-secondary" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-body-medium text-text-tertiary">Models</span>
-                    <button type="button" onClick={() => setSearching(true)} className="ease flex cursor-pointer items-center gap-[5px] rounded-sm opacity-50 outline-none transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-border-focus-ring">
-                      <span className="text-body-medium whitespace-nowrap text-text-secondary">Quick Search</span>
-                      <Icon name="search-line" className="size-4 text-foreground-icon-secondary" />
-                    </button>
-                  </>
-                )}
-              </div>
-
-              <div className="relative mt-1 flex min-h-0 flex-1 flex-col">
-                {/* Progressive blur fading the list under the header once it scrolls. */}
-                <div aria-hidden="true" className={cn('pointer-events-none absolute inset-x-0 top-0 z-10 h-8 transition-opacity duration-200 ease-out', scrolled ? 'opacity-100' : 'opacity-0')}>
-                  <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_0%,black_45%,transparent_100%)] backdrop-blur-[1px]" />
-                  <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_0%,black_25%,transparent_75%)] backdrop-blur-[3px]" />
-                  <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_0%,transparent_50%)] backdrop-blur-[8px]" />
-                  <div className="absolute inset-0 bg-linear-to-b from-background-primary-default via-background-primary-default/70 to-transparent" />
-                </div>
-                <div
-                  role="radiogroup"
-                  aria-label={searching && q.trim() ? 'Matching models' : `${PROVIDERS.find((p) => p.id === tab)?.name} models`}
-                  onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 2)}
-                  className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
-                  {rows.map(({ p, m }) => (
-                    <ModelRow
-                      key={`${p.id}-${m}`}
-                      provider={p}
-                      model={m}
-                      on={m === value && p.id === selected.id}
-                      showProvider={searching && !!q.trim()}
-                      effort={effort}
-                      onEffort={setEffort}
-                      fast={fastWanted}
-                      onFast={setFast}
-                      onPick={() => {
-                        setPickedAt(p.id);
-                        onChange(m);
-                      }}
-                    />
-                  ))}
-                  {rows.length === 0 && <p className="px-2 py-2 text-body-medium text-text-tertiary">No models match</p>}
+          <BoltSlot on={fastOn} className="ms-0.5" />
+          <span className="px-0.5 text-body-medium whitespace-nowrap text-text-secondary">{value}</span>
+          <Icon name="arrow-down-s-line" className={cn('ease size-[18px] text-foreground-icon-secondary transition-transform duration-200', open && 'rotate-180')} />
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            // Follow the trigger every frame: it slides when the fast bolt appears, and a popover that only
+            // re-measures on resize would catch up later in a single jump.
+            updatePositionStrategy="always"
+            side="top"
+            align="start"
+            sideOffset={8}
+            collisionPadding={16}
+            aria-label="Models"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            className={cn(popoverCls, 'relative h-[282px] w-[341px] max-w-[calc(100vw-32px)] overflow-clip rounded-[20px] border border-border-button-default bg-background-primary-default shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_8px_rgba(0,0,0,0.02)]')}
+          >
+            <div className="size-full">
+              <div role="tablist" aria-label="Providers" aria-orientation="vertical" className="absolute start-0.5 top-0.5 h-[276px] w-[42px] overflow-y-auto rounded-[17px] bg-composer-panel-rail-background p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex w-9 flex-col gap-1.5">
+                  {PROVIDERS.map((p) => {
+                    const on = !searching && tab === p.id;
+                    return (
+                      <Tip key={p.id} label={p.name} side="right">
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={on}
+                          aria-label={p.name}
+                          onClick={() => {
+                            closeSearch();
+                            setTab(p.id);
+                          }}
+                          className={cn('ease flex h-[30px] w-9 shrink-0 cursor-pointer items-center justify-center rounded-[50px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-border-focus-ring', on ? 'bg-background-tertiary-default' : 'hover:bg-background-tertiary-default/50')}
+                        >
+                          <img alt="" aria-hidden="true" width={p.size} height={p.size} src={logo(p.file)} className="shrink-0 dark:invert" style={{ width: p.size, height: p.size }} />
+                        </button>
+                      </Tip>
+                    );
+                  })}
                 </div>
               </div>
+
+              <div className="absolute start-[52px] end-2 top-2 bottom-0 flex flex-col">
+                <div className="flex h-5 items-center justify-between gap-[5px] px-0.5">
+                  {searching ? (
+                    <>
+                      <input
+                        autoFocus
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape' && q) {
+                            e.preventDefault();
+                            setQ('');
+                          }
+                        }}
+                        placeholder="Search models"
+                        aria-label="Search models"
+                        className="h-5 min-w-0 flex-1 bg-transparent text-body-medium text-text-primary caret-accent-500 outline-none placeholder:text-text-tertiary"
+                      />
+                      <button type="button" aria-label="Close search" onClick={closeSearch} className="flex shrink-0 cursor-pointer items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
+                        <Icon name="close-line" className="size-4 text-foreground-icon-secondary" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-body-medium text-text-tertiary">Models</span>
+                      <button type="button" onClick={() => setSearching(true)} className="ease flex cursor-pointer items-center gap-[5px] rounded-sm opacity-50 outline-none transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-border-focus-ring">
+                        <span className="text-body-medium whitespace-nowrap text-text-secondary">Quick Search</span>
+                        <Icon name="search-line" className="size-4 text-foreground-icon-secondary" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <div className="relative mt-1 flex min-h-0 flex-1 flex-col">
+                  {/* Progressive blur fading the list under the header once it scrolls. */}
+                  <div aria-hidden="true" className={cn('pointer-events-none absolute inset-x-0 top-0 z-10 h-8 transition-opacity duration-200 ease-out', scrolled ? 'opacity-100' : 'opacity-0')}>
+                    <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_0%,black_45%,transparent_100%)] backdrop-blur-[1px]" />
+                    <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_0%,black_25%,transparent_75%)] backdrop-blur-[3px]" />
+                    <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black_0%,transparent_50%)] backdrop-blur-[8px]" />
+                    <div className="absolute inset-0 bg-linear-to-b from-background-primary-default via-background-primary-default/70 to-transparent" />
+                  </div>
+                  <div
+                    role="radiogroup"
+                    aria-label={searching && q.trim() ? 'Matching models' : `${PROVIDERS.find((p) => p.id === tab)?.name} models`}
+                    onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 2)}
+                    className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  >
+                    {rows.map(({ p, m }) => (
+                      <ModelRow
+                        key={`${p.id}-${m}`}
+                        provider={p}
+                        model={m}
+                        on={m === value && p.id === selected.id}
+                        showProvider={searching && !!q.trim()}
+                        effort={effort}
+                        onEffort={setEffort}
+                        fast={fastWanted}
+                        onFast={setFast}
+                        onPick={() => {
+                          setPickedAt(p.id);
+                          onChange(m);
+                        }}
+                      />
+                    ))}
+                    {rows.length === 0 && <p className="px-2 py-2 text-body-medium text-text-tertiary">No models match</p>}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+    </Tooltip.Provider>
   );
 }

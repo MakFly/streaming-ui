@@ -7,13 +7,13 @@ import { cn } from '@/lib/utils';
  * built by `npm run registry:build`). The command points at the origin the page is served from, so a
  * deployed copy of the site installs from itself. */
 
-const PMS = [
+export const PMS = [
   { id: 'npm', run: 'npx shadcn@latest add' },
   { id: 'pnpm', run: 'pnpm dlx shadcn@latest add' },
   { id: 'bun', run: 'bunx --bun shadcn@latest add' },
 ] as const;
 
-function CopyLine({ text, className }: { text: string; className?: string }) {
+export function CopyLine({ text, className }: { text: string; className?: string }) {
   const [done, setDone] = useState(false);
   return (
     <div className={cn('group flex items-start gap-2 rounded-lg border border-border-button-default bg-background-secondary-default py-2 ps-3 pe-1.5', className)}>

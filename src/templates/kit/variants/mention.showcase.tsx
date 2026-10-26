@@ -3,7 +3,7 @@ import type { ComposerExtension } from '../variant-types';
 
 import { MentionComposerView, renderMentions } from './mention';
 
-/* The /composers showcase for Mention: picker glyph, scripted demo, spec sheet and comparison cells. */
+/* The /composers showcase for Mention: picker glyph, scripted demo and comparison cells. */
 
 /* ------------------------------------------------------------------ glyph, demo, spec */
 
@@ -60,35 +60,6 @@ Everything else reads as safe.`,
         </>
       ),
     }),
-  },
-  spec: {
-    anatomy: ['Mention menu at the caret (Files · People · Sources · Tools)', 'Attachment strip', 'Rich field with atomic @ chips, tinted by kind', 'Add button', '@ button', 'Tools slot', 'Model slot', 'Send / Stop', 'Status line under the box'],
-    behaviour: [
-      { keys: ['@'], text: 'opens the menu at the caret; the text after it filters' },
-      { keys: ['↑', '↓'], text: 'move through the matches' },
-      { keys: ['Enter'], text: 'inserts the chip (Tab too) when the menu is open, sends otherwise' },
-      { keys: ['Shift', 'Enter'], text: 'inserts a newline' },
-      { keys: ['Backspace'], text: 'right after a chip removes it whole' },
-      { keys: ['Esc'], text: 'closes the menu, or stops while busy' },
-      { keys: null, text: 'The value stays plain text: a chip serializes to “@label”, and known labels in an incoming value come back as chips. Paste is plain text only. Busy: Send turns into Stop.' },
-    ],
-    bestFor: 'Agents that take context by name: point at files, teammates and connected sources without leaving the prompt.',
-    usage: `<Composer
-  variant="mention"
-  value={draft}
-  onChange={setDraft}
-  onSend={send}
-  onStop={stop}
-  busy={busy}
-  placeholder="Type @ to mention a file, person or source"
-  model={<ModelPicker value={model} onChange={setModel} />}
-  status={
-    <>
-      <span><AtSign /> Files, people, sources</span>
-      <span>{count} messages</span>
-    </>
-  }
-/>`,
   },
   compare: {
     Input: 'Rich text with @ chips',

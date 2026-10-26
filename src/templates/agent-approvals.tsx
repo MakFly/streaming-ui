@@ -239,7 +239,7 @@ export default function AgentApprovalsTemplate() {
           </>
         }
         footer={
-          <Composer
+          <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
             variant="panel"
             value={chat.draft}
             onChange={chat.setDraft}
@@ -262,11 +262,11 @@ export default function AgentApprovalsTemplate() {
       >
         {chat.messages.map((m, i) =>
           m.role === 'user' ? (
-            <UserMessage key={m.id} onEdit={() => chat.setDraft(textOf(m))}>
+            <UserMessage key={m.id} replyTo={m.replyTo} onEdit={() => chat.setDraft(textOf(m))}>
               {textOf(m)}
             </UserMessage>
           ) : (
-            <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} renderCustom={renderCustom} toolIcon={(n) => (n === 'Ran' ? <TerminalSquare /> : <Activity />)} />
+            <AssistantMessage key={m.id} message={m} onReply={chat.startReply} isLast={i === chat.messages.length - 1} renderCustom={renderCustom} toolIcon={(n) => (n === 'Ran' ? <TerminalSquare /> : <Activity />)} />
           ),
         )}
       </ChatSurface>

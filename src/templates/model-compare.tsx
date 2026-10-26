@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Check, Columns3, Crown, Gauge, Plus, Timer, Trophy, X, Zap } from 'lucide-react';
+import { Check, Columns3, Crown, Gauge, Plus, Reply, Timer, Trophy, X, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useChatEngine, type ChatScriptApi } from './kit/engine';
+import { useChatEngine, type ChatScriptApi, type ReplyRef } from './kit/engine';
 import { CopyButton, Markdown } from './kit/markdown';
 import { ThinkingIndicator } from './kit/thinking-style';
-import { Badge, Canvas, ChatSurface, Composer, Frame, FrameFooter, FrameHeader, FramePanel, HeaderButton, Suggestions, HeaderTools, UserMessage, Welcome, textOf } from './kit/parts';
+import { Badge, Canvas, ChatSurface, Composer, Frame, FrameFooter, FrameHeader, FramePanel, HeaderButton, IconButton, Suggestions, HeaderTools, UserMessage, Welcome, excerptOf, textOf } from './kit/parts';
 
 /* Model Compare — one prompt, several models streaming side by side (after Zola's multi-model chat and
  * arena-style comparisons). Each column shows its own time to first token, speed and cost as it streams;
@@ -68,12 +68,15 @@ async function reply(api: ChatScriptApi, text: string) {
 
 const modelOf = (id: string) => MODELS.find((m) => m.id === id)!;
 
-function Column({ a, vote, best, onVote }: { a: Answer; vote: string | null; best: Record<string, string>; onVote: () => void }) {
+/** One model's answer as a reply target: its own id, so the quote scrolls back to that column. */
+const answerId = (messageId: string, model: string) => `${messageId}:${model}`;
+
+function Column({ a, id, vote, best, onVote, onReply }: { a: Answer; id: string; vote: string | null; best: Record<string, string>; onVote: () => void; onReply: (ref: ReplyRef) => void }) {
   const m = modelOf(a.model);
   const won = vote === a.model;
   const lost = vote !== null && !won;
   return (
-    <Frame className={cn('min-w-[260px] flex-1 transition-opacity duration-300', won && 'border-emerald-500/40 bg-emerald-500/10', lost && 'opacity-60')}>
+    <Frame messageId={id} className={cn('min-w-[260px] flex-1 transition-opacity duration-300', won && 'border-emerald-500/40 bg-emerald-500/10', lost && 'opacity-60')}>
       <FrameHeader icon={<span className="size-2.5 rounded-full" style={{ backgroundColor: m.color }} />} title={m.id}>
         {won ? <Badge tone="success"><Trophy /> Preferred</Badge> : <span className="text-caption-1-regular text-text-tertiary">{m.vendor}</span>}
       </FrameHeader>
@@ -92,6 +95,11 @@ function Column({ a, vote, best, onVote }: { a: Answer; vote: string | null; bes
         </span>
         <span className="ms-auto flex items-center gap-0.5">
           {a.done && <CopyButton text={a.text} />}
+          {a.done && (
+            <IconButton label="Reply" onClick={() => onReply({ id, text: excerptOf(a.text), label: a.model })}>
+              <Reply />
+            </IconButton>
+          )}
           {a.done && vote === null && (
             <button type="button" onClick={onVote} className="flex h-7 items-center gap-1 rounded-lg border border-border-button-default bg-background-primary-default px-2 text-caption-1-medium text-text-primary shadow-xs transition-[scale] active:scale-95">
               <Crown className="size-3.5" /> Prefer
@@ -117,7 +125,7 @@ export default function ModelCompareTemplate() {
     });
 
   const composer = (
-    <Composer
+    <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
       value={chat.draft}
       onChange={chat.setDraft}
       onSend={chat.send}
@@ -184,7 +192,7 @@ export default function ModelCompareTemplate() {
           chat.messages.map((m) => {
             if (m.role === 'user')
               return (
-                <UserMessage key={m.id} onEdit={() => chat.setDraft(textOf(m))}>
+                <UserMessage key={m.id} replyTo={m.replyTo} onEdit={() => chat.setDraft(textOf(m))}>
                   {textOf(m)}
                 </UserMessage>
               );
@@ -197,7 +205,7 @@ export default function ModelCompareTemplate() {
             return (
               <div key={m.id} className="scrollbar-thin -mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
                 {answers.map((a) => (
-                  <Column key={a.model} a={a} vote={votes[m.id] ?? null} best={best} onVote={() => setVotes((v) => ({ ...v, [m.id]: a.model }))} />
+                  <Column key={a.model} a={a} id={answerId(m.id, a.model)} onReply={chat.startReply} vote={votes[m.id] ?? null} best={best} onVote={() => setVotes((v) => ({ ...v, [m.id]: a.model }))} />
                 ))}
               </div>
             );

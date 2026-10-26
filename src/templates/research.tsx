@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, BookOpen, Compass, ExternalLink, Globe, Library, Lock, PanelRightClose, Plus, Quote, RotateCw, Search, Share, Telescope, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useChatEngine, type ChatScriptApi, type Message, type Part } from './kit/engine';
+import { useChatEngine, type ChatScriptApi, type Message, type Part, type ReplyRef } from './kit/engine';
 import { Cite, Markdown } from './kit/markdown';
 import { AgentLog } from './kit/primitives';
-import { ActionBar, Badge, Canvas, ChatSurface, Composer, Drawer, Frame, FrameHeader, FramePanel, HeaderButton, IconButton, Reasoning, SideRail, Suggestions, Surface, HeaderTools, Welcome, textOf } from './kit/parts';
+import { ActionBar, Badge, Canvas, ChatSurface, Composer, Drawer, Frame, FrameHeader, FramePanel, HeaderButton, IconButton, Reasoning, SideRail, Suggestions, Surface, HeaderTools, Quote as ReplyQuote, Welcome, replyRefOf, revealMessage, textOf } from './kit/parts';
 
 /* Research — an answer engine. The query becomes the page title with Answer / Sources tabs; searches run
  * on the agent-log trail with live result counts, sources land in a frame, then a cited
@@ -259,7 +259,7 @@ const Heading = ({ icon, children }: { icon: React.ReactNode; children: React.Re
 );
 
 /** One query and its answer, with the Answer / Sources tabs under the title. */
-function Turn({ query, answer, isLast, first, onPick, current, onOpen }: { query: string; answer?: Message; isLast: boolean; first: boolean; onPick: (q: string) => void; current: number | null; onOpen: OpenSource }) {
+function Turn({ query, replyTo, answer, isLast, first, onPick, onReply, current, onOpen }: { query: string; /** The answer this question replies to: quoted above it. */ replyTo?: ReplyRef; answer?: Message; isLast: boolean; first: boolean; onPick: (q: string) => void; onReply: (ref: ReplyRef) => void; current: number | null; onOpen: OpenSource }) {
   const [tab, setTab] = useState<'answer' | 'sources'>('answer');
   const custom = (type: string) => answer?.parts.find((p): p is Extract<Part, { kind: 'custom' }> => p.kind === 'custom' && p.type === type)?.data.items;
   const sources = (custom('sources') as Source[] | undefined) ?? [];
@@ -268,6 +268,11 @@ function Turn({ query, answer, isLast, first, onPick, current, onOpen }: { query
   return (
     <section className={cn('flex flex-col gap-6', !first && 'border-t border-separator-border pt-8')}>
       <div className="flex flex-col gap-4">
+        {replyTo && (
+          <button type="button" onClick={() => revealMessage(replyTo.id)} title="Show the quoted answer" className="-mb-2 flex max-w-full cursor-pointer self-start rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
+            <ReplyQuote text={replyTo.text} />
+          </button>
+        )}
         <h1 className="animate-in fade-in-0 slide-in-from-bottom-1 text-title-1-semibold tracking-[-0.015em] text-balance duration-300">{query}</h1>
         <div role="tablist" className="flex gap-5 border-b border-separator-border text-body-2-medium">
           <button type="button" role="tab" aria-selected={tab === 'answer'} onClick={() => setTab('answer')} className={tabCls(tab === 'answer')}>
@@ -284,7 +289,7 @@ function Turn({ query, answer, isLast, first, onPick, current, onOpen }: { query
         <SourceList items={sources} onOpen={onOpen} />
       ) : (
         answer && (
-          <div className="group/message flex flex-col gap-6">
+          <div data-message-id={answer.id} className="group/message flex flex-col gap-6 rounded-lg">
             {answer.parts.map((p) => {
               if (p.kind === 'custom' && p.type === 'steps') return <SearchTrail key={p.id} items={p.data.items as Step[]} />;
               if (p.kind === 'custom' && p.type === 'sources') return (p.data.items as Source[]).length ? <SourceCards key={p.id} items={p.data.items as Source[]} current={current} onOpen={onOpen} /> : null;
@@ -307,7 +312,7 @@ function Turn({ query, answer, isLast, first, onPick, current, onOpen }: { query
                         )
                       }
                     />
-                    {p.done && <ActionBar message={answer} isLast={isLast} onRegenerate={() => onPick(query)} />}
+                    {p.done && <ActionBar message={answer} isLast={isLast} onRegenerate={() => onPick(query)} onReply={() => onReply(replyRefOf(answer, 'Answer'))} />}
                   </div>
                 );
               if (p.kind === 'custom' && p.type === 'related')
@@ -654,7 +659,7 @@ export default function ResearchTemplate() {
   const rail = 'grid size-9 place-items-center rounded-xl text-foreground-icon-secondary transition-colors hover:bg-background-secondary-hover hover:text-foreground-icon-primary [&_svg]:size-[18px]';
 
   const composer = (
-    <Composer
+    <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
       variant="box"
       value={chat.draft}
       onChange={chat.setDraft}
@@ -718,7 +723,7 @@ export default function ResearchTemplate() {
           chat.messages.map((m, i) =>
             m.role === 'user' ? (
               <Fragment key={m.id}>
-                <Turn query={textOf(m)} answer={chat.messages[i + 1]} isLast={i + 1 === chat.messages.length - 1} first={i === 0} onPick={chat.send} current={current} onOpen={browser.openSource} />
+                <Turn query={textOf(m)} replyTo={m.replyTo} onReply={chat.startReply} answer={chat.messages[i + 1]} isLast={i + 1 === chat.messages.length - 1} first={i === 0} onPick={chat.send} current={current} onOpen={browser.openSource} />
               </Fragment>
             ) : null,
           )

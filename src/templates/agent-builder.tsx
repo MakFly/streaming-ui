@@ -707,7 +707,7 @@ export default function AgentBuilderTemplate() {
 
   const empty = chat.messages.length === 0;
   const composer = (
-    <Composer
+    <Composer reply={chat.replyTo} onClearReply={chat.clearReply}
       context={Math.min(95, 14 + Math.round(tokens / 120) + chat.messages.length * 3)}
       branch="Main"
       project={(name || "agent").toLowerCase().replace(/s+/g, "-")}
@@ -717,7 +717,7 @@ export default function AgentBuilderTemplate() {
       onStop={chat.stop}
       busy={chat.busy}
       placeholder={`Message ${name || 'your agent'}`}
-      model={<ModelPicker value={model} onChange={setModel} className="hidden sm:flex" />}
+      model={<ModelPicker value={model} onChange={setModel} />}
       status={
         <>
           <button type="button" onClick={() => configure('mcp')} className="flex items-center gap-1 rounded-md px-1 transition-colors hover:text-text-primary">
@@ -759,11 +759,11 @@ export default function AgentBuilderTemplate() {
         ) : (
           chat.messages.map((m, i) =>
             m.role === 'user' ? (
-              <UserMessage key={m.id} onEdit={() => chat.setDraft(textOf(m))}>
+              <UserMessage key={m.id} replyTo={m.replyTo} onEdit={() => chat.setDraft(textOf(m))}>
                 {textOf(m)}
               </UserMessage>
             ) : (
-              <AssistantMessage key={m.id} message={m} isLast={i === chat.messages.length - 1} toolIcon={() => <Wrench />} onRegenerate={() => chat.send(GEN.starters[0])} />
+              <AssistantMessage key={m.id} message={m} onReply={chat.startReply} isLast={i === chat.messages.length - 1} toolIcon={() => <Wrench />} onRegenerate={() => chat.send(GEN.starters[0])} />
             ),
           )
         )}

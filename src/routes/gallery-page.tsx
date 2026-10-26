@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/icon';
+import { ScrollToTop } from '@/components/scroll-to-top';
 import { demos, getLibrary, libraries, searchText } from '@/engine/registry';
 import { STORAGE_KEYS, storage } from '@/lib/storage';
 import { paths, type GalleryView } from '@/lib/paths';
@@ -22,6 +23,8 @@ const SEARCH_INDEX = new Map(demos.map((d) => [d.slug, searchText(d)]));
 const URL_SYNC_DELAY = 300;
 /** Cards rendered with the navigation itself: enough to fill a tall screen. The rest mount right after the first paint. */
 const FIRST_BATCH = 12;
+/** All: cards per infinite-scroll page (an even count, so the two-column grid ends on a full row). */
+const PAGE = 24;
 
 /**
  * `/responses` and `/responses/library/:library`. The library lives in the path; search (?q=) and layout (?view=)
@@ -57,7 +60,7 @@ export function GalleryPage() {
   const view: GalleryView = (params.get('view') ?? storage.get(STORAGE_KEYS.view, 'grid')) === 'list' ? 'list' : 'grid';
 
   useEffect(() => storage.set(STORAGE_KEYS.view, view), [view]);
-  const { pathname } = useLocation();
+  const { pathname, key: locationKey } = useLocation();
   useEffect(() => {
     if (librarySlug && !library) return;
     applyHead({
@@ -78,18 +81,41 @@ export function GalleryPage() {
     [library, deferredQuery],
   );
 
-  // Router navigations render in a transition, so the previous page stays on screen until all 249 cards have
-  // rendered (most of a second in dev). Render the first screenful with the navigation, then the rest in the
-  // background once it has painted. Back/forward renders everything at once so ScrollRestoration has the full height.
+  // All (no collection): infinite scroll, PAGE cards at a time, the next page mounting as the end comes near.
+  // A collection is short: its first screenful renders with the navigation (router navigations render in a
+  // transition, so the previous page would otherwise stay up until every card has rendered), the rest right after.
+  // Back/forward renders everything at once so ScrollRestoration has the full height.
+  const paged = !library;
   const navigationType = useNavigationType();
-  const [limit, setLimit] = useState(navigationType === 'POP' ? Infinity : FIRST_BATCH);
+  // A first visit is a POP too (key 'default'): only a return through history, with a scroll to restore, takes them all.
+  const restoring = navigationType === 'POP' && locationKey !== 'default';
+  const [limit, setLimit] = useState(restoring ? Infinity : paged ? PAGE : FIRST_BATCH);
+  // A new filter starts over from the first page (not on mount: that is the state above).
+  const filter = `${librarySlug ?? ''}|${deferredQuery}`;
+  const lastFilter = useRef(filter);
+  useEffect(() => {
+    if (filter === lastFilter.current) return;
+    lastFilter.current = filter;
+    setLimit(paged ? PAGE : FIRST_BATCH);
+  }, [filter, paged]);
   // A timer, not requestAnimationFrame: rAF never fires in a background tab, which would strand the list at the first batch.
   useEffect(() => {
-    if (limit === Infinity) return;
+    if (paged || limit === Infinity) return;
     const id = setTimeout(() => startTransition(() => setLimit(Infinity)), 50);
     return () => clearTimeout(id);
-  }, [limit]);
+  }, [limit, paged]);
   const shown = limit < visible.length ? visible.slice(0, limit) : visible;
+  const more = shown.length < visible.length;
+  // The sentinel under the grid asks for the next page well before it scrolls into view. Re-observed after each
+  // page, so a sentinel still in range (a fast scroll, a tall screen) asks again instead of waiting for a change.
+  const sentinel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!paged || !more || !el) return;
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && startTransition(() => setLimit((l) => l + PAGE)), { rootMargin: '0px 0px 1600px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [paged, more, shown.length]);
 
   const setParam = (key: string, value: string | null) =>
     setParams(
@@ -116,7 +142,9 @@ export function GalleryPage() {
         </div>
       </SiteHeader>
 
-      <div className="sticky top-14 z-30 -mx-6 mt-8 flex flex-col gap-3 border-b border-separator-border bg-background-full/85 px-6 py-3 backdrop-blur-md sm:-mx-10 sm:px-10">
+      {/* Near-opaque, no blur: the nav above already frosts, and a second backdrop-filter over 249 live demos is
+          re-blurred on every scroll frame. */}
+      <div className="sticky top-14 z-30 -mx-6 mt-8 flex flex-col gap-3 border-b border-separator-border bg-background-full/95 px-6 py-3 sm:-mx-10 sm:px-10">
         <div className="flex flex-wrap items-center gap-2">
           <label className="relative flex h-9 min-w-0 basis-full items-center gap-2 rounded-full bg-background-tertiary-default px-3 sm:max-w-[320px] sm:flex-1 sm:basis-auto">
             <Icon name="search-line" className="size-[18px] text-foreground-icon-secondary" />
@@ -169,6 +197,15 @@ export function GalleryPage() {
         </div>
       )}
 
+      {/* Infinite scroll's end of list: the trigger for the next page, and where the reader is in the 249. */}
+      {paged && visible.length > 0 && (
+        <div ref={sentinel} className="flex items-center justify-center gap-2 py-12 text-body-2-medium text-text-tertiary tabular-nums" aria-live="polite">
+          {more && <Icon name="loader-4-line" className="size-4 animate-spin motion-reduce:animate-none" />}
+          {more ? `${shown.length} of ${visible.length}` : `All ${visible.length} responses`}
+        </div>
+      )}
+
+      <ScrollToTop />
       <Outlet />
     </PageShell>
   );

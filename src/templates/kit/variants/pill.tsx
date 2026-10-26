@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { Children, Fragment, isValidElement, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { ComposerLoader } from '../primitives';
 import { AttachmentStrip } from '../attachments';
@@ -22,8 +22,31 @@ function textWidth(text: string, el: HTMLElement) {
   return ctx.measureText(text).width;
 }
 
+/** Below `sm` the row keeps its room for the text: the model moves under the pill, to the status line's start. */
+const NARROW = '(max-width: 639.98px)';
+const subscribeNarrow = (cb: () => void) => {
+  const mq = window.matchMedia(NARROW);
+  mq.addEventListener('change', cb);
+  return () => mq.removeEventListener('change', cb);
+};
+const useNarrow = () => useSyncExternalStore(subscribeNarrow, () => window.matchMedia(NARROW).matches, () => false);
+
+/** The status line with the model in front: its left span gives way, the counters keep the right. */
+function withModel(model: ReactNode, status: ReactNode) {
+  const flat = Children.toArray(status).flatMap((c) => (isValidElement<{ children?: ReactNode }>(c) && c.type === Fragment ? Children.toArray(c.props.children) : [c]));
+  return (
+    <>
+      {/* A quiet text trigger, like the status around it, instead of the row's filled chip. */}
+      <span className="-ms-1.5 flex [&>button]:h-6 [&>button]:rounded-lg [&>button]:bg-transparent [&>button]:ps-1.5 [&>button]:hover:bg-background-tertiary-default [&>button_span]:text-body-2-medium">{model}</span>
+      {flat.slice(1)}
+    </>
+  );
+}
+
 export function PillComposerView(p: VariantProps) {
   const field = useField(p);
+  const narrow = useNarrow();
+  const below = narrow && !!p.model;
   const form = useRef<HTMLFormElement>(null);
   const [multi, setMulti] = useState(false);
 
@@ -72,7 +95,7 @@ export function PillComposerView(p: VariantProps) {
             )}
           />
           <AddButton onClick={p.att.add} className={cn('col-start-1', multi ? 'row-start-2' : 'row-start-1')} />
-          <span className={cn('col-start-3 flex', multi ? 'row-start-2' : 'row-start-1')}>{p.model}</span>
+          <span className={cn('col-start-3 flex', multi ? 'row-start-2' : 'row-start-1')}>{!below && p.model}</span>
           <span className={cn('col-start-4 flex', multi ? 'row-start-2' : 'row-start-1')}>
             <MicButton value={p.value} onChange={p.onChange} />
           </span>
@@ -81,7 +104,7 @@ export function PillComposerView(p: VariantProps) {
           </span>
         </form>
       </ComposerLoader>
-      <Status context={p.context}>{p.status}</Status>
+      <Status context={p.context}>{below ? withModel(p.model, p.status) : p.status}</Status>
     </div>
   );
 }

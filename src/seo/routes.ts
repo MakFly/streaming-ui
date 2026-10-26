@@ -43,6 +43,20 @@ export const ORBS: PageMeta = {
     'Dotted thought-orb loading indicators for AI agents: nine animated states (working, searching, solving, listening, connecting, weaving, composing, breathing, shaping) at three sizes, on a plain 2D canvas.',
 };
 
+export const MODEL_PICKER: PageMeta = {
+  path: '/model-picker',
+  title: 'Model picker · Streaming UI',
+  description:
+    'A model picker for AI chat composers: 18 providers on a rail, search across every model, an effort slider and fast mode. Install it with the shadcn CLI or copy its prompt.',
+};
+
+export const PLAYGROUND: PageMeta = {
+  path: '/playground',
+  title: 'Playground · Streaming UI',
+  description:
+    'Combine every piece live: 11 composers, the model picker, thinking orbs, colour palettes, 249 streaming responses and 10 chat templates. Share the combination as a link and install it with the shadcn CLI.',
+};
+
 /** Collection pages. Slugs match engine/prompt.js slug(group). */
 const LIBRARIES: { slug: string; name: string; description: string }[] = [
   { slug: 'agent', name: 'Agent', description: 'Agent thinking, progress, task lists, web search, cited answers, pipelines, live logs, diffs, handoffs and a context budget, playing live as the work happens.' },
@@ -68,7 +82,7 @@ export const LIBRARY_PAGES: PageMeta[] = LIBRARIES.map((l) => ({
 }));
 
 /** Routes whose HTML head is written at build time. Demo pages stay client-rendered. */
-export const STATIC_PAGES: PageMeta[] = [HOME, RESPONSES, TEMPLATES, COMPOSERS, ORBS, ...LIBRARY_PAGES];
+export const STATIC_PAGES: PageMeta[] = [HOME, RESPONSES, TEMPLATES, COMPOSERS, ORBS, MODEL_PICKER, PLAYGROUND, ...LIBRARY_PAGES];
 
 export const clip = (text: string, max = 155) => {
   const clean = text.replace(/\s+/g, ' ').trim();

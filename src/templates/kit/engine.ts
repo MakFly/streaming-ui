@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Chat, useChat } from '@ai-sdk/react';
+import type { UIMessage, UIMessageChunk } from 'ai';
+import { ScriptTransport, type Turn } from './script-transport';
 
-/* A tiny scripted chat engine. Templates describe a conversation as an async script
- * (think → call tools → stream markdown); the engine turns it into React state over time,
- * and a new user message (or unmount) cancels whatever is still playing. */
+/* A tiny scripted chat engine on top of the AI SDK. Templates describe a conversation as an async script
+ * (think → call tools → stream markdown); each call writes the UI message stream chunks a real model would send,
+ * useChat turns them into messages, and a new user message (or unmount) cancels whatever is still playing.
+ * The templates read `Message`/`Part` below, mapped from the AI SDK's UIMessage parts, so a live transport
+ * renders through the same components. */
 
 export type ToolStatus = 'running' | 'done' | 'error';
 
@@ -12,12 +17,25 @@ export type Part =
   | { kind: 'text'; id: string; text: string; shown: number; done: boolean }
   | { kind: 'custom'; id: string; type: string; data: Record<string, unknown> };
 
+import type { ReplyRef } from './reply';
+export type { ReplyRef };
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
   parts: Part[];
   done: boolean;
+  /** A user message written in reply to an earlier one. */
+  replyTo?: ReplyRef;
 }
+
+/** The AI SDK message the engine keeps: the reply quote rides in its metadata. */
+export type ChatMessage = UIMessage<{ replyTo?: ReplyRef }>;
+
+/** providerMetadata namespace for what the protocol has no field for: the reasoning label and its duration. */
+const DEMO = 'demo';
+/** Tool output as the scripts send it: the meta shown on the row, and the lines streamed under it. */
+type ToolOutput = { meta?: string; lines?: string[] };
 
 let seq = 0;
 const uid = () => `p${++seq}`;
@@ -28,7 +46,7 @@ export interface ChatScriptApi {
   /** Wait, unless the script was cancelled. */
   sleep(ms: number): Promise<void>;
   /** Adds a user message (optionally typed into the composer first). */
-  user(text: string, opts?: { type?: boolean }): Promise<void>;
+  user(text: string, opts?: { type?: boolean; replyTo?: ReplyRef }): Promise<void>;
   /** Starts an assistant message; every call below writes into it. */
   assistant(): AssistantApi;
   /** Text shown in the composer while the script "types". */
@@ -49,155 +67,245 @@ export interface AssistantApi {
 
 export type Script = (api: ChatScriptApi) => Promise<void>;
 
+/** Seconds each reasoning part took, timed on the client when the stream does not say (a live model). */
+type Clock = { started: Map<string, number>; took: Map<string, number> };
+
+/** UIMessage parts → the kit's parts. `settle` freezes a message no longer streaming: text ends where it is,
+ *  reasoning collapses, a tool still running reads as stopped. */
+function toPart(p: ChatMessage['parts'][number], key: string, settle: boolean, clock: Clock): Part | null {
+  if (p.type === 'text') return { kind: 'text', id: key, text: p.text, shown: p.text.length, done: settle || p.state !== 'streaming' };
+  if (p.type === 'reasoning') {
+    const meta = p.providerMetadata?.[DEMO] as { label?: string; seconds?: number } | undefined;
+    const done = settle || p.state !== 'streaming';
+    if (!clock.started.has(key)) clock.started.set(key, Date.now());
+    if (done && !clock.took.has(key)) clock.took.set(key, meta?.seconds ?? Math.max(1, Math.round((Date.now() - clock.started.get(key)!) / 1000)));
+    return { kind: 'thinking', id: key, label: meta?.label ?? 'Thinking', steps: p.text.split('\n').filter(Boolean), done, seconds: done ? clock.took.get(key) : undefined };
+  }
+  if (p.type === 'dynamic-tool') {
+    const out = (p.state === 'output-available' ? p.output : p.toolMetadata) as ToolOutput | undefined;
+    const arg = p.input == null ? undefined : typeof p.input === 'string' ? p.input : JSON.stringify(p.input);
+    const tool = { kind: 'tool', id: p.toolCallId, name: p.toolName, arg, output: out?.lines } as const;
+    if (p.state === 'output-error') return { ...tool, status: 'error', meta: p.errorText || undefined };
+    if (p.state === 'output-available' && !p.preliminary) return { ...tool, status: 'done', meta: out?.meta };
+    return settle ? { ...tool, status: 'error', meta: 'Stopped' } : { ...tool, status: 'running' };
+  }
+  if (p.type.startsWith('data-') && 'data' in p) return { kind: 'custom', id: p.id ?? key, type: p.type.slice(5), data: p.data as Record<string, unknown> };
+  return null;
+}
+
+function toMessage(m: ChatMessage, live: boolean, clock: Clock): Message {
+  const parts = m.parts.flatMap((p, i) => toPart(p, `${m.id}:${i}`, !live, clock) ?? []);
+  return { id: m.id, role: m.role === 'user' ? 'user' : 'assistant', parts, done: !live, replyTo: m.metadata?.replyTo };
+}
+
 export function useChatEngine({ intro, reply }: { intro?: Script; reply: (api: ChatScriptApi, text: string) => Promise<void> }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [transport] = useState(() => new ScriptTransport());
+  // One Chat per conversation: New chat (or a replayed intro) starts a fresh one rather than clearing a busy one.
+  const [chat, setChat] = useState(() => new Chat<ChatMessage>({ transport }));
+  const current = useRef(chat);
+  const { messages: raw } = useChat({ chat });
+  const [live, setLive] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState('');
   const token = useRef(0);
+  // The response being written: its stream, and the assistant message once the script started one.
+  const turn = useRef<{ io: Turn; message?: string } | null>(null);
 
-  const run = useCallback(async (script: Script) => {
-    const my = ++token.current;
-    const alive = () => my === token.current;
-    const sleep = (ms: number) =>
-      new Promise<void>((resolve, reject) => {
-        const id = setTimeout(() => (alive() ? resolve() : reject(new Cancelled())), ms);
-        if (!alive()) {
-          clearTimeout(id);
-          reject(new Cancelled());
-        }
-      });
-    const patchMessage = (msgId: string, fn: (m: Message) => Message) =>
-      alive() && setMessages((all) => all.map((m) => (m.id === msgId ? fn(m) : m)));
-    const patchPart = (msgId: string, partId: string, fn: (p: Part) => Part) =>
-      patchMessage(msgId, (m) => ({ ...m, parts: m.parts.map((p) => (p.id === partId ? fn(p) : p)) }));
-    const addPart = (msgId: string, part: Part) => patchMessage(msgId, (m) => ({ ...m, parts: [...m.parts, part] }));
+  const clock = useRef<Clock>({ started: new Map(), took: new Map() });
+  const messages = useMemo(() => raw.map((m) => toMessage(m, m.id === live, clock.current)), [raw, live]);
 
-    const api: ChatScriptApi = {
-      sleep,
-      setDraft: (t) => alive() && setDraft(t),
-      async user(text, opts) {
-        if (opts?.type) {
-          for (let i = 1; i <= text.length; i++) {
-            setDraft(text.slice(0, i));
-            await sleep(text[i - 1] === ' ' ? 45 : 22);
-          }
-          await sleep(350);
-          setDraft('');
-        }
-        if (!alive()) throw new Cancelled();
-        setMessages((all) => [...all, { id: uid(), role: 'user', parts: [{ kind: 'text', id: uid(), text, shown: text.length, done: true }], done: true }]);
-        await sleep(250);
-      },
-      assistant() {
-        const msgId = uid();
-        if (alive()) setMessages((all) => [...all, { id: msgId, role: 'assistant', parts: [], done: false }]);
-        return {
-          async think(label, steps = [], stepMs = 700) {
-            const id = uid();
-            const t0 = Date.now();
-            addPart(msgId, { kind: 'thinking', id, label, steps: [], done: false });
-            await sleep(500);
-            for (const s of steps) {
-              patchPart(msgId, id, (p) => (p.kind === 'thinking' ? { ...p, steps: [...p.steps, s] } : p));
-              await sleep(stepMs);
-            }
-            const seconds = Math.max(1, Math.round((Date.now() - t0) / 1000));
-            patchPart(msgId, id, (p) => (p.kind === 'thinking' ? { ...p, done: true, seconds } : p));
-            await sleep(200);
-          },
-          async tool(name, arg, opts = {}) {
-            const id = uid();
-            addPart(msgId, { kind: 'tool', id, name, arg, status: 'running', output: opts.output ? [] : undefined });
-            await sleep(opts.ms ?? 900);
-            for (const line of opts.output ?? []) {
-              patchPart(msgId, id, (p) => (p.kind === 'tool' ? { ...p, output: [...(p.output ?? []), line] } : p));
-              await sleep(opts.lineMs ?? 120);
-            }
-            patchPart(msgId, id, (p) => (p.kind === 'tool' ? { ...p, status: opts.status ?? 'done', meta: opts.meta } : p));
-            await sleep(180);
-            return id;
-          },
-          async stream(markdown, wps = 22) {
-            const id = uid();
-            addPart(msgId, { kind: 'text', id, text: markdown, shown: 0, done: false });
-            const words = markdown.split(/(?<=\s)/);
-            let shown = 0;
-            for (let i = 0; i < words.length; i += 2) {
-              const chunk = words[i] + (words[i + 1] ?? '');
-              shown += chunk.length;
-              const n = shown;
-              patchPart(msgId, id, (p) => (p.kind === 'text' ? { ...p, shown: n } : p));
-              // Breathe like BoardUI: a beat after a sentence, a longer one before the next block.
-              const pause = /\n\s*$/.test(chunk) ? 160 : /[.!?:]\s*$/.test(chunk) ? 100 : 0;
-              await sleep(2000 / wps + pause);
-            }
-            patchPart(msgId, id, (p) => (p.kind === 'text' ? { ...p, shown: markdown.length, done: true } : p));
-          },
-          custom(type, data) {
-            const id = uid();
-            addPart(msgId, { kind: 'custom', id, type, data });
-            return (patch) => patchPart(msgId, id, (p) => (p.kind === 'custom' ? { ...p, data: { ...p.data, ...patch } } : p));
-          },
-          done() {
-            patchMessage(msgId, (m) => ({ ...m, done: true }));
-          },
-        };
-      },
-    };
-
-    setBusy(true);
-    try {
-      await script(api);
-    } catch (error) {
-      if (!(error instanceof Cancelled)) console.error(error);
-    } finally {
-      if (alive()) {
-        setBusy(false);
-        setMessages((all) => all.map((m) => (m.done ? m : { ...m, done: true })));
-      }
-    }
+  const endTurn = useCallback(() => {
+    turn.current?.io.write({ type: 'finish' });
+    turn.current?.io.close();
+    turn.current = null;
+    setLive(null);
   }, []);
+
+  /** Opens a response: with a user message, or none (an assistant that speaks first). */
+  const request = useCallback(
+    (text?: string, replyTo?: ReplyRef) => {
+      endTurn();
+      turn.current = { io: transport.turn() };
+      void current.current.sendMessage(text === undefined ? undefined : { text, metadata: { replyTo } });
+    },
+    [endTurn, transport],
+  );
+
+  const fresh = useCallback(() => {
+    void current.current.stop();
+    current.current = new Chat<ChatMessage>({ transport });
+    setChat(current.current);
+  }, [transport]);
+
+  const run = useCallback(
+    async (script: Script) => {
+      const my = ++token.current;
+      const alive = () => my === token.current;
+      const sleep = (ms: number) =>
+        new Promise<void>((resolve, reject) => {
+          const id = setTimeout(() => (alive() ? resolve() : reject(new Cancelled())), ms);
+          if (!alive()) {
+            clearTimeout(id);
+            reject(new Cancelled());
+          }
+        });
+      // A new script takes over: whatever was still streaming ends where it is.
+      endTurn();
+
+      const api: ChatScriptApi = {
+        sleep,
+        setDraft: (t) => alive() && setDraft(t),
+        async user(text, opts) {
+          if (opts?.type) {
+            for (let i = 1; i <= text.length; i++) {
+              setDraft(text.slice(0, i));
+              await sleep(text[i - 1] === ' ' ? 45 : 22);
+            }
+            await sleep(350);
+            setDraft('');
+          }
+          if (!alive()) throw new Cancelled();
+          request(text, opts?.replyTo);
+          await sleep(250);
+        },
+        assistant() {
+          const msgId = uid();
+          if (alive()) {
+            if (!turn.current?.io.open || turn.current.message) request();
+            turn.current!.message = msgId;
+            turn.current!.io.write({ type: 'start', messageId: msgId });
+            setLive(msgId);
+          }
+          const mine = () => alive() && turn.current?.message === msgId;
+          const emit = (chunk: UIMessageChunk) => mine() && turn.current!.io.write(chunk);
+          return {
+            async think(label, steps = [], stepMs = 700) {
+              const id = uid();
+              const t0 = Date.now();
+              emit({ type: 'reasoning-start', id, providerMetadata: { [DEMO]: { label } } });
+              await sleep(500);
+              for (const s of steps) {
+                emit({ type: 'reasoning-delta', id, delta: `${s}\n` });
+                await sleep(stepMs);
+              }
+              const seconds = Math.max(1, Math.round((Date.now() - t0) / 1000));
+              emit({ type: 'reasoning-end', id, providerMetadata: { [DEMO]: { label, seconds } } });
+              await sleep(200);
+            },
+            async tool(name, arg, opts = {}) {
+              const id = uid();
+              emit({ type: 'tool-input-available', toolCallId: id, toolName: name, input: arg, dynamic: true });
+              await sleep(opts.ms ?? 900);
+              const lines = opts.output ?? [];
+              // Lines arrive as preliminary results, like a tool that yields as it runs.
+              for (let i = 1; i <= lines.length; i++) {
+                emit({ type: 'tool-output-available', toolCallId: id, output: { lines: lines.slice(0, i) }, dynamic: true, preliminary: true });
+                await sleep(opts.lineMs ?? 120);
+              }
+              const output: ToolOutput = { meta: opts.meta, lines: opts.output };
+              if (opts.status === 'error') emit({ type: 'tool-output-error', toolCallId: id, errorText: opts.meta ?? '', dynamic: true, toolMetadata: opts.output && { lines: opts.output } });
+              else if (opts.status !== 'running') emit({ type: 'tool-output-available', toolCallId: id, output, dynamic: true });
+              await sleep(180);
+              return id;
+            },
+            async stream(markdown, wps = 22) {
+              const id = uid();
+              emit({ type: 'text-start', id });
+              const words = markdown.split(/(?<=\s)/);
+              for (let i = 0; i < words.length; i += 2) {
+                const chunk = words[i] + (words[i + 1] ?? '');
+                emit({ type: 'text-delta', id, delta: chunk });
+                // Breathe like BoardUI: a beat after a sentence, a longer one before the next block.
+                const pause = /\n\s*$/.test(chunk) ? 160 : /[.!?:]\s*$/.test(chunk) ? 100 : 0;
+                await sleep(2000 / wps + pause);
+              }
+              emit({ type: 'text-end', id });
+            },
+            custom(type, data) {
+              const id = uid();
+              let value = data;
+              emit({ type: `data-${type}`, id, data });
+              // A data part with the same id replaces the previous one; once the response has ended, patch it in place.
+              return (patch) => {
+                value = { ...value, ...patch };
+                if (emit({ type: `data-${type}`, id, data: value }) || !alive()) return;
+                const c = current.current;
+                c.messages = c.messages.map((m) => (m.id !== msgId ? m : { ...m, parts: m.parts.map((p) => (p.type === `data-${type}` && 'id' in p && p.id === id ? { ...p, data: value } : p)) }));
+              };
+            },
+            done() {
+              if (mine()) endTurn();
+            },
+          };
+        },
+      };
+
+      setBusy(true);
+      try {
+        await script(api);
+      } catch (error) {
+        if (!(error instanceof Cancelled)) console.error(error);
+      } finally {
+        if (alive()) {
+          setBusy(false);
+          endTurn();
+        }
+      }
+    },
+    [endTurn, request],
+  );
 
   // Play the intro conversation once mounted; unmount cancels it.
   useEffect(() => {
     if (intro) {
-      setMessages([]);
+      fresh();
       void run(intro);
     }
     return () => {
       token.current++;
+      endTurn();
     };
-  }, [intro, run]);
+  }, [intro, run, fresh, endTurn]);
+
+  // Reply: the answer quoted in the composer (<Composer reply>) until the next send takes it along.
+  const [replyTo, setReplyTo] = useState<ReplyRef | null>(null);
+  const quoted = useRef<ReplyRef | null>(null);
+  quoted.current = replyTo;
+  const startReply = useCallback((ref: ReplyRef) => setReplyTo(ref), []);
+  const clearReply = useCallback(() => setReplyTo(null), []);
 
   const send = useCallback(
-    (text: string) => {
+    (text: string, replyTo?: ReplyRef) => {
       const t = text.trim();
       if (!t) return;
+      const ref = replyTo ?? quoted.current ?? undefined;
       setDraft('');
+      setReplyTo(null);
       void run(async (api) => {
-        await api.user(t);
+        await api.user(t, { replyTo: ref });
         await reply(api, t);
       });
     },
     [reply, run],
   );
 
+  /** Freezes whatever is in flight: the response ends where it is (see toPart's settle). */
   const stop = useCallback(() => {
     token.current++;
     setBusy(false);
-    // Freeze whatever was in flight: streams end where they are, reasoning collapses, running tools settle.
-    const settle = (p: Part): Part =>
-      p.kind === 'text' ? { ...p, done: true } : p.kind === 'thinking' && !p.done ? { ...p, done: true, seconds: Math.max(1, p.steps.length) } : p.kind === 'tool' && p.status === 'running' ? { ...p, status: 'error', meta: 'Stopped' } : p;
-    setMessages((all) => all.map((m) => (m.done ? m : { ...m, done: true, parts: m.parts.map(settle) })));
-  }, []);
+    endTurn();
+    void current.current.stop();
+  }, [endTurn]);
 
   /** Cancels whatever is playing and empties the thread (New chat). */
   const reset = useCallback(() => {
     token.current++;
     setBusy(false);
     setDraft('');
-    setMessages([]);
-  }, []);
+    setReplyTo(null);
+    endTurn();
+    fresh();
+  }, [endTurn, fresh]);
 
-  return { messages, busy, draft, setDraft, send, stop, run, reset };
+  return { messages, busy, draft, setDraft, send, stop, run, reset, replyTo, startReply, clearReply };
 }

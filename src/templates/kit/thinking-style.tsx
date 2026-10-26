@@ -1,4 +1,4 @@
-import { lazy, Suspense, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
+import { createContext, lazy, Suspense, useContext, useSyncExternalStore, type ComponentProps, type CSSProperties, type ReactNode } from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { cn } from '@/lib/utils';
@@ -47,13 +47,25 @@ function subscribe(onChange: () => void) {
   };
 }
 
+const Scope = createContext<{ value: ThinkingStyle; onChange?: (s: ThinkingStyle) => void } | null>(null);
+
+/**
+ * A thinking style for what is inside only (the /playground chat): indicators and pickers below it read and set
+ * this value, and the shared choice of the templates stays as it is.
+ */
+export function ThinkingStyleScope({ value, onChange, children }: { value: ThinkingStyle; onChange?: (s: ThinkingStyle) => void; children: ReactNode }) {
+  return <Scope.Provider value={{ value, onChange }}>{children}</Scope.Provider>;
+}
+
 export function useThinkingStyle(): [ThinkingStyle, (s: ThinkingStyle) => void] {
-  const style = useSyncExternalStore(subscribe, read);
+  const scope = useContext(Scope);
+  const shared = useSyncExternalStore(subscribe, read);
+  if (scope) return [scope.value, (s) => scope.onChange?.(s)];
   const set = (s: ThinkingStyle) => {
     storage.set(KEY, s);
     window.dispatchEvent(new Event(THINKING_EVENT));
   };
-  return [style, set];
+  return [shared, set];
 }
 
 const ThinkingOrb = lazy(() => import('@/components/thinking-orb/ThinkingOrb').then((m) => ({ default: m.ThinkingOrb })));
