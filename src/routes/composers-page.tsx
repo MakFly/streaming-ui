@@ -100,7 +100,7 @@ function Content() {
       </header>
 
       {/* Jump bar: sticks right under the 57px site nav while the sections scroll past. */}
-      <nav aria-label="Composers" className="scrollbar-none sticky top-[57px] z-20 -mx-6 mt-6 flex gap-1 overflow-x-auto bg-background-full/85 px-6 py-3 backdrop-blur-md sm:-mx-10 sm:px-10">
+      <nav aria-label="Composers" className="scrollbar-none sticky top-14 z-20 -mx-6 mt-6 flex lg:top-0 gap-1 overflow-x-auto bg-background-full/85 px-6 py-3 backdrop-blur-md sm:-mx-10 sm:px-10">
         {COMPOSER_VARIANTS.map((v, i) => (
           <a
             key={v.id}

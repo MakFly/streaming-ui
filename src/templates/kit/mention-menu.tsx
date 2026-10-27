@@ -208,7 +208,7 @@ export function MentionMenu({ id, matches, active, onPick, onActive, style }: { 
       role="listbox"
       aria-label="Mention"
       style={style}
-      className="animate-in fade-in-0 slide-in-from-bottom-1 scrollbar-thin absolute z-30 max-h-64 w-64 overflow-y-auto rounded-xl border border-border-button-default bg-background-primary-default p-1 shadow-dropdown duration-150"
+      className="animate-in fade-in-0 slide-in-from-bottom-1 scrollbar-thin absolute z-30 max-h-64 w-64 overflow-y-auto rounded-xl border border-border-button-default bg-dropdown-background p-1 shadow-dropdown duration-150"
     >
       {matches.groups.map((g) => (
         <div key={g.title} role="group" aria-label={g.title}>
@@ -226,7 +226,7 @@ export function MentionMenu({ id, matches, active, onPick, onActive, style }: { 
                 onClick={() => onPick(c)}
                 // The kit's row highlight on a primary surface (as in the model picker): in dark, tertiary is the
                 // surface's own colour, so it would not show.
-                className={cn('flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5', i === active && 'bg-background-tertiary-default dark:bg-background-primary-hover')}
+                className={cn('flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5', i === active && 'bg-dropdown-item-hover-background')}
               >
                 <span className={cn('grid size-6 shrink-0 place-items-center rounded-md', mentionTone(c).bg)}>
                   <MentionGlyph c={c} className="size-3.5" />

@@ -144,7 +144,7 @@ export function GalleryPage() {
 
       {/* Near-opaque, no blur: the nav above already frosts, and a second backdrop-filter over 249 live demos is
           re-blurred on every scroll frame. */}
-      <div className="sticky top-14 z-30 -mx-6 mt-8 flex flex-col gap-3 border-b border-separator-border bg-background-full/95 px-6 py-3 sm:-mx-10 sm:px-10">
+      <div className="sticky top-14 z-30 lg:top-0 -mx-6 mt-8 flex flex-col gap-3 border-b border-separator-border bg-background-full/95 px-6 py-3 sm:-mx-10 sm:px-10">
         <div className="flex flex-wrap items-center gap-2">
           <label className="relative flex h-9 min-w-0 basis-full items-center gap-2 rounded-full bg-background-tertiary-default px-3 sm:max-w-[320px] sm:flex-1 sm:basis-auto">
             <Icon name="search-line" className="size-[18px] text-foreground-icon-secondary" />

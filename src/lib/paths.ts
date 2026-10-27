@@ -8,6 +8,14 @@ export const paths = {
   templates: () => '/templates',
   template: (slug: string) => `/templates/${slug}`,
   templatePrompt: (slug: string) => `/templates/${slug}/prompt`,
+  /** Component library index (BoardUI-style sidebar layout), and its single-component pages. */
+  components: (section?: string) => (section ? `/components#${section}` : '/components'),
+  /** Every response collection as a card, each opening its filtered gallery. */
+  collections: () => '/collections',
+  /** How the rebuild prompts work and where each one lives. */
+  prompts: () => '/prompts',
+  /** The context-window and plan-limits card, named as in BoardUI. */
+  agentLimits: () => '/components/agent-limits-card',
   /** The five interchangeable composers, each in a live thread; `#<variant>` jumps to one. */
   composers: (variant?: string) => (variant ? `/composers#${variant}` : '/composers'),
   /** Thinking-orb loaders: the nine states and a playground. */
