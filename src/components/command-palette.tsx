@@ -11,14 +11,16 @@ import { paths } from '@/lib/paths';
 
 const PAGES = [
   { label: 'Home', to: paths.home(), icon: 'compass-3-line' },
-  { label: 'Responses', to: paths.gallery(), icon: 'layout-grid-line' },
+  { label: 'Components', to: paths.components(), icon: 'layout-grid-line' },
+  { label: 'Responses', to: paths.gallery(), icon: 'sparkling-line' },
+  { label: 'Agent Limits Card', to: paths.agentLimits(), icon: 'pie-chart-line' },
   { label: 'Templates', to: paths.templates(), icon: 'robot-2-line' },
   { label: 'Composers', to: paths.composers(), icon: 'quill-pen-line' },
   { label: 'Orbs', to: paths.orbs(), icon: 'loader-4-line' },
   { label: 'Model picker', to: paths.modelPicker(), icon: 'cpu-line' },
   { label: 'Playground', to: paths.playground(), icon: 'magic-line' },
-  { label: 'Collections', to: '/#libraries', icon: 'stack-line' },
-  { label: 'Prompts', to: '/#prompts', icon: 'markdown-line' },
+  { label: 'Collections', to: paths.collections(), icon: 'stack-line' },
+  { label: 'Prompts', to: paths.prompts(), icon: 'markdown-line' },
 ];
 /** The "search in Responses" fallback always shows, ranked last so Enter opens the best match. */
 const IN_GALLERY = 'search-in-gallery';

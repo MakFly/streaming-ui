@@ -110,6 +110,15 @@ const registry = {
       files: [file('model-picker.tsx'), file('max-effort-fx.tsx'), file('provider-logos.ts')],
     },
     {
+      name: 'agent-limits-card',
+      type: 'registry:component',
+      title: 'Agent Limits Card',
+      description: 'Context window split by token bucket with an expandable breakdown, plan usage limits with reset times, and the context ring that opens it.',
+      dependencies: ['radix-ui'],
+      registryDependencies: ['utils', url('composer-theme')],
+      files: [file('agent-limits.tsx'), file('icon.tsx')],
+    },
+    {
       name: 'thinking-orb',
       type: 'registry:component',
       title: 'Thinking orb',

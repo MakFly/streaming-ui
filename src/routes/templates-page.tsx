@@ -52,7 +52,7 @@ export function TemplateCard({ t, featured }: { t: TemplateMeta; featured?: bool
             </Link>
           </Button>
           <Button asChild className="gap-1.5 px-2.5">
-            <Link to={paths.templatePreview(t.slug)}>
+            <Link to={paths.templatePreview(t.slug)} target="_blank" rel="noreferrer">
               <Maximize2 className="size-4" /> Live preview
             </Link>
           </Button>

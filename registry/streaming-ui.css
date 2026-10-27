@@ -323,6 +323,7 @@
   --color-button-ghost-disabled:                  var(--color-accent-50);
   --color-button-ghost-foreground:                var(--color-accent-700);
   --color-button-ghost-disabled-foreground:       var(--color-accent-300);
+  --color-dropdown-background:                   var(--color-white);
   --color-dropdown-item-hover-background:        var(--color-neutral-100);
   --color-kbd-background:                        var(--color-neutral-300);
   --color-kbd-foreground:                        var(--color-neutral-500);
@@ -521,7 +522,9 @@
   --color-button-ghost-disabled:                  var(--color-neutral-800);
   --color-button-ghost-foreground:                var(--color-accent-300);
   --color-button-ghost-disabled-foreground:       var(--color-neutral-600);
-  --color-dropdown-item-hover-background:        color-mix(in srgb, var(--color-neutral-700) 60%, transparent);
+  /* Floating panels follow shadcn dark: popover a step below the page surface, highlight = accent (neutral-800). */
+  --color-dropdown-background:                   var(--color-neutral-900);
+  --color-dropdown-item-hover-background:        var(--color-neutral-800);
   --color-kbd-background:                        var(--color-neutral-700);
   --color-kbd-foreground:                        var(--color-neutral-400);
   --color-docs-file-chip-background:             color-mix(in srgb, var(--color-purple-950) 50%, transparent);
@@ -766,6 +769,7 @@
   --color-button-ghost-disabled:                  var(--color-button-ghost-disabled);
   --color-button-ghost-foreground:                var(--color-button-ghost-foreground);
   --color-button-ghost-disabled-foreground:       var(--color-button-ghost-disabled-foreground);
+  --color-dropdown-background:                   var(--color-dropdown-background);
   --color-dropdown-item-hover-background:        var(--color-dropdown-item-hover-background);
   --color-kbd-background:                        var(--color-kbd-background);
   --color-kbd-foreground:                        var(--color-kbd-foreground);

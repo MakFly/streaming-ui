@@ -28,7 +28,7 @@ export function CommandComposerView(p: VariantProps) {
           </div>
         )}
         {matches.length > 0 && (
-          <ul role="listbox" className="animate-in fade-in-0 slide-in-from-bottom-1 absolute inset-x-2 bottom-full mb-1.5 overflow-hidden rounded-lg border border-border-button-default bg-background-primary-default py-1 shadow-dropdown duration-150">
+          <ul role="listbox" className="animate-in fade-in-0 slide-in-from-bottom-1 absolute inset-x-2 bottom-full mb-1.5 overflow-hidden rounded-lg border border-border-button-default bg-dropdown-background py-1 shadow-dropdown duration-150">
             {matches.map((c, i) => (
               <li key={c.cmd}>
                 <button
@@ -39,7 +39,7 @@ export function CommandComposerView(p: VariantProps) {
                     p.onChange(`${c.cmd} `);
                     field.ref.current?.focus();
                   }}
-                  className={cn('flex w-full items-baseline gap-3 px-3 py-1.5 text-start text-[12.5px] hover:bg-background-tertiary-default', i === 0 && 'bg-background-tertiary-default/60')}
+                  className={cn('flex w-full items-baseline gap-3 px-3 py-1.5 text-start text-[12.5px] hover:bg-dropdown-item-hover-background', i === 0 && 'bg-dropdown-item-hover-background')}
                 >
                   <span className="text-accent-500">{c.cmd}</span>
                   <span className="font-sans text-caption-1-regular text-text-tertiary">{c.hint}</span>

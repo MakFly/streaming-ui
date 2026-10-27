@@ -1,14 +1,15 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Code, Copy, Download, ExternalLink, Eye, FileText, Maximize2, Monitor, Smartphone, Tablet } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Code, Copy, Download, Eye, FileText, Maximize2, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { BrowserFrame, type Device } from '@/components/browser-frame';
 import { getTemplate, templates } from '@/templates/registry';
 import { paths } from '@/lib/paths';
 import { applyHead, isPromptPath } from '@/seo/routes';
 import { NotFound } from '@/routes/not-found';
+import { useDocsCrumbs } from '@/components/docs/in-docs';
 
 const TemplateCode = lazy(() => import('@/components/template-code'));
 const buildPrompt = async (slug: string) => (await import('@/templates/prompt')).buildTemplatePrompt(getTemplate(slug)!);
@@ -28,11 +29,12 @@ async function copyText(text: string) {
 
 /**
  * `/templates/:slug` — the template page: title, Preview / Code, device switcher, Live preview
- * (the bare template, full window, same tab — its Back button returns here), Copy prompt with more options, then a playable browser-framed preview.
+ * (the bare template, full window, in a new tab — its Back button lands here), Copy prompt with more options, then a playable browser-framed preview.
  */
 export function TemplatePage() {
   const { slug } = useParams();
   const t = getTemplate(slug);
+  useDocsCrumbs(t ? [{ label: t.name }] : []);
   const navigate = useNavigate();
   const [tab, setTab] = useState<'preview' | 'code'>('preview');
   const [device, setDevice] = useState<Device>('desktop');
@@ -71,16 +73,8 @@ export function TemplatePage() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[1180px] flex-col px-6 pt-10 pb-16 sm:px-10">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-caption-1-medium text-text-tertiary">
-        <Link to="/" className="hover:text-text-primary">Streaming</Link>
-        <span>›</span>
-        <Link to={paths.templates()} className="hover:text-text-primary">Templates</Link>
-        <span>›</span>
-        <span className="text-text-secondary">{t.name}</span>
-      </nav>
-
-      <header className="mt-6 flex flex-col gap-3">
+    <div className="flex w-full flex-col">
+      <header className="flex flex-col gap-3">
         <h1 className="text-title-1-semibold text-text-primary">{t.name}</h1>
         <p className="max-w-[820px] text-headline-regular text-text-secondary">{t.description}</p>
       </header>
@@ -96,9 +90,9 @@ export function TemplatePage() {
           <ToggleGroupItem value="tablet"><Tablet className="size-4" /> <span className="hidden sm:inline">Tablet</span></ToggleGroupItem>
           <ToggleGroupItem value="mobile"><Smartphone className="size-4" /> <span className="hidden sm:inline">Mobile</span></ToggleGroupItem>
         </ToggleGroup>
-        {/* Same tab: the preview's Back button (or Esc) returns here. */}
+        {/* New tab: this page stays put; the preview's Back button (or Esc) has no history there and lands on this page. */}
         <Button asChild className="h-9 gap-1.5 px-3">
-          <Link to={paths.templatePreview(t.slug)}>
+          <Link to={paths.templatePreview(t.slug)} target="_blank" rel="noreferrer">
             <Maximize2 className="size-4" /> Live preview
           </Link>
         </Button>
@@ -119,12 +113,6 @@ export function TemplatePage() {
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={download}>
                 <Download /> Download .md
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <a href={paths.templatePreview(t.slug)} target="_blank" rel="noreferrer">
-                  <ExternalLink /> Open in a new tab
-                </a>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

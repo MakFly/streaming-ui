@@ -358,6 +358,31 @@
       ]
     },
     {
+      "name": "agent-limits-card",
+      "type": "registry:component",
+      "title": "Agent Limits Card",
+      "description": "Context window split by token bucket with an expandable breakdown, plan usage limits with reset times, and the context ring that opens it.",
+      "dependencies": [
+        "radix-ui"
+      ],
+      "registryDependencies": [
+        "utils",
+        "https://streaming-ui.pulseview.app/r/composer-theme.json"
+      ],
+      "files": [
+        {
+          "path": "src/templates/kit/agent-limits.tsx",
+          "type": "registry:component",
+          "target": "components/composer/agent-limits.tsx"
+        },
+        {
+          "path": "src/templates/kit/icon.tsx",
+          "type": "registry:component",
+          "target": "components/composer/icon.tsx"
+        }
+      ]
+    },
+    {
       "name": "thinking-orb",
       "type": "registry:component",
       "title": "Thinking orb",

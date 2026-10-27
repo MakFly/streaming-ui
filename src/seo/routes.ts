@@ -82,7 +82,35 @@ export const LIBRARY_PAGES: PageMeta[] = LIBRARIES.map((l) => ({
 }));
 
 /** Routes whose HTML head is written at build time. Demo pages stay client-rendered. */
-export const STATIC_PAGES: PageMeta[] = [HOME, RESPONSES, TEMPLATES, COMPOSERS, ORBS, MODEL_PICKER, PLAYGROUND, ...LIBRARY_PAGES];
+export const COMPONENTS_INDEX: PageMeta = {
+  path: '/components',
+  title: 'Components · Streaming UI',
+  description:
+    'Every piece of an AI chat interface in one library: composers, the model picker, the agent limits card and thinking orbs. React and Tailwind, installable with the shadcn CLI.',
+};
+
+export const AGENT_LIMITS: PageMeta = {
+  path: '/components/agent-limits-card',
+  title: 'Agent Limits Card · Streaming UI',
+  description:
+    'A context-window and plan-usage card for AI agents: a token bar split by bucket, an expandable breakdown, and 5-hour and weekly limits with reset times. Install it with the shadcn CLI.',
+};
+
+export const COLLECTIONS: PageMeta = {
+  path: '/collections',
+  title: 'Collections · Streaming UI',
+  description:
+    '249 streaming, thinking and agent responses in 14 collections, each rendered in its own theme. Open one to browse its responses and copy their prompts.',
+};
+
+export const PROMPTS: PageMeta = {
+  path: '/prompts',
+  title: 'Rebuild prompts · Streaming UI',
+  description:
+    'Every response, template and component comes with a Markdown prompt an agent can follow to rebuild it 1:1: install command, source files, theme tokens and exact timings.',
+};
+
+export const STATIC_PAGES: PageMeta[] = [HOME, COMPONENTS_INDEX, AGENT_LIMITS, COLLECTIONS, PROMPTS, RESPONSES, TEMPLATES, COMPOSERS, ORBS, MODEL_PICKER, PLAYGROUND, ...LIBRARY_PAGES];
 
 export const clip = (text: string, max = 155) => {
   const clean = text.replace(/\s+/g, ' ').trim();

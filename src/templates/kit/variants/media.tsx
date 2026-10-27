@@ -60,7 +60,7 @@ function RatioBox({ w, h, max, className }: { w: number; h: number; max: number;
 const chip =
   'flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border-button-default px-2.5 text-body-2-medium whitespace-nowrap text-text-secondary outline-none transition-colors hover:bg-background-primary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring data-[state=open]:bg-background-tertiary-default data-[state=open]:text-text-primary [&_svg]:size-4 [&_svg]:text-foreground-icon-secondary';
 const panel =
-  'z-50 max-w-[calc(100vw-32px)] rounded-2xl border border-border-button-default bg-background-primary-default p-3 text-text-primary shadow-dropdown outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0';
+  'z-50 max-w-[calc(100vw-32px)] rounded-2xl border border-border-button-default bg-dropdown-background p-3 text-text-primary shadow-dropdown outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0';
 const heading = 'text-caption-1-medium tracking-wide text-text-tertiary uppercase';
 
 function ChipPopover({ label, trigger, children, className }: { label: string; trigger: ReactNode; children: ReactNode; className?: string }) {

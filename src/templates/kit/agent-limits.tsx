@@ -116,8 +116,9 @@ export function AgentLimitsCard({ limits = SAMPLE_LIMITS, defaultOpen = false, c
           <div key={b.label} title={`${b.label} · ${formatTokens(b.tokens)}`} className="h-full shrink-0 transition-[width] duration-500 ease-out" style={{ width: `${(b.tokens / limits.window) * 100}%`, backgroundColor: b.color }} />
         ))}
       </div>
-      <Reveal open={open} className="-mx-2 px-2">
-        <div className="flex flex-col pt-3">
+      {/* The padding sits inside the clipping box, so the rows' -mx-2 hover keeps its rounded corners. */}
+      <Reveal open={open} className="-mx-2">
+        <div className="flex flex-col px-2 pt-3">
           {[...limits.buckets.map((b) => ({ ...b, share: pct(b.tokens) })), ...limits.deferred.map((d) => ({ ...d, color: 'var(--color-chart-cursor)', share: '—' }))].map((b) => (
             <div key={b.label} className="flex items-center gap-2 py-[5px]">
               <span className="size-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: b.color }} />
@@ -195,7 +196,7 @@ export function ContextMeter({ percent, limits, className }: { percent: number; 
           align="end"
           sideOffset={8}
           collisionPadding={16}
-          className="z-50 w-[448px] max-w-[calc(100vw-32px)] rounded-[20px] border border-border-button-default bg-background-primary-default p-1 shadow-dropdown outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="z-50 w-[448px] max-w-[calc(100vw-32px)] rounded-[20px] border border-border-button-default bg-dropdown-background p-1 shadow-dropdown outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           <div className="scrollbar-thin max-h-[min(70vh,640px)] overflow-y-auto rounded-2xl">
             <AgentLimitsCard limits={limits ?? { ...SAMPLE_LIMITS, buckets: scaleBuckets(SAMPLE_LIMITS, percent) }} />

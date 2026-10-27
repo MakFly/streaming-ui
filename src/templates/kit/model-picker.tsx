@@ -194,7 +194,7 @@ function EffortBadge({ effort, onEffort, canFast, fast, onFast }: { effort: numb
         <Icon name="arrow-down-s-line" className={cn('ease size-[18px] text-foreground-icon-secondary transition-transform duration-200', open ? 'rotate-0' : '-rotate-90')} />
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content updatePositionStrategy="always" side="bottom" align="start" alignOffset={-8} sideOffset={14} collisionPadding={16} className={cn(popoverCls, 'w-[266px] max-w-[calc(100vw-32px)] rounded-2xl border border-border-button-default bg-background-primary-default p-1 shadow-dropdown')}>
+        <Popover.Content updatePositionStrategy="always" side="bottom" align="start" alignOffset={-8} sideOffset={14} collisionPadding={16} className={cn(popoverCls, 'w-[266px] max-w-[calc(100vw-32px)] rounded-2xl border border-border-button-default bg-dropdown-background p-1 shadow-dropdown')}>
           <section aria-label="Effort" className="flex flex-col pt-1 outline-none">
             {/* Fast toggle on the left (only for models that offer it), reset on the right. */}
             <div className="-mb-0.5 flex items-center gap-1 ps-2 pe-0.5">
@@ -250,7 +250,7 @@ function EffortBadge({ effort, onEffort, canFast, fast, onFast }: { effort: numb
 function ModelRow({ provider, model, on, showProvider, effort, onEffort, fast, onFast, onPick }: { provider: Provider; model: string; on: boolean; showProvider: boolean; effort: number; onEffort: (v: number) => void; fast: boolean; onFast: (v: boolean) => void; onPick: () => void }) {
   const canFast = hasFastMode(provider.id, model);
   return (
-    <div className={cn('relative flex h-9 w-full shrink-0 items-center rounded-2lg px-2 transition-colors', on ? 'bg-background-primary-hover' : 'hover:bg-background-primary-hover')}>
+    <div className={cn('relative flex h-9 w-full shrink-0 items-center rounded-2lg px-2 transition-colors', on ? 'bg-dropdown-item-hover-background' : 'hover:bg-dropdown-item-hover-background')}>
       <button type="button" role="radio" aria-checked={on} aria-label={`${provider.name} ${model}`} onClick={onPick} className="absolute inset-0 cursor-pointer rounded-2lg outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring focus-visible:ring-inset" />
       <span className="pointer-events-none relative flex min-w-0 flex-1 items-center gap-3">
         <span className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -364,7 +364,7 @@ export function ModelPicker({
             collisionPadding={16}
             aria-label="Models"
             onOpenAutoFocus={(e) => e.preventDefault()}
-            className={cn(popoverCls, 'relative h-[282px] w-[341px] max-w-[calc(100vw-32px)] overflow-clip rounded-[20px] border border-border-button-default bg-background-primary-default shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_8px_rgba(0,0,0,0.02)]')}
+            className={cn(popoverCls, 'relative h-[282px] w-[341px] max-w-[calc(100vw-32px)] overflow-clip rounded-[20px] border border-border-button-default bg-dropdown-background shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_8px_rgba(0,0,0,0.02)]')}
           >
             <div className="size-full">
               <div role="tablist" aria-label="Providers" aria-orientation="vertical" className="absolute start-0.5 top-0.5 h-[276px] w-[42px] overflow-y-auto rounded-[17px] bg-composer-panel-rail-background p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

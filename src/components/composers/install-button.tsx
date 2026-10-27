@@ -56,7 +56,7 @@ export function InstallButton({ item, label = 'Install', className }: { item: st
           align="end"
           sideOffset={8}
           collisionPadding={12}
-          className="z-50 flex w-[min(440px,calc(100vw-24px))] flex-col gap-3 rounded-2xl border border-border-button-default bg-background-primary-default p-4 shadow-dropdown outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="z-50 flex w-[min(440px,calc(100vw-24px))] flex-col gap-3 rounded-2xl border border-border-button-default bg-dropdown-background p-4 shadow-dropdown outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           <div className="flex items-center justify-between gap-3">
             <span className="text-body-semibold text-text-primary">Install with shadcn</span>

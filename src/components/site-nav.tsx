@@ -9,16 +9,12 @@ import { paths } from '@/lib/paths';
 import { cn } from '@/lib/utils';
 
 // `active` marks the section the current page belongs to (gallery and single demos are both "Responses").
-// `wide` links (anchors on the home page, also in the search palette) only show from xl, where the bar has room.
-const NAV: { label: string; to: string; active?: (p: string) => boolean; wide?: true }[] = [
-  { label: 'Responses', to: paths.gallery(), active: (p: string) => p.startsWith('/responses') || p.startsWith('/demo/') },
-  { label: 'Templates', to: paths.templates(), active: (p: string) => p.startsWith('/templates') },
-  { label: 'Composers', to: paths.composers(), active: (p: string) => p.startsWith('/composers') },
-  { label: 'Orbs', to: paths.orbs(), active: (p: string) => p.startsWith('/orbs') },
-  { label: 'Models', to: paths.modelPicker(), active: (p: string) => p.startsWith('/model-picker') },
-  { label: 'Playground', to: paths.playground(), active: (p: string) => p.startsWith('/playground') },
-  { label: 'Collections', to: '/#libraries', wide: true },
-  { label: 'Prompts', to: '/#prompts', wide: true },
+// The component pages have their own sidebar (the docs layout): the bar only points at the library.
+const NAV: { label: string; to: string; active?: (p: string) => boolean }[] = [
+  { label: 'Components', to: paths.components() },
+  { label: 'Responses', to: paths.gallery(), active: (p) => p.startsWith('/responses') || p.startsWith('/demo/') },
+  { label: 'Templates', to: paths.templates(), active: (p) => p.startsWith('/templates') },
+  { label: 'Playground', to: paths.playground() },
 ];
 
 // The palette pulls in the whole response registry: load it on first use (or hover), never with the page.
@@ -62,18 +58,17 @@ export function SiteNav() {
           {NAV.map((n) => {
             const on = n.active?.(pathname) ?? false;
             return (
-            <Link
-              key={n.label}
-              to={n.to}
-              aria-current={on ? 'page' : undefined}
-              className={cn(
-                'rounded-md px-2.5 py-1.5 text-body-medium whitespace-nowrap transition-colors hover:bg-background-tertiary-default hover:text-text-primary',
-                on ? 'text-text-primary' : 'text-text-secondary',
-                n.wide && 'max-xl:hidden',
-              )}
-            >
-              {n.label}
-            </Link>
+              <Link
+                key={n.label}
+                to={n.to}
+                aria-current={on ? 'page' : undefined}
+                className={cn(
+                  'rounded-md px-2.5 py-1.5 text-body-medium whitespace-nowrap outline-none transition-colors hover:bg-background-tertiary-default hover:text-text-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring',
+                  on ? 'text-text-primary' : 'text-text-secondary',
+                )}
+              >
+                {n.label}
+              </Link>
             );
           })}
         </nav>

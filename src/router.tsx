@@ -17,6 +17,11 @@ const page = {
   composers: () => import('@/routes/composers-page'),
   orbs: () => import('@/routes/orbs-page'),
   modelPicker: () => import('@/routes/model-picker-page'),
+  docs: () => import('@/routes/docs-layout'),
+  components: () => import('@/routes/components-page'),
+  agentLimits: () => import('@/routes/agent-limits-page'),
+  collections: () => import('@/routes/collections-page'),
+  prompts: () => import('@/routes/prompts-page'),
   playground: () => import('@/routes/playground-page'),
 };
 const promptIn = (from: 'gallery' | 'demo' | 'template') => async () => {
@@ -28,7 +33,7 @@ const promptIn = (from: 'gallery' | 'demo' | 'template') => async () => {
 export function prefetchRoutes() {
   if (window.self !== window.top || window.location.pathname.includes('/preview/')) return;
   const run = () => {
-    for (const load of [page.landing, page.gallery, page.templates, page.composers, page.orbs, page.modelPicker, page.playground, page.demo, page.template, page.prompt]) void load();
+    for (const load of [page.landing, page.gallery, page.templates, page.docs, page.components, page.composers, page.orbs, page.modelPicker, page.agentLimits, page.collections, page.prompts, page.playground, page.demo, page.template, page.prompt]) void load();
   };
   if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 3000 });
   else setTimeout(run, 1500);
@@ -36,7 +41,7 @@ export function prefetchRoutes() {
 
 /**
  * /                                         landing page
- * /responses                                gallery, every library        (?q=search &view=list)
+ * /responses                                gallery, every library        (?q=search &view=list)  (docs layout)
  * /responses/library/:library               gallery, one library
  * /responses/prompt/:slug                   gallery + Prompt dialog
  * /responses/library/:library/prompt/:slug  library gallery + Prompt dialog
@@ -45,6 +50,10 @@ export function prefetchRoutes() {
  * /templates                      chat templates, live thumbnails
  * /templates/:slug                one template full size (device switcher)
  * /templates/:slug/prompt         template page + Prompt dialog
+ * /collections                   every response collection as a card
+ * /prompts                       how the rebuild prompts work and where each one lives
+ * /components                    component library index
+ * /components/agent-limits-card  the context-window and plan-limits card
  * /composers                     the eleven composers, each in a live thread (#pill … #command, #compare)
  * /orbs                          thinking-orb loaders: nine-state showcase and a playground
  * /model-picker                  the composers' model picker on its own: demo, install and prompt
@@ -52,6 +61,9 @@ export function prefetchRoutes() {
  * /preview/:slug                  bare template, no site chrome (what the iframes load)
  * /preview/composer/:variant      bare playground chat thread (the playground's tablet and mobile frames)
  * *                               404
+ *
+ * Every page from /responses to /model-picker sits in the docs layout (BoardUI-style sidebar, no navbar); the landing
+ * and the 404 keep the site navbar.
  *
  * The gallery is one layout route with every variant as a child, so switching library or opening a prompt keeps it mounted:
  * previews keep playing instead of restarting.
@@ -64,8 +76,16 @@ export const router = createBrowserRouter(
       errorElement: <RouteError />,
       children: [
         { index: true, lazy: async () => ({ Component: (await page.landing()).LandingPage }) },
+        { path: '*', element: <NotFound /> },
+      ],
+    },
+    // Every library page: BoardUI-style sidebar layout, no site navbar (the landing keeps it).
+    {
+      lazy: async () => ({ Component: (await page.docs()).DocsLayout }),
+      errorElement: <RouteError />,
+      children: [
         {
-          path: 'responses',
+          path: '/responses',
           lazy: async () => ({ Component: (await page.gallery()).GalleryPage }),
           children: [
             { index: true, element: null },
@@ -75,20 +95,23 @@ export const router = createBrowserRouter(
           ],
         },
         {
-          path: 'demo/:slug',
+          path: '/demo/:slug',
           lazy: async () => ({ Component: (await page.demo()).DemoPage }),
           children: [{ path: 'prompt', lazy: promptIn('demo') }],
         },
-        { path: 'templates', lazy: async () => ({ Component: (await page.templates()).TemplatesPage }) },
+        { path: '/templates', lazy: async () => ({ Component: (await page.templates()).TemplatesPage }) },
         {
-          path: 'templates/:slug',
+          path: '/templates/:slug',
           lazy: async () => ({ Component: (await page.template()).TemplatePage }),
           children: [{ path: 'prompt', lazy: promptIn('template') }],
         },
-        { path: 'composers', lazy: async () => ({ Component: (await page.composers()).ComposersPage }) },
-        { path: 'orbs', lazy: async () => ({ Component: (await page.orbs()).OrbsPage }) },
-        { path: 'model-picker', lazy: async () => ({ Component: (await page.modelPicker()).ModelPickerPage }) },
-        { path: '*', element: <NotFound /> },
+        { path: '/collections', lazy: async () => ({ Component: (await page.collections()).CollectionsPage }) },
+        { path: '/prompts', lazy: async () => ({ Component: (await page.prompts()).PromptsPage }) },
+        { path: '/components', lazy: async () => ({ Component: (await page.components()).ComponentsPage }) },
+        { path: '/components/agent-limits-card', lazy: async () => ({ Component: (await page.agentLimits()).AgentLimitsPage }) },
+        { path: '/composers', lazy: async () => ({ Component: (await page.composers()).ComposersPage }) },
+        { path: '/orbs', lazy: async () => ({ Component: (await page.orbs()).OrbsPage }) },
+        { path: '/model-picker', lazy: async () => ({ Component: (await page.modelPicker()).ModelPickerPage }) },
       ],
     },
     // Outside the root layout: a full-screen builder with its own header.
