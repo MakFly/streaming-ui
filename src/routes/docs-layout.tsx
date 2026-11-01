@@ -6,6 +6,7 @@ import { Logo } from '@/components/logo';
 import { PalettePicker } from '@/components/palette-picker';
 import { DOCS_NAV, DocsSidebar } from '@/components/docs/docs-sidebar';
 import { DocsCrumbs, DocsSubnav, InDocs, type Crumb, type Subnav } from '@/components/docs/in-docs';
+import { LocaleSwitch } from '@/templates/kit/parts';
 import { useTheme } from '@/providers/theme-provider';
 import { paths } from '@/lib/paths';
 import { cn } from '@/lib/utils';
@@ -96,6 +97,8 @@ export function DocsLayout() {
 
   const tools = (
     <div className="flex shrink-0 items-center gap-2">
+      {/* The language of every component, template and response demo (the site's own copy stays English). */}
+      <LocaleSwitch />
       <PalettePicker />
       <button
         type="button"

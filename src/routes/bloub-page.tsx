@@ -3,6 +3,7 @@ import { DocsPage, DocsPreview } from '@/components/docs/docs-page';
 import { cn } from '@/lib/utils';
 import { BLOUB_NAMES, BLOUBS, Bloub, COLORS, EXPRESSIONS, POSES, stateFor, statesFor, type BloubVariant, type StateId } from '@/templates/kit/bloub';
 import { CodeBlock } from '@/templates/kit/markdown';
+import { useLocale } from '@/templates/kit/i18n';
 import { BLOUB, applyHead } from '@/seo/routes';
 
 /* `/components/bloub`: our animated agent avatar, after bloub (github.com/jeremy-prt/bloub, MIT), in four
@@ -121,6 +122,8 @@ function Expressions() {
 }
 
 export function BloubPage() {
+  // BLOUB_NAMES reads the locale when it is read: re-render the page on a switch.
+  useLocale();
   useEffect(() => {
     applyHead(BLOUB);
   }, []);
