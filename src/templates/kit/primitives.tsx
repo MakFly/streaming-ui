@@ -1,8 +1,11 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { defineCopy, useCopy } from './i18n';
 
 /* The agentic primitives (Agent Thinking, Composer Loader, the agent-log trail),
  * kept to the variants the templates use. Keyframes live in styles/templates.css. */
+
+const COPY = defineCopy({ en: { thinking: 'Thinking' }, fr: { thinking: 'Réflexion' } });
 
 const TONES = {
   subtle: 'var(--color-text-tertiary)',
@@ -90,7 +93,7 @@ export function ElapsedTimer({ className }: { className?: string }) {
 /** Dot-grid (wave) or sparkles (stars) indicator, a shimmering label and an elapsed timer. */
 export function AgentThinking({
   variant = 'wave',
-  label = 'Thinking',
+  label,
   tone,
   showTimer = true,
   small,
@@ -103,11 +106,12 @@ export function AgentThinking({
   small?: boolean;
   className?: string;
 }) {
+  const t = useCopy(COPY);
   const color = TONES[tone ?? (variant === 'stars' ? 'subtle' : 'default')];
   return (
     <div role="status" className={cn('flex items-center gap-2.5', className)} style={{ color, '--sui-agent-thinking-tone': color } as CSSProperties}>
       {variant === 'wave' ? <WaveDots /> : <Stars />}
-      <span className={cn('sui-agent-thinking-label', small ? 'text-body-2-medium' : 'text-body-medium')}>{label}</span>
+      <span className={cn('sui-agent-thinking-label', small ? 'text-body-2-medium' : 'text-body-medium')}>{label ?? t.thinking}</span>
       {showTimer && <ElapsedTimer />}
     </div>
   );

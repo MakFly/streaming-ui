@@ -6,22 +6,60 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { OrbState } from '@/components/thinking-orb/types';
 import { AgentThinking, ElapsedTimer } from './primitives';
+import { copyOf, defineCopy, useCopy } from './i18n';
 
 /* How a template shows that the agent is thinking: the kit's dot grid, or one of the nine thinking orbs
  * (Jakub Antalik, libraries.dev/orbs). Saved and shared like the composer choice: other same-origin frames
  * follow through the storage event, this frame through THINKING_EVENT, and `?thinking=<state>` forces one.
  * The orb engine is loaded only once an orb is picked. */
 
+const COPY = defineCopy({
+  en: {
+    working: 'Working', searching: 'Searching', solving: 'Solving', listening: 'Listening', connecting: 'Connecting',
+    weaving: 'Weaving', composing: 'Composing', breathing: 'Breathing', shaping: 'Shaping',
+    thinking: 'Thinking',
+    style: 'Thinking style',
+    menuTitle: 'Thinking · applies to every template',
+    dots: 'Dots',
+    dotsHint: "The kit's dot grid (default)",
+    orbsBy: 'Thinking orbs by Jakub Antalik',
+    shownAs: 'Thinking shown as',
+    dotsLower: 'dots',
+    orb: (name: string) => `${name} orb`,
+    reset: 'Reset',
+  },
+  fr: {
+    working: 'Travail', searching: 'Recherche', solving: 'Résolution', listening: 'Écoute', connecting: 'Connexion',
+    weaving: 'Tissage', composing: 'Composition', breathing: 'Respiration', shaping: 'Modelage',
+    thinking: 'Réflexion',
+    style: 'Style de réflexion',
+    menuTitle: 'Réflexion · s\'applique à tous les templates',
+    dots: 'Points',
+    dotsHint: 'La grille de points du kit (par défaut)',
+    orbsBy: 'Orbes de réflexion par Jakub Antalik',
+    shownAs: 'Réflexion affichée en',
+    dotsLower: 'points',
+    orb: (name: string) => `orbe ${name.toLowerCase()}`,
+    reset: 'Réinitialiser',
+  },
+});
+
+const orb = (id: OrbState) => ({
+  id,
+  get name(): string {
+    return copyOf(COPY)[id as keyof (typeof COPY)['en'] & OrbState] as string;
+  },
+});
 export const THINKING_ORBS: { id: OrbState; name: string }[] = [
-  { id: 'working', name: 'Working' },
-  { id: 'searching', name: 'Searching' },
-  { id: 'solving', name: 'Solving' },
-  { id: 'listening', name: 'Listening' },
-  { id: 'connecting', name: 'Connecting' },
-  { id: 'weaving', name: 'Weaving' },
-  { id: 'composing', name: 'Composing' },
-  { id: 'breathing', name: 'Breathing' },
-  { id: 'shaping', name: 'Shaping' },
+  orb('working'),
+  orb('searching'),
+  orb('solving'),
+  orb('listening'),
+  orb('connecting'),
+  orb('weaving'),
+  orb('composing'),
+  orb('breathing'),
+  orb('shaping'),
 ];
 
 export type ThinkingStyle = 'dots' | OrbState;
@@ -80,13 +118,14 @@ function Orb({ state, size }: { state: OrbState; size: 20 | 32 }) {
 
 /** Agent Thinking in the picked style: same label shimmer and timer, the dot grid swapped for an orb. */
 export function ThinkingIndicator(props: ComponentProps<typeof AgentThinking>) {
+  const t = useCopy(COPY);
   const [style] = useThinkingStyle();
   if (style === 'dots') return <AgentThinking {...props} />;
-  const { label = 'Thinking', showTimer = true, small, className } = props;
+  const { label, showTimer = true, small, className } = props;
   return (
     <div role="status" className={cn('flex items-center gap-2.5 text-text-secondary', className)} style={{ '--sui-agent-thinking-tone': 'var(--color-text-secondary)' } as CSSProperties}>
       <Orb state={style} size={20} />
-      <span className={cn('sui-agent-thinking-label', small ? 'text-body-2-medium' : 'text-body-medium')}>{label}</span>
+      <span className={cn('sui-agent-thinking-label', small ? 'text-body-2-medium' : 'text-body-medium')}>{label ?? t.thinking}</span>
       {showTimer && <ElapsedTimer />}
     </div>
   );
@@ -94,6 +133,7 @@ export function ThinkingIndicator(props: ComponentProps<typeof AgentThinking>) {
 
 /** Swaps the thinking indicator of every template and composer demo (saved, shared with the preview frames). */
 export function ThinkingPicker({ className }: { className?: string }) {
+  const t = useCopy(COPY);
   const [style, setStyle] = useThinkingStyle();
   return (
     <DropdownMenu>
@@ -102,7 +142,7 @@ export function ThinkingPicker({ className }: { className?: string }) {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Thinking style"
+              aria-label={t.style}
               className={cn(
                 'grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-colors outline-none hover:bg-background-tertiary-default hover:text-foreground-icon-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring data-[state=open]:bg-background-tertiary-default',
                 className,
@@ -112,21 +152,21 @@ export function ThinkingPicker({ className }: { className?: string }) {
             </button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
-        <TooltipContent>Thinking style</TooltipContent>
+        <TooltipContent>{t.style}</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="scrollbar-thin max-h-[min(70vh,600px)] w-64 overflow-y-auto p-1.5">
-        <p className="px-2 pt-1 pb-2 text-caption-1-medium text-text-tertiary">Thinking · applies to every template</p>
+        <p className="px-2 pt-1 pb-2 text-caption-1-medium text-text-tertiary">{t.menuTitle}</p>
         <DropdownMenuItem onSelect={() => setStyle('dots')} className="flex items-center gap-3 rounded-lg py-2">
           <span className="grid size-8 shrink-0 place-items-center rounded-md bg-background-tertiary-default text-text-secondary">
             <Sparkles className="size-4" />
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-body-2-medium text-text-primary">Dots</span>
-            <span className="truncate text-caption-1-regular text-text-tertiary">The kit's dot grid (default)</span>
+            <span className="text-body-2-medium text-text-primary">{t.dots}</span>
+            <span className="truncate text-caption-1-regular text-text-tertiary">{t.dotsHint}</span>
           </span>
           {style === 'dots' && <Check className="size-4 shrink-0 text-text-primary" />}
         </DropdownMenuItem>
-        <p className="px-2 pt-2 pb-1 text-caption-2-medium text-text-tertiary">Thinking orbs by Jakub Antalik</p>
+        <p className="px-2 pt-2 pb-1 text-caption-2-medium text-text-tertiary">{t.orbsBy}</p>
         {THINKING_ORBS.map((o) => (
           <DropdownMenuItem key={o.id} onSelect={() => setStyle(o.id)} className="flex items-center gap-3 rounded-lg py-2">
             <span className="grid size-8 shrink-0 place-items-center">
@@ -143,17 +183,18 @@ export function ThinkingPicker({ className }: { className?: string }) {
 
 /** Which thinking indicator the demos and templates show: the dot grid or a thinking orb. */
 export function ThinkingChoice() {
+  const t = useCopy(COPY);
   const [style, setStyle] = useThinkingStyle();
   return (
     <p className="flex flex-wrap items-center gap-2 text-body-2-regular text-text-tertiary">
-      Thinking shown as
+      {t.shownAs}
       <span className="rounded-md bg-background-tertiary-default px-1.5 py-0.5 text-body-2-medium text-text-primary">
-        {style === 'dots' ? 'dots' : `${THINKING_ORBS.find((o) => o.id === style)?.name} orb`}
+        {style === 'dots' ? t.dotsLower : t.orb(THINKING_ORBS.find((o) => o.id === style)?.name ?? '')}
       </span>
       <ThinkingPicker className="size-8 rounded-lg border border-border-button-default" />
       {style !== 'dots' && (
         <button type="button" onClick={() => setStyle('dots')} className="text-body-2-medium text-text-secondary underline underline-offset-2 hover:text-text-primary">
-          Reset
+          {t.reset}
         </button>
       )}
     </p>

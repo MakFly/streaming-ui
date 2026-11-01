@@ -1,6 +1,6 @@
 import { COMPOSER_VARIANTS, type ComposerVariant } from './kit/composer-variant';
 
-/* Rebuild prompt for one composer (/composers → Prompt): what it is, the one-line install from this site's
+/* Rebuild prompt for one composer (/components/composers → Prompt): what it is, the one-line install from this site's
  * registry, then every source file it needs verbatim (the shared composer kit + its own file). Raw files load
  * only when a prompt is opened. */
 

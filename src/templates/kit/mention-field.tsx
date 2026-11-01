@@ -1,5 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { MENTION_QUERY, MentionMenu, findMentions, mentionMatches, type MentionCandidate } from './mention-menu';
+import { defineCopy, useCopy } from './i18n';
+
+const COPY = defineCopy({ en: { message: 'Message' }, fr: { message: 'Message' } });
 
 /* The @mention field shared by Mention and Box (with `mentions`): a contentEditable whose mentions are atomic
  * chips, so they can have real padding and margins, which a textarea cannot (react-mentions' overlay only tints
@@ -86,6 +89,7 @@ interface Menu {
  * opens above the caret, inside it), `menu` anywhere in that box and `field` where the text goes.
  */
 export function useMentionField(p: { value: string; onChange: (v: string) => void; onSend: (v: string) => void; onStop?: () => void; busy?: boolean; placeholder: string; chip: (c: MentionCandidate) => HTMLElement }) {
+  const t = useCopy(COPY);
   const wrap = useRef<HTMLDivElement>(null);
   const ed = useRef<HTMLDivElement>(null);
   /** The value this field last emitted (or painted): anything else in `p.value` came from outside. */
@@ -264,7 +268,7 @@ export function useMentionField(p: { value: string; onChange: (v: string) => voi
       suppressContentEditableWarning
       role="textbox"
       aria-multiline="true"
-      aria-label="Message"
+      aria-label={t.message}
       aria-autocomplete="list"
       aria-expanded={open}
       aria-controls={open ? listId : undefined}

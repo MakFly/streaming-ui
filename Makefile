@@ -143,6 +143,8 @@ deploy-prod: ## Vérifie, déploie sur la VM tools (shuttle) puis teste la prod
 	fi
 	@$(MAKE) --no-print-directory typecheck
 	@$(MAKE) --no-print-directory registry-check
+	@# Badges New encore « pending » : datés d'aujourd'hui et commités, pour expirer 7 jours après la mise en prod.
+	@bun scripts/stamp-new.mjs
 	@shuttle deploy
 	@$(MAKE) --no-print-directory smoke-prod
 

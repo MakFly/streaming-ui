@@ -5,7 +5,7 @@ import { PromptButton } from '@/components/prompt-button';
 import { EFFORTS, ModelPicker, PROVIDERS, hasFastMode } from '@/templates/kit/model-picker';
 import { MODEL_PICKER, applyHead } from '@/seo/routes';
 
-/* `/model-picker`: the composers' model picker on its own, installable from our registry as `model-picker`.
+/* `/components/model-picker`: the composers' model picker on its own, installable from our registry as `model-picker`.
  * Just the demo (open on arrival) with its live state, plus Install and the rebuild prompt. */
 
 const loadPrompt = () => import('@/templates/model-picker-prompt').then((m) => m.buildModelPickerPrompt());
@@ -28,7 +28,7 @@ export function ModelPickerPage() {
       <div className="flex w-full flex-col gap-8">
         <header className="flex flex-col items-start gap-3">
           <p className="font-mono text-caption-1-medium tracking-[0.12em] text-text-tertiary uppercase">Model picker</p>
-          <h1 className="text-display-4-semibold tracking-[-0.02em] text-text-primary">One picker, every model</h1>
+          <h1 className="text-display-4-semibold tracking-[-0.02em] text-text-primary">One model picker, every LLM</h1>
           <p className="max-w-[720px] text-headline-regular text-text-secondary">
             The picker every composer carries in its model slot: {PROVIDERS.length} providers on a rail, {MODELS} models, a search across all of them, and an effort slider
             with fast mode. It works inside a composer or on its own.

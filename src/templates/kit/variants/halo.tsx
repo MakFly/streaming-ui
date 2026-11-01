@@ -3,6 +3,24 @@ import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AttachmentStrip } from '../attachments';
 import { withAttachments, AddButton, Field, SendButton, Status, useField, type VariantProps } from '../composer-kit';
+import { copyOf, defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({
+  en: {
+    examples: ['Summarize this article in three bullet points', 'Plan a 3-day trip to Kyoto in autumn', 'Explain closures in JavaScript like I am five', 'Draft a friendly reminder for an overdue invoice'],
+    enhanced: 'Context: I want a clear, practical answer I can act on today.\nFormat: start with a one-sentence summary, then concrete steps as a short list.\nConstraints: plain language, call out any assumptions, and keep it under 200 words.',
+    enhancePrompt: 'Enhance prompt',
+    enhancing: 'Enhancing…',
+    enhance: 'Enhance',
+  },
+  fr: {
+    examples: ['Résume cet article en trois points', 'Planifie trois jours à Kyoto en automne', "Explique les closures en JavaScript comme si j'avais cinq ans", 'Rédige un rappel aimable pour une facture en retard'],
+    enhanced: "Contexte : je veux une réponse claire et pratique, que je puisse appliquer dès aujourd'hui.\nFormat : commence par un résumé en une phrase, puis des étapes concrètes sous forme de courte liste.\nContraintes : langage simple, signale les hypothèses et reste sous 200 mots.",
+    enhancePrompt: 'Améliorer le prompt',
+    enhancing: 'Amélioration…',
+    enhance: 'Améliorer',
+  },
+});
 
 /* Halo (Glow rim): a rounded card inside a glowing conic rim. Rather than painting the rim
  * with a shader, it is a conic-gradient whose start angle is an animated @property, plus a blurred copy
@@ -37,7 +55,6 @@ const CSS = `
 
 /* ------------------------------------------------------------------ helpers */
 
-const EXAMPLES = ['Summarize this article in three bullet points', 'Plan a 3-day trip to Kyoto in autumn', 'Explain closures in JavaScript like I am five', 'Draft a friendly reminder for an overdue invoice'];
 
 const VANISH_MS = 560;
 const ENHANCE_MS = 750;
@@ -58,11 +75,7 @@ const useReducedMotion = () =>
 /** The simulated "Enhance": keeps the ask, adds the context, shape and constraints a good prompt carries. */
 function enhance(draft: string) {
   const ask = draft.trim().replace(/[.?!]+$/, '');
-  return `${ask.charAt(0).toUpperCase()}${ask.slice(1)}.
-
-Context: I want a clear, practical answer I can act on today.
-Format: start with a one-sentence summary, then concrete steps as a short list.
-Constraints: plain language, call out any assumptions, and keep it under 200 words.`;
+  return `${ask.charAt(0).toUpperCase()}${ask.slice(1)}.\n\n${copyOf(COPY).enhanced}`;
 }
 
 interface Particle {
@@ -132,6 +145,7 @@ function useTypedPlaceholder(examples: string[], on: boolean, reduced: boolean) 
 /* ------------------------------------------------------------------ composer */
 
 export function HaloComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
   const reduced = useReducedMotion();
   const [vanish, setVanish] = useState<Particle[] | null>(null);
   const [enhancing, setEnhancing] = useState(false);
@@ -159,7 +173,7 @@ export function HaloComposerView(p: VariantProps) {
   };
   const field = useField({ value: p.value, busy: p.busy, onStop: p.onStop, onSend: send });
 
-  const examples = useMemo(() => [p.placeholder, ...EXAMPLES.filter((e) => e !== p.placeholder)], [p.placeholder]);
+  const examples = useMemo(() => [p.placeholder, ...t.examples.filter((e) => e !== p.placeholder)], [p.placeholder, t.examples]);
   const idle = !p.value && !vanish && !enhancing;
   const typed = useTypedPlaceholder(examples, idle, reduced);
 
@@ -240,14 +254,14 @@ export function HaloComposerView(p: VariantProps) {
                 type="button"
                 onClick={onEnhance}
                 disabled={enhancing || !!vanish}
-                aria-label="Enhance prompt"
+                aria-label={t.enhancePrompt}
                 className={cn(
                   'flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-body-2-medium transition-[background-color,color,scale] active:scale-[0.96] disabled:cursor-default [&_svg]:size-4',
                   enhancing ? 'bg-violet-500/15 text-violet-600 dark:text-violet-300' : 'text-text-secondary hover:bg-violet-500/10 hover:text-violet-600 dark:hover:text-violet-300',
                 )}
               >
                 <Sparkles className={cn(enhancing && 'animate-pulse')} />
-                <span className="hidden sm:inline">{enhancing ? 'Enhancing…' : 'Enhance'}</span>
+                <span className="hidden sm:inline">{enhancing ? t.enhancing : t.enhance}</span>
               </button>
               {p.tools}
               <span className="ms-auto flex items-center gap-1">

@@ -4,12 +4,58 @@ import { RotateCcw } from 'lucide-react';
 import { Icon } from './icon';
 import { cn } from '@/lib/utils';
 import { MaxEffortFx, scatterTicks } from './max-effort-fx';
-import { PROVIDER_LOGOS } from './provider-logos';
+import { PROVIDER_LOGOS, isMonoLogo } from './provider-logos';
+import { copyOf, defineCopy, useCopy } from './i18n';
 
 /* Model picker for the multi-agent chat: a
  * 341×282 popover over the trigger with a vertical provider rail (embedded provider logos),
  * that provider's models as radio rows, Quick Search across every provider, and an Effort badge on the selected
  * row opening a six-step Faster → Smarter slider. Class strings follow the reference design. */
+
+const COPY = defineCopy({
+  en: {
+    efforts: ['Low', 'Medium', 'Balanced', 'High', 'Very High', 'Max'],
+    effort: 'Effort',
+    effortValue: (label: string, fast: boolean) => `Effort: ${label}${fast ? ', fast mode' : ''}`,
+    fastMode: 'Fast mode',
+    fastModeOn: 'Fast mode on',
+    fast: 'Fast',
+    reset: 'Reset',
+    resetEffort: 'Reset effort',
+    fastNote: 'Same model, faster output · billed at a higher rate',
+    faster: 'Faster',
+    smarter: 'Smarter',
+    models: 'Models',
+    providers: 'Providers',
+    searchModels: 'Search models',
+    closeSearch: 'Close search',
+    quickSearch: 'Quick Search',
+    matchingModels: 'Matching models',
+    providerModels: (name: string) => `${name} models`,
+    noMatch: 'No models match',
+  },
+  fr: {
+    efforts: ['Faible', 'Moyen', 'Équilibré', 'Élevé', 'Très élevé', 'Max'],
+    effort: 'Effort',
+    effortValue: (label: string, fast: boolean) => `Effort : ${label}${fast ? ', mode rapide' : ''}`,
+    fastMode: 'Mode rapide',
+    fastModeOn: 'Mode rapide activé',
+    fast: 'Rapide',
+    reset: 'Réinitialiser',
+    resetEffort: "Réinitialiser l'effort",
+    fastNote: 'Même modèle, sortie plus rapide · facturé à un tarif plus élevé',
+    faster: 'Plus rapide',
+    smarter: 'Plus intelligent',
+    models: 'Modèles',
+    providers: 'Fournisseurs',
+    searchModels: 'Rechercher un modèle',
+    closeSearch: 'Fermer la recherche',
+    quickSearch: 'Recherche rapide',
+    matchingModels: 'Modèles correspondants',
+    providerModels: (name: string) => `Modèles ${name}`,
+    noMatch: 'Aucun modèle trouvé',
+  },
+});
 
 const logo = (file: string) => PROVIDER_LOGOS[file];
 
@@ -36,7 +82,11 @@ export const PROVIDERS: Provider[] = [
   { id: 'amazon', name: 'Amazon', file: 'aws', size: 20, models: ['Nova Premier', 'Nova Pro', 'Nova Lite', 'Nova Micro', 'Nova Canvas', 'Nova Reel', 'Nova Sonic', 'Titan Text Premier', 'Titan Embed v2'] },
 ];
 
-export const EFFORTS = ['Low', 'Medium', 'Balanced', 'High', 'Very High', 'Max'] as const;
+/** The six effort labels, in the current language at the moment each one is read. */
+export const EFFORTS: readonly string[] = Array.from({ length: 6 }, (_, i) => i).reduce<string[]>((arr, i) => {
+  Object.defineProperty(arr, i, { get: () => copyOf(COPY).efforts[i], enumerable: true });
+  return arr;
+}, new Array<string>(6));
 const DEFAULT_EFFORT = 1;
 
 /**
@@ -115,6 +165,7 @@ function Radio({ on }: { on: boolean }) {
 
 /** The six-step Faster → Smarter slider; a transparent range input on top keeps keyboard and pointer access. */
 function EffortSlider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const t = useCopy(COPY);
   const max = value === EFFORTS.length - 1;
   // New random flight paths each time the slider reaches Max (re-rolled per ignition).
   const scatter = useMemo(() => scatterTicks(EFFORTS.length), [max]);
@@ -148,8 +199,8 @@ function EffortSlider({ value, onChange }: { value: number; onChange: (v: number
         max={5}
         step={1}
         value={value}
-        aria-label="Effort"
-        aria-valuetext={EFFORTS[value]}
+        aria-label={t.effort}
+        aria-valuetext={t.efforts[value]}
         onChange={(e) => onChange(Number(e.target.value))}
         className="absolute inset-0 size-full cursor-grab opacity-0 active:cursor-grabbing"
       />
@@ -165,10 +216,11 @@ type FastProps = { canFast: boolean; fast: boolean; onFast: (v: boolean) => void
  * The visible label settles in with a short blur instead of being remounted from transparent.
  */
 function EffortLabel({ effort, className }: { effort: number; className?: string }) {
+  const t = useCopy(COPY);
   return (
     <span className={cn('inline-grid', className)}>
-      {EFFORTS.map((l, i) => (
-        <span key={l} aria-hidden={i !== effort} className={cn('col-start-1 row-start-1 whitespace-nowrap transition-[opacity,filter] duration-150 ease-out', i === effort ? 'opacity-100 blur-0' : 'opacity-0 blur-[2px]')}>
+      {t.efforts.map((l, i) => (
+        <span key={i} aria-hidden={i !== effort} className={cn('col-start-1 row-start-1 whitespace-nowrap transition-[opacity,filter] duration-150 ease-out', i === effort ? 'opacity-100 blur-0' : 'opacity-0 blur-[2px]')}>
           {l}
         </span>
       ))}
@@ -177,12 +229,13 @@ function EffortLabel({ effort, className }: { effort: number; className?: string
 }
 
 function EffortBadge({ effort, onEffort, canFast, fast, onFast }: { effort: number; onEffort: (v: number) => void } & FastProps) {
+  const t = useCopy(COPY);
   const [open, setOpen] = useState(false);
   const on = canFast && fast;
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger
-        aria-label={`Effort: ${EFFORTS[effort]}${on ? ', fast mode' : ''}`}
+        aria-label={t.effortValue(t.efforts[effort], on)}
         className="ease flex shrink-0 cursor-pointer items-center gap-0.5 rounded-full bg-background-tertiary-default py-1 ps-2 pe-1 outline-none transition-colors duration-150 hover:bg-background-tertiary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring"
       >
         <BoltSlot on={on} />
@@ -195,15 +248,15 @@ function EffortBadge({ effort, onEffort, canFast, fast, onFast }: { effort: numb
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content updatePositionStrategy="always" side="bottom" align="start" alignOffset={-8} sideOffset={14} collisionPadding={16} className={cn(popoverCls, 'w-[266px] max-w-[calc(100vw-32px)] rounded-2xl border border-border-button-default bg-dropdown-background p-1 shadow-dropdown')}>
-          <section aria-label="Effort" className="flex flex-col pt-1 outline-none">
+          <section aria-label={t.effort} className="flex flex-col pt-1 outline-none">
             {/* Fast toggle on the left (only for models that offer it), reset on the right. */}
             <div className="-mb-0.5 flex items-center gap-1 ps-2 pe-0.5">
               {canFast && (
-                <Tip label={on ? 'Fast mode on' : 'Fast mode'}>
+                <Tip label={on ? t.fastModeOn : t.fastMode}>
                   <button
                     type="button"
                     aria-pressed={on}
-                    aria-label="Fast mode"
+                    aria-label={t.fastMode}
                     onClick={() => onFast(!on)}
                     className={cn('-ms-1.5 grid size-6 shrink-0 cursor-pointer place-items-center rounded-md outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-border-focus-ring', on ? 'bg-accent-500/12 text-accent-500' : 'text-foreground-icon-tertiary hover:bg-background-tertiary-default dark:hover:bg-background-primary-hover hover:text-foreground-icon-secondary')}
                   >
@@ -212,13 +265,13 @@ function EffortBadge({ effort, onEffort, canFast, fast, onFast }: { effort: numb
                 </Tip>
               )}
               <p className="min-w-0 flex-1 truncate text-body-medium text-text-secondary">
-                {on ? 'Fast' : 'Effort'} <EffortLabel effort={effort} className={cn('align-bottom transition-colors duration-150', on ? 'text-accent-500' : 'text-text-primary')} />
+                {on ? t.fast : t.effort} <EffortLabel effort={effort} className={cn('align-bottom transition-colors duration-150', on ? 'text-accent-500' : 'text-text-primary')} />
               </p>
               {(effort !== DEFAULT_EFFORT || on) && (
-                <Tip label="Reset">
+                <Tip label={t.reset}>
                   <button
                     type="button"
-                    aria-label="Reset effort"
+                    aria-label={t.resetEffort}
                     onClick={() => {
                       onEffort(DEFAULT_EFFORT);
                       onFast(false);
@@ -230,11 +283,11 @@ function EffortBadge({ effort, onEffort, canFast, fast, onFast }: { effort: numb
                 </Tip>
               )}
             </div>
-            {on && <p className="animate-in fade-in-0 slide-in-from-top-1 ps-2 pt-1.5 text-caption-1-regular text-text-tertiary duration-200">Same model, faster output · billed at a higher rate</p>}
+            {on && <p className="animate-in fade-in-0 slide-in-from-top-1 ps-2 pt-1.5 text-caption-1-regular text-text-tertiary duration-200">{t.fastNote}</p>}
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between px-2 pt-2 pb-[3px] text-body-2-medium text-text-secondary">
-                <span>Faster</span>
-                <span>Smarter</span>
+                <span>{t.faster}</span>
+                <span>{t.smarter}</span>
               </div>
               <div className="px-2 pb-2">
                 <EffortSlider value={effort} onChange={onEffort} />
@@ -254,7 +307,7 @@ function ModelRow({ provider, model, on, showProvider, effort, onEffort, fast, o
       <button type="button" role="radio" aria-checked={on} aria-label={`${provider.name} ${model}`} onClick={onPick} className="absolute inset-0 cursor-pointer rounded-2lg outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring focus-visible:ring-inset" />
       <span className="pointer-events-none relative flex min-w-0 flex-1 items-center gap-3">
         <span className="flex min-w-0 flex-1 items-center gap-1.5">
-          <img alt="" aria-hidden="true" width={16} height={16} src={logo(provider.file)} className="size-4 shrink-0 dark:invert" />
+          <img alt="" aria-hidden="true" width={16} height={16} src={logo(provider.file)} className={cn('size-4 shrink-0', isMonoLogo(provider.file) && 'dark:invert')} />
           <span className="min-w-0 flex-1 truncate text-body-medium whitespace-nowrap">
             <span className="text-text-primary">{model}</span>
             {showProvider && <span className="ms-1.5 text-text-tertiary">{provider.name}</span>}
@@ -298,6 +351,7 @@ export function ModelPicker({
   defaultOpen?: boolean;
   className?: string;
 }) {
+  const t = useCopy(COPY);
   const [ownFast, setOwnFast] = useState(false);
   const fastWanted = fastProp ?? ownFast;
   const setFast = onFastChange ?? setOwnFast;
@@ -349,7 +403,8 @@ export function ModelPicker({
             className,
           )}
         >
-          <BoltSlot on={fastOn} className="ms-0.5" />
+          <img alt="" aria-hidden="true" width={16} height={16} src={logo(selected.file)} className={cn('ms-0.5 me-1 size-4 shrink-0', isMonoLogo(selected.file) && 'dark:invert')} />
+          <BoltSlot on={fastOn} />
           <span className="px-0.5 text-body-medium whitespace-nowrap text-text-secondary">{value}</span>
           <Icon name="arrow-down-s-line" className={cn('ease size-[18px] text-foreground-icon-secondary transition-transform duration-200', open && 'rotate-180')} />
         </Popover.Trigger>
@@ -362,12 +417,12 @@ export function ModelPicker({
             align="start"
             sideOffset={8}
             collisionPadding={16}
-            aria-label="Models"
+            aria-label={t.models}
             onOpenAutoFocus={(e) => e.preventDefault()}
             className={cn(popoverCls, 'relative h-[282px] w-[341px] max-w-[calc(100vw-32px)] overflow-clip rounded-[20px] border border-border-button-default bg-dropdown-background shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_8px_rgba(0,0,0,0.02)]')}
           >
             <div className="size-full">
-              <div role="tablist" aria-label="Providers" aria-orientation="vertical" className="absolute start-0.5 top-0.5 h-[276px] w-[42px] overflow-y-auto rounded-[17px] bg-composer-panel-rail-background p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div role="tablist" aria-label={t.providers} aria-orientation="vertical" className="absolute start-0.5 top-0.5 h-[276px] w-[42px] overflow-y-auto rounded-[17px] bg-composer-panel-rail-background p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="flex w-9 flex-col gap-1.5">
                   {PROVIDERS.map((p) => {
                     const on = !searching && tab === p.id;
@@ -384,7 +439,7 @@ export function ModelPicker({
                           }}
                           className={cn('ease flex h-[30px] w-9 shrink-0 cursor-pointer items-center justify-center rounded-[50px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-border-focus-ring', on ? 'bg-background-tertiary-default' : 'hover:bg-background-tertiary-default/50')}
                         >
-                          <img alt="" aria-hidden="true" width={p.size} height={p.size} src={logo(p.file)} className="shrink-0 dark:invert" style={{ width: p.size, height: p.size }} />
+                          <img alt="" aria-hidden="true" width={p.size} height={p.size} src={logo(p.file)} className={cn('shrink-0', isMonoLogo(p.file) && 'dark:invert')} style={{ width: p.size, height: p.size }} />
                         </button>
                       </Tip>
                     );
@@ -406,19 +461,19 @@ export function ModelPicker({
                             setQ('');
                           }
                         }}
-                        placeholder="Search models"
-                        aria-label="Search models"
+                        placeholder={t.searchModels}
+                        aria-label={t.searchModels}
                         className="h-5 min-w-0 flex-1 bg-transparent text-body-medium text-text-primary caret-accent-500 outline-none placeholder:text-text-tertiary"
                       />
-                      <button type="button" aria-label="Close search" onClick={closeSearch} className="flex shrink-0 cursor-pointer items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
+                      <button type="button" aria-label={t.closeSearch} onClick={closeSearch} className="flex shrink-0 cursor-pointer items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
                         <Icon name="close-line" className="size-4 text-foreground-icon-secondary" />
                       </button>
                     </>
                   ) : (
                     <>
-                      <span className="text-body-medium text-text-tertiary">Models</span>
+                      <span className="text-body-medium text-text-tertiary">{t.models}</span>
                       <button type="button" onClick={() => setSearching(true)} className="ease flex cursor-pointer items-center gap-[5px] rounded-sm opacity-50 outline-none transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-border-focus-ring">
-                        <span className="text-body-medium whitespace-nowrap text-text-secondary">Quick Search</span>
+                        <span className="text-body-medium whitespace-nowrap text-text-secondary">{t.quickSearch}</span>
                         <Icon name="search-line" className="size-4 text-foreground-icon-secondary" />
                       </button>
                     </>
@@ -435,7 +490,7 @@ export function ModelPicker({
                   </div>
                   <div
                     role="radiogroup"
-                    aria-label={searching && q.trim() ? 'Matching models' : `${PROVIDERS.find((p) => p.id === tab)?.name} models`}
+                    aria-label={searching && q.trim() ? t.matchingModels : t.providerModels(PROVIDERS.find((p) => p.id === tab)?.name ?? '')}
                     onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 2)}
                     className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                   >
@@ -456,7 +511,7 @@ export function ModelPicker({
                         }}
                       />
                     ))}
-                    {rows.length === 0 && <p className="px-2 py-2 text-body-medium text-text-tertiary">No models match</p>}
+                    {rows.length === 0 && <p className="px-2 py-2 text-body-medium text-text-tertiary">{t.noMatch}</p>}
                   </div>
                 </div>
               </div>

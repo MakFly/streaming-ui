@@ -307,5 +307,12 @@ export function useChatEngine({ intro, reply }: { intro?: Script; reply: (api: C
     fresh();
   }, [endTurn, fresh]);
 
-  return { messages, busy, draft, setDraft, send, stop, run, reset, replyTo, startReply, clearReply };
+  /** Takes one message out of the thread. A retry drops the cut-off reply first: a response that opens while the
+   *  last message is an assistant's continues that message, so the partial text would come back in front of the new one. */
+  const remove = useCallback((id: string) => {
+    const c = current.current;
+    c.messages = c.messages.filter((m) => m.id !== id);
+  }, []);
+
+  return { messages, busy, draft, setDraft, send, stop, run, reset, remove, replyTo, startReply, clearReply };
 }

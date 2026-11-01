@@ -7,15 +7,31 @@ import { ComposerLoader } from '../primitives';
 import { AttachmentStrip } from '../attachments';
 import { ContextMeter } from '../agent-limits';
 import { withAttachments, AddButton, Field, SendButton, Status, useDictation, useField, type VariantProps } from '../composer-kit';
+import { defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({
+  en: {
+    modes: { ask: 'Ask before edits', plan: 'Plan mode', auto: 'Accept edits', bypass: 'Bypass all' },
+    permission: (label: string) => `Permission: ${label}`,
+    stopVoice: 'Stop voice input',
+    voice: 'Voice input',
+  },
+  fr: {
+    modes: { ask: 'Demander avant de modifier', plan: 'Mode plan', auto: 'Accepter les modifications', bypass: 'Tout autoriser' },
+    permission: (label: string) => `Permission : ${label}`,
+    stopVoice: 'Arrêter la saisie vocale',
+    voice: 'Saisie vocale',
+  },
+});
 
 /* Panel (Rail): the box on a rail with branch, project, context ring and permission modes.
  * Use <PanelComposer> on its own, or the view inside a switcher that owns the attachments. */
 
 const MODES = [
-  { id: 'ask', label: 'Ask before edits', icon: <MessageCircle /> },
-  { id: 'plan', label: 'Plan mode', icon: <ListChecks /> },
-  { id: 'auto', label: 'Accept edits', icon: <Bot /> },
-  { id: 'bypass', label: 'Bypass all', icon: <Icon name="shield-check-line" /> },
+  { id: 'ask', icon: <MessageCircle /> },
+  { id: 'plan', icon: <ListChecks /> },
+  { id: 'auto', icon: <Bot /> },
+  { id: 'bypass', icon: <Icon name="shield-check-line" /> },
 ] as const;
 
 /**
@@ -24,10 +40,12 @@ const MODES = [
  * add, permission mode, model, voice and send.
  */
 export function PanelComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
   const field = useField(p);
   const dictation = useDictation(p.value, p.onChange);
   const [mode, setMode] = useState<(typeof MODES)[number]['id']>('bypass');
   const current = MODES.find((m) => m.id === mode)!;
+  const labelOf = (id: (typeof MODES)[number]['id']) => t.modes[id];
   const rail = p.branch || p.project || p.context !== undefined;
   return (
     <div className={cn('flex w-full flex-col', p.className)}>
@@ -69,16 +87,16 @@ export function PanelComposerView(p: VariantProps) {
                 <AddButton onClick={p.att.add} className="bg-composer-panel-add-background hover:bg-composer-panel-add-hover-background" />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button type="button" aria-label={`Permission: ${current.label}`} className="ease flex h-[30px] shrink-0 cursor-pointer items-center gap-1 rounded-full py-[5px] ps-2 pe-2.5 outline-none transition-colors duration-150 hover:bg-background-primary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-4 [&_svg]:text-foreground-icon-secondary">
+                    <button type="button" aria-label={t.permission(labelOf(current.id))} className="ease flex h-[30px] shrink-0 cursor-pointer items-center gap-1 rounded-full py-[5px] ps-2 pe-2.5 outline-none transition-colors duration-150 hover:bg-background-primary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring [&_svg]:size-4 [&_svg]:text-foreground-icon-secondary">
                       {current.icon}
-                      <span className="hidden text-body-medium whitespace-nowrap text-text-secondary sm:inline">{current.label}</span>
+                      <span className="hidden text-body-medium whitespace-nowrap text-text-secondary sm:inline">{labelOf(current.id)}</span>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" side="top" className="min-w-48">
                     {MODES.map((m) => (
                       <DropdownMenuItem key={m.id} onSelect={() => setMode(m.id)} className="flex items-center gap-2 [&_svg]:size-4 [&_svg]:text-foreground-icon-secondary">
                         {m.icon}
-                        <span className="flex-1">{m.label}</span>
+                        <span className="flex-1">{labelOf(m.id)}</span>
                         {m.id === mode && <Icon name="check-line" className="text-text-primary!" />}
                       </DropdownMenuItem>
                     ))}
@@ -89,7 +107,7 @@ export function PanelComposerView(p: VariantProps) {
               <div className="flex shrink-0 items-center gap-4">
                 {p.model}
                 <div className="flex items-center gap-2">
-                  <button type="button" aria-label={dictation.listening ? 'Stop voice input' : 'Voice input'} aria-pressed={dictation.listening} onClick={dictation.toggle} className={cn('ease relative hidden size-9 cursor-pointer items-center justify-center rounded-full border p-2 shadow-xs outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-border-focus-ring sm:flex', dictation.listening ? 'border-red-500/30 bg-red-500/10 hover:bg-red-500/15' : 'border-border-button-default bg-background-primary-default hover:bg-background-primary-hover')}>
+                  <button type="button" aria-label={dictation.listening ? t.stopVoice : t.voice} aria-pressed={dictation.listening} onClick={dictation.toggle} className={cn('ease relative hidden size-9 cursor-pointer items-center justify-center rounded-full border p-2 shadow-xs outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-border-focus-ring sm:flex', dictation.listening ? 'border-red-500/30 bg-red-500/10 hover:bg-red-500/15' : 'border-border-button-default bg-background-primary-default hover:bg-background-primary-hover')}>
                     {dictation.listening && <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-red-500/20 motion-reduce:animate-none" />}
                     <Icon name="mic-line" className={cn('relative size-5', dictation.listening ? 'text-red-500' : 'text-foreground-icon-primary')} />
                   </button>

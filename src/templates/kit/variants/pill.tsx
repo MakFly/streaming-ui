@@ -3,6 +3,9 @@ import { cn } from '@/lib/utils';
 import { ComposerLoader } from '../primitives';
 import { AttachmentStrip } from '../attachments';
 import { withAttachments, AddButton, MicButton, SendButton, Status, useField, type VariantProps } from '../composer-kit';
+import { defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({ en: { message: 'Message' }, fr: { message: 'Message' } });
 
 /* Pill (Single row): a single 52px row: add, input, model, mic, send.
  * Long drafts behave like ChatGPT's: once the text wraps (or has a line break) the field takes the full width
@@ -44,6 +47,7 @@ function withModel(model: ReactNode, status: ReactNode) {
 }
 
 export function PillComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
   const field = useField(p);
   const narrow = useNarrow();
   const below = narrow && !!p.model;
@@ -88,7 +92,7 @@ export function PillComposerView(p: VariantProps) {
             onChange={(e) => p.onChange(e.target.value)}
             onKeyDown={field.onKeyDown}
             placeholder={p.placeholder}
-            aria-label="Message"
+            aria-label={t.message}
             className={cn(
               'scrollbar-thin min-w-0 resize-none bg-transparent text-body-regular text-text-primary caret-text-primary outline-none placeholder:text-text-tertiary',
               multi ? 'col-span-5 row-start-1 px-2 pt-1.5 leading-6' : 'col-start-2 row-start-1 h-5! overflow-hidden px-1 leading-5',

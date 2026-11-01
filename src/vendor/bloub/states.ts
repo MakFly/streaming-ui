@@ -145,6 +145,29 @@ function spinningTriangle(rot: number): Silhouette {
   })
 }
 
+/** Ajouts streaming-ui : le "!" et les "Z" poses a cote d'un personnage (voir `alertBody`). */
+const MARK_X = 1.08
+const MARK_Y = -0.8
+const MARK_BAR = polyPath(hullOfCircles(0, -0.17, 0.07, 0, 0.08, 0.045))
+const MARK_BAR_UPRIGHT = polyPath(hullOfCircles(0, -0.22, 0.085, 0, 0.1, 0.05))
+const Z_GLYPH = [
+  { x: -0.4, y: -0.5 },
+  { x: 0.4, y: -0.5 },
+  { x: 0.4, y: -0.3 },
+  { x: -0.1, y: 0.28 },
+  { x: 0.4, y: 0.28 },
+  { x: 0.4, y: 0.5 },
+  { x: -0.4, y: 0.5 },
+  { x: -0.4, y: 0.3 },
+  { x: 0.1, y: -0.28 },
+  { x: -0.4, y: -0.28 }
+]
+const SLEEP_Z = [
+  { x: 0.82, y: -0.76, s: 0.14 },
+  { x: 1.02, y: -1.0, s: 0.19 },
+  { x: 1.24, y: -1.24, s: 0.25 }
+].map((z) => ({ ...z, d: polyPath(Z_GLYPH, z.s) }))
+
 /* ------------------------------------------------------------------ etats */
 
 export type StateId =
@@ -164,6 +187,10 @@ export type StateId =
   | 'comet'
   /** transition d'interface, pas une animation du catalogue : hors `SEQUENCE` */
   | 'swirl'
+  // Ajouts streaming-ui : alerte, exclamation et sommeil qui gardent le corps (personnages).
+  | 'alertBody'
+  | 'exclaimBody'
+  | 'sleepBody'
 
 export interface StateDef {
   id: StateId
@@ -569,6 +596,92 @@ export const STATES: StateDef[] = [
         arcs: COMET_RIBBONS.map((s, i) => ({ id: `cm${i}`, seed: s, t, opacity: fade }))
       })
     }
+  },
+
+  /* --- Ajouts streaming-ui (hors bloub amont) ----------------------------------------
+   * `alert`, `exclaim` et `sleep` dessinent leur propre forme a la place du corps : un
+   * personnage (chat, chien, fleur) y perdrait ses oreilles ou ses petales. Ces trois
+   * variantes gardent le corps (`baseBody`), donc `eyefit` leur calcule aussi un decalage
+   * des yeux, et posent le signe A COTE de la tete, en haut a droite, hors des oreilles. */
+
+  {
+    id: 'alertBody',
+    duration: 2.4,
+    morph: 0.45,
+    baseFace: false,
+    baseBody: true,
+    blinkIn: true,
+    pose: (t) => {
+      const pop = easings.easeOutCubic(clamp(t / 0.3))
+      // Le "!" penche tremble a 2.5 Hz autour de son centre, comme celui d'`alert`.
+      const a = ((17.7 + 12 * Math.sin(t * 2.5 * TAU) * pop) * Math.PI) / 180
+      const mx = MARK_X
+      const my = MARK_Y + (1 - pop) * 0.12
+      return base({
+        offY: -0.05 * Math.sin(clamp(t / 0.35) * Math.PI),
+        // le regard part vers le signe
+        gaze: { yaw: 24, pitch: 22, roll: 8 },
+        split: 18.43,
+        eyes: pair(0.356, 0.875),
+        dots: [
+          { x: mx, y: my, r: 0.07, d: MARK_BAR, rot: (a * 180) / Math.PI, opacity: pop },
+          { x: mx - Math.sin(a) * 0.24, y: my + Math.cos(a) * 0.24, r: 0.055, opacity: pop }
+        ]
+      })
+    }
+  },
+
+  {
+    id: 'exclaimBody',
+    duration: 2,
+    morph: 0.45,
+    baseFace: false,
+    baseBody: true,
+    blinkIn: true,
+    pose: (t) => {
+      const pop = easings.easeOutCubic(clamp(t / 0.3))
+      // Sursaut : la tete s'etire et saute une fois, puis se pose.
+      const bump = Math.sin(clamp(t / 0.4) * Math.PI)
+      const my = MARK_Y - 0.06 + (1 - pop) * 0.14
+      return base({
+        sil: circle(1, { sx: 1 - 0.05 * bump, sy: 1 + 0.07 * bump }),
+        offY: -0.06 * bump,
+        gaze: { yaw: 0, pitch: 8, roll: 0 },
+        split: 18.43,
+        eyes: pair(0.4, 0.62),
+        dots: [
+          { x: MARK_X, y: my, r: 0.085, d: MARK_BAR_UPRIGHT, opacity: pop },
+          { x: MARK_X, y: my + 0.29, r: 0.065, opacity: pop }
+        ]
+      })
+    }
+  },
+
+  {
+    id: 'sleepBody',
+    duration: 2.4,
+    morph: 0.5,
+    baseFace: false,
+    baseBody: true,
+    blinkIn: true,
+    pose: (t) => {
+      // Respiration lente, et trois "Z" qui montent l'un apres l'autre.
+      const b = Math.sin((t * TAU) / 2.4)
+      return base({
+        sil: circle(1, { sx: 1 + 0.02 * b, sy: 1 - 0.02 * b }),
+        offY: 0.015 * b,
+        gaze: { yaw: 0, pitch: -12, roll: 0 },
+        split: 18.43,
+        eyes: [
+          { w: 0.36, h: 0.08, open: 1 },
+          { w: 0.36, h: 0.08, open: 1 }
+        ],
+        dots: SLEEP_Z.map((z, i) => {
+          const p = ((((t / 2.4 - i * 0.22) % 1) + 1) % 1)
+          return { x: z.x + 0.04 * p, y: z.y - 0.12 * p, r: z.s, d: z.d, opacity: Math.sin(p * Math.PI) }
+        })
+      })
+    }
   }
 ]
 
@@ -595,7 +708,10 @@ export const POSES: Record<StateId, number> = {
   orbit: 1.2,
   swirl: 0.5,
   burst: 0.45,
-  comet: 1.15
+  comet: 1.15,
+  alertBody: 0.75,
+  exclaimBody: 0.8,
+  sleepBody: 0.45
 }
 
 export const SEQUENCE: StateId[] = [

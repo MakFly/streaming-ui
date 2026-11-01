@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ComponentType } from 'react';
+import { defineCopy, useCopy } from './i18n';
 import { ReplyChip, type ReplyRef } from './reply';
 import { useComposerVariant, type ComposerVariant } from './composer-variant';
 import { useAttachments } from './attachments';
@@ -17,6 +18,8 @@ import { MentionComposerView } from './variants/mention';
 
 /* The template-facing composer: one prop picks among the eleven composers in kit/variants/ (one file each, each
  * also installable alone from the registry). The attachment queue lives here so switching variant keeps the files. */
+
+const COPY = defineCopy({ en: { placeholder: 'Ask me anything' }, fr: { placeholder: 'Demandez-moi ce que vous voulez' } });
 
 /* ------------------------------------------------------------------ switch */
 
@@ -46,7 +49,8 @@ export interface ComposerProps extends BaseProps {
 }
 
 /** Every composer behind one switch: the template's pick, or the global one from the header picker. */
-export function Composer({ variant, lock, placeholder = 'Ask me anything', reply, onClearReply, ...rest }: ComposerProps) {
+export function Composer({ variant, lock, placeholder, reply, onClearReply, ...rest }: ComposerProps) {
+  const t = useCopy(COPY);
   const global = useComposerVariant(variant ?? 'pill');
   const active = lock && variant ? variant : global;
   const att = useAttachments();
@@ -74,7 +78,7 @@ export function Composer({ variant, lock, placeholder = 'Ask me anything', reply
       }}
     >
       {reply && <ReplyChip reply={reply} onClear={() => onClearReply?.()} />}
-      <V {...rest} onSend={onSend} placeholder={placeholder} att={att} />
+      <V {...rest} onSend={onSend} placeholder={placeholder ?? t.placeholder} att={att} />
     </div>
   );
 }

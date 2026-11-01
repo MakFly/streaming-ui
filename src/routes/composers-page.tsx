@@ -12,7 +12,7 @@ import { paths } from '@/lib/paths';
 import { COMPOSERS, applyHead } from '@/seo/routes';
 import { cn } from '@/lib/utils';
 
-/* `/composers` — the five interchangeable composers of the chat templates, each typing into its own live
+/* `/components/composers` — the five interchangeable composers of the chat templates, each typing into its own live
  * thread at full width, with a comparison at the end. "Use in every template" sets the
  * same shared choice as the picker in the template headers. The demos lock their variant, so that choice
  * never changes what this page shows. */
@@ -81,7 +81,7 @@ function Content() {
     <PageShell width="wide">
       <header className="flex flex-col items-start gap-3 pb-2">
         <p className="font-mono text-caption-1-medium tracking-[0.12em] text-text-tertiary uppercase">Composers</p>
-        <h1 className="text-display-4-semibold tracking-[-0.02em] text-text-primary">Eleven composers, one interface</h1>
+        <h1 className="text-display-4-semibold tracking-[-0.02em] text-text-primary">Eleven AI chat composers, one interface</h1>
         <p className="max-w-[720px] text-headline-regular text-text-secondary">
           Every chat template can wear any of these. Each one below types into its own live thread, so you can watch it work, then try it yourself. Pick one for every
           template at once, or keep each template's own. Every composer installs into your own project with the shadcn CLI.
@@ -153,7 +153,7 @@ function Content() {
   );
 }
 
-/** `/composers` — wrapped in the shared choice so "Use in every template" reaches the templates. */
+/** `/components/composers` — wrapped in the shared choice so "Use in every template" reaches the templates. */
 export function ComposersPage() {
   useEffect(() => {
     applyHead(COMPOSERS);

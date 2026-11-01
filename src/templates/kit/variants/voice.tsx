@@ -4,6 +4,34 @@ import { cn } from '@/lib/utils';
 import { AttachmentStrip } from '../attachments';
 import { ComposerLoader } from '../primitives';
 import { withAttachments, AddButton, Field, SendButton, Status, useField, type VariantProps } from '../composer-kit';
+import { copyOf, defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({
+  en: {
+    phrases: ['What can I cook tonight with eggs, spinach and a bit of feta?', 'Remind me what we decided about the launch date', 'Give me three ideas for a rainy Sunday with kids', 'How do I say thank you very much in Japanese?'],
+    listening: 'Listening…',
+    thinking: 'Thinking…',
+    speaking: 'Speaking · tap the orb or press Esc to stop',
+    idle: 'Hold the orb or Space to talk',
+    backToVoice: 'Back to voice',
+    typeInstead: 'Type instead',
+    stopAnswer: 'Stop the answer',
+    release: 'Release to send',
+    hold: 'Hold to talk',
+  },
+  fr: {
+    phrases: ['Que puis-je cuisiner ce soir avec des œufs, des épinards et un peu de feta ?', 'Rappelle-moi ce qu\'on a décidé pour la date de lancement', 'Donne-moi trois idées pour un dimanche pluvieux avec des enfants', 'Comment dit-on merci beaucoup en japonais ?'],
+    listening: 'Écoute…',
+    thinking: 'Réflexion…',
+    speaking: 'Je parle · touchez l\'orbe ou appuyez sur Échap pour arrêter',
+    idle: 'Maintenez l\'orbe ou Espace pour parler',
+    backToVoice: 'Revenir à la voix',
+    typeInstead: 'Écrire à la place',
+    stopAnswer: 'Arrêter la réponse',
+    release: 'Relâcher pour envoyer',
+    hold: 'Maintenir pour parler',
+  },
+});
 
 /* Voice composer (Voice orb, drawn without motion libraries or WebGL): a glowing orb you hold to talk.
  *
@@ -46,12 +74,6 @@ function recognitionCtor(): RecognitionCtor | null {
 }
 
 /** What the simulation "hears", one per hold, in turn. */
-const PHRASES = [
-  'What can I cook tonight with eggs, spinach and a bit of feta?',
-  'Remind me what we decided about the launch date',
-  'Give me three ideas for a rainy Sunday with kids',
-  'How do I say thank you very much in Japanese?',
-];
 let phraseTurn = 0;
 
 const join = (base: string, add: string) => (base && add ? `${base} ${add}` : base || add);
@@ -108,7 +130,7 @@ function usePushToTalk(p: VariantProps) {
   const simulate = useCallback(
     (s: Session) => {
       if (s.sim !== undefined || session.current !== s) return;
-      const words = PHRASES[phraseTurn++ % PHRASES.length].split(' ');
+      const words = copyOf(COPY).phrases[phraseTurn++ % copyOf(COPY).phrases.length].split(' ');
       let i = 0;
       s.sim = window.setInterval(() => {
         if (i >= words.length) return;
@@ -297,6 +319,7 @@ const Bars = ({ level }: { level: number }) => (
 /* ------------------------------------------------------------------ composer */
 
 export function VoiceComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
   const field = useField(p);
   const reduced = useReducedMotion();
   const { listening, start, release } = usePushToTalk(p);
@@ -355,12 +378,12 @@ export function VoiceComposerView(p: VariantProps) {
 
   const hint =
     phase === 'listening'
-      ? 'Listening…'
+      ? t.listening
       : phase === 'thinking'
-        ? 'Thinking…'
+        ? t.thinking
         : phase === 'speaking'
-          ? 'Speaking · tap the orb or press Esc to stop'
-          : 'Hold the orb or Space to talk';
+          ? t.speaking
+          : t.idle;
   const transcript = phase === 'listening' || (phase === 'idle' && p.value) ? p.value : '';
 
   return (
@@ -385,7 +408,7 @@ export function VoiceComposerView(p: VariantProps) {
               <AddButton onClick={p.att.add} />
               <button
                 type="button"
-                aria-label={typing ? 'Back to voice' : 'Type instead'}
+                aria-label={typing ? t.backToVoice : t.typeInstead}
                 aria-pressed={typing}
                 onClick={() => setTyping((v) => !v)}
                 className={cn('grid size-9 shrink-0 place-items-center rounded-full text-foreground-icon-secondary transition-colors outline-none hover:bg-background-tertiary-default hover:text-foreground-icon-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring', typing && 'bg-accent-500/10 text-accent-500 hover:bg-accent-500/15 hover:text-accent-500')}
@@ -396,7 +419,7 @@ export function VoiceComposerView(p: VariantProps) {
             <button
               ref={orb}
               type="button"
-              aria-label={p.busy ? 'Stop the answer' : listening ? 'Release to send' : 'Hold to talk'}
+              aria-label={p.busy ? t.stopAnswer : listening ? t.release : t.hold}
               aria-pressed={listening}
               data-phase={phase}
               onPointerDown={(e) => {

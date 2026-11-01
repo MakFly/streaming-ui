@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, Columns3, Crown, Gauge, Plus, Reply, Timer, Trophy, X, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { copyOf, defineCopy, useCopy } from './kit/i18n';
 import { useChatEngine, type ChatScriptApi, type ReplyRef } from './kit/engine';
 import { CopyButton, Markdown } from './kit/markdown';
 import { ThinkingIndicator } from './kit/thinking-style';
@@ -20,26 +21,80 @@ const MODELS: Model[] = [
 
 type Answer = { model: string; text: string; shown: number; started: boolean; done: boolean; ttft: number; tps: number; cost: number };
 
-const ANSWERS: Record<string, string> = {
-  'Fable 5': `**Use SSE by default.** It's one long HTTP response the server writes tokens into, so it works through proxies and CDNs, and the browser reconnects on its own with \`Last-Event-ID\`.
+const COPY = defineCopy({
+  en: {
+    answers: {
+      'Fable 5': `**Use SSE by default.** It's one long HTTP response the server writes tokens into, so it works through proxies and CDNs, and the browser reconnects on its own with \`Last-Event-ID\`.
 
 Switch to WebSockets only when the client must talk back mid-stream: voice, live cursors, or interrupting a long answer without a new request.`,
-  'Sonnet 5.5': `Pick **Server-Sent Events**:
+      'Sonnet 5.5': `Pick **Server-Sent Events**:
 - one-way token streams are exactly what SSE is for
 - plain HTTP, so auth, caching and proxies just work
 - automatic reconnects
 
 WebSockets add a stateful connection you then have to scale and load-balance.`,
-  'Haiku 5.5': `SSE. It's simpler, reconnects automatically, and chat tokens only flow one way. Use WebSockets if you need two-way realtime.`,
-  'Open 70B': `Both work. SSE is easier for streaming text from server to client. WebSockets are bidirectional and better for interactive apps. Many chat apps use SSE with a separate POST for user messages.`,
-};
+      'Haiku 5.5': `SSE. It's simpler, reconnects automatically, and chat tokens only flow one way. Use WebSockets if you need two-way realtime.`,
+      'Open 70B': `Both work. SSE is easier for streaming text from server to client. WebSockets are bidirectional and better for interactive apps. Many chat apps use SSE with a separate POST for user messages.`,
+    } as Record<string, string>,
+    fallback: (prompt: string) => `On **${prompt}**: keep it simple, measure, then iterate.`,
+    introPrompt: 'SSE or WebSockets for streaming chat responses?',
+    introTopic: 'SSE or WebSockets',
+    selfHosted: 'Self-hosted',
+    preferred: 'Preferred',
+    waiting: 'Waiting for first token',
+    reply: 'Reply',
+    prefer: 'Prefer',
+    sendTo: (n: number) => `Send to ${n} models`,
+    sideBySide: (n: number) => `${n} models side by side`,
+    votes: (n: number) => `${n} votes`,
+    compare: 'Compare',
+    newLabel: 'New',
+    welcomeTitle: 'Which model answers best?',
+    welcomeSubtitle: 'Send one prompt to several models and compare speed, cost and quality.',
+    suggestions: ['Explain CRDTs in two sentences', 'Write a regex for ISO dates', 'Name a CLI for streaming logs'],
+    votesSaved: '{t.votesSaved}',
+  },
+  fr: {
+    answers: {
+      'Fable 5': `**Prenez SSE par défaut.** C'est une seule longue réponse HTTP dans laquelle le serveur écrit les tokens : elle passe les proxys et les CDN, et le navigateur se reconnecte tout seul avec \`Last-Event-ID\`.
+
+Ne passez aux WebSockets que si le client doit répondre en cours de flux : voix, curseurs en direct, ou interruption d'une longue réponse sans nouvelle requête.`,
+      'Sonnet 5.5': `Choisissez les **Server-Sent Events** :
+- un flux de tokens à sens unique, c'est exactement le cas d'usage de SSE
+- du HTTP standard : authentification, cache et proxys fonctionnent sans effort
+- reconnexion automatique
+
+Les WebSockets ajoutent une connexion avec état qu'il faut ensuite dimensionner et répartir.`,
+      'Haiku 5.5': `SSE. C'est plus simple, ça se reconnecte tout seul, et les tokens d'un chat ne circulent que dans un sens. Les WebSockets si vous avez besoin de temps réel dans les deux sens.`,
+      'Open 70B': `Les deux marchent. SSE est plus simple pour streamer du texte du serveur vers le client. Les WebSockets sont bidirectionnels et conviennent mieux aux applications interactives. Beaucoup d'applications de chat utilisent SSE avec un POST séparé pour les messages de l'utilisateur.`,
+    } as Record<string, string>,
+    fallback: (prompt: string) => `À propos de **${prompt}** : restez simple, mesurez, puis itérez.`,
+    introPrompt: 'SSE ou WebSockets pour streamer les réponses d\'un chat ?',
+    introTopic: 'SSE ou WebSockets',
+    selfHosted: 'Auto-hébergé',
+    preferred: 'Préférée',
+    waiting: 'En attente du premier token',
+    reply: 'Répondre',
+    prefer: 'Préférer',
+    sendTo: (n: number) => `Envoyer à ${n} modèles`,
+    sideBySide: (n: number) => `${n} modèles côte à côte`,
+    votes: (n: number) => `${n} vote${n > 1 ? 's' : ''}`,
+    compare: 'Comparer',
+    newLabel: 'Nouveau',
+    welcomeTitle: 'Quel modèle répond le mieux ?',
+    welcomeSubtitle: 'Envoyez un même prompt à plusieurs modèles et comparez vitesse, coût et qualité.',
+    suggestions: ['Explique les CRDT en deux phrases', 'Écris une regex pour les dates ISO', 'Trouve un nom de CLI pour streamer des logs'],
+    votesSaved: 'Les votes sont enregistrés dans votre classement',
+  },
+});
 
 let picked: string[] = MODELS.slice(0, 3).map((m) => m.id);
 
 async function compare(api: ChatScriptApi, prompt: string) {
+  const t = copyOf(COPY);
   const a = api.assistant();
   const models = MODELS.filter((m) => picked.includes(m.id));
-  const answers: Answer[] = models.map((m) => ({ model: m.id, text: ANSWERS[m.id] ?? `On **${prompt}**: keep it simple, measure, then iterate.`, shown: 0, started: false, done: false, ttft: m.ttft, tps: m.tps, cost: m.cost }));
+  const answers: Answer[] = models.map((m) => ({ model: m.id, text: t.answers[m.id] ?? t.fallback(prompt), shown: 0, started: false, done: false, ttft: m.ttft, tps: m.tps, cost: m.cost }));
   const set = a.custom('compare', { answers: answers.map((x) => ({ ...x })), vote: null });
   // One clock for every column: each starts at its own TTFT, then advances at its own tokens/s.
   for (let t = 0; answers.some((x) => !x.done); t += 60) {
@@ -57,9 +112,10 @@ async function compare(api: ChatScriptApi, prompt: string) {
 
 async function intro(api: ChatScriptApi) {
   picked = MODELS.slice(0, 3).map((m) => m.id);
+  const t = copyOf(COPY);
   await api.sleep(500);
-  await api.user('SSE or WebSockets for streaming chat responses?', { type: true });
-  await compare(api, 'SSE or WebSockets');
+  await api.user(t.introPrompt, { type: true });
+  await compare(api, t.introTopic);
 }
 
 async function reply(api: ChatScriptApi, text: string) {
@@ -72,16 +128,17 @@ const modelOf = (id: string) => MODELS.find((m) => m.id === id)!;
 const answerId = (messageId: string, model: string) => `${messageId}:${model}`;
 
 function Column({ a, id, vote, best, onVote, onReply }: { a: Answer; id: string; vote: string | null; best: Record<string, string>; onVote: () => void; onReply: (ref: ReplyRef) => void }) {
+  const t = useCopy(COPY);
   const m = modelOf(a.model);
   const won = vote === a.model;
   const lost = vote !== null && !won;
   return (
     <Frame messageId={id} className={cn('min-w-[260px] flex-1 transition-opacity duration-300', won && 'border-emerald-500/40 bg-emerald-500/10', lost && 'opacity-60')}>
       <FrameHeader icon={<span className="size-2.5 rounded-full" style={{ backgroundColor: m.color }} />} title={m.id}>
-        {won ? <Badge tone="success"><Trophy /> Preferred</Badge> : <span className="text-caption-1-regular text-text-tertiary">{m.vendor}</span>}
+        {won ? <Badge tone="success"><Trophy /> {t.preferred}</Badge> : <span className="text-caption-1-regular text-text-tertiary">{m.vendor === 'Self-hosted' ? t.selfHosted : m.vendor}</span>}
       </FrameHeader>
       <FramePanel className="flex min-h-48 flex-1 flex-col px-3.5 py-3">
-        {a.started ? <Markdown text={a.text.slice(0, a.shown)} streaming={!a.done} className="text-body-2-regular leading-6" /> : <ThinkingIndicator label="Waiting for first token" small showTimer />}
+        {a.started ? <Markdown text={a.text.slice(0, a.shown)} streaming={!a.done} className="text-body-2-regular leading-6" /> : <ThinkingIndicator label={t.waiting} small showTimer />}
       </FramePanel>
       <FrameFooter className="flex-wrap gap-x-3 gap-y-1 text-caption-1-regular text-text-tertiary tabular-nums [&_svg]:size-3.5">
         <span className={cn('flex items-center gap-1', best.ttft === a.model && 'text-emerald-600 dark:text-emerald-400')}>
@@ -96,13 +153,13 @@ function Column({ a, id, vote, best, onVote, onReply }: { a: Answer; id: string;
         <span className="ms-auto flex items-center gap-0.5">
           {a.done && <CopyButton text={a.text} />}
           {a.done && (
-            <IconButton label="Reply" onClick={() => onReply({ id, text: excerptOf(a.text), label: a.model })}>
+            <IconButton label={t.reply} onClick={() => onReply({ id, text: excerptOf(a.text), label: a.model })}>
               <Reply />
             </IconButton>
           )}
           {a.done && vote === null && (
             <button type="button" onClick={onVote} className="flex h-7 items-center gap-1 rounded-lg border border-border-button-default bg-background-primary-default px-2 text-caption-1-medium text-text-primary shadow-xs transition-[scale] active:scale-95">
-              <Crown className="size-3.5" /> Prefer
+              <Crown className="size-3.5" /> {t.prefer}
             </button>
           )}
         </span>
@@ -112,6 +169,7 @@ function Column({ a, id, vote, best, onVote, onReply }: { a: Answer; id: string;
 }
 
 export default function ModelCompareTemplate() {
+  const t = useCopy(COPY);
   const chat = useChatEngine({ intro, reply });
   const [models, setModels] = useState<string[]>(picked);
   const [votes, setVotes] = useState<Record<string, string>>({});
@@ -131,13 +189,13 @@ export default function ModelCompareTemplate() {
       onSend={chat.send}
       onStop={chat.stop}
       busy={chat.busy}
-      placeholder={`Send to ${models.length} models`}
+      placeholder={t.sendTo(models.length)}
       status={
         <>
           <span className="flex items-center gap-1">
-            <Columns3 /> {models.length} models side by side
+            <Columns3 /> {t.sideBySide(models.length)}
           </span>
-          <span className="tabular-nums">{Object.keys(votes).length} votes</span>
+          <span className="tabular-nums">{t.votes(Object.keys(votes).length)}</span>
         </>
       }
     />
@@ -154,7 +212,7 @@ export default function ModelCompareTemplate() {
             <span className="grid size-7 place-items-center rounded-lg bg-text-primary text-background-primary-default">
               <Columns3 className="size-4" />
             </span>
-            <span className="hidden text-headline-medium sm:inline">Compare</span>
+            <span className="hidden text-headline-medium sm:inline">{t.compare}</span>
             <div className="scrollbar-none ms-1 flex min-w-0 items-center gap-1 overflow-x-auto">
               {MODELS.map((m) => {
                 const on = models.includes(m.id);
@@ -176,7 +234,7 @@ export default function ModelCompareTemplate() {
             <span className="ms-auto flex items-center gap-1">
               <HeaderTools />
               <HeaderButton outline onClick={chat.reset} className="hidden sm:flex">
-                New
+                {t.newLabel}
               </HeaderButton>
             </span>
           </>
@@ -184,9 +242,9 @@ export default function ModelCompareTemplate() {
         footer={!empty && <div className="mx-auto w-full max-w-3xl">{composer}</div>}
       >
         {empty ? (
-          <Welcome title="Which model answers best?" subtitle="Send one prompt to several models and compare speed, cost and quality.">
+          <Welcome title={t.welcomeTitle} subtitle={t.welcomeSubtitle}>
             <div className="mt-2 w-full max-w-2xl text-start">{composer}</div>
-            <Suggestions className="justify-center" items={['Explain CRDTs in two sentences', 'Write a regex for ISO dates', 'Name a CLI for streaming logs']} onPick={chat.send} />
+            <Suggestions className="justify-center" items={t.suggestions} onPick={chat.send} />
           </Welcome>
         ) : (
           chat.messages.map((m) => {
@@ -213,7 +271,7 @@ export default function ModelCompareTemplate() {
         )}
         {Object.keys(votes).length > 0 && !chat.busy && (
           <p className="flex items-center justify-center gap-1.5 text-caption-1-regular text-text-tertiary">
-            <Check className="size-3.5" /> Votes are saved to your leaderboard
+            <Check className="size-3.5" /> {t.votesSaved}
           </p>
         )}
       </ChatSurface>

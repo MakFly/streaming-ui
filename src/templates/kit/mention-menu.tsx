@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { AtSign, FileCode, FileImage, FileSpreadsheet, Layers, User, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { copyOf, defineCopy, useCopy } from './i18n';
 
 /* @mentions, shared by the composers that offer them: the candidates (files, people, sources, tools), their tints,
  * the menu listing what matches the "@query", and the toolbar's @ button. Mention draws a pick as a chip in its
@@ -13,41 +14,63 @@ export interface MentionCandidate {
   hint: string;
 }
 
+const COPY = defineCopy({
+  en: {
+    files: 'Files',
+    people: 'People',
+    sources: 'Sources',
+    tools: 'Tools',
+    projectRoot: 'Project root',
+    designLead: 'Design lead',
+    backend: 'Backend',
+    issuesAndCycles: 'Issues and cycles',
+    teamWiki: 'Team wiki',
+    liveSearch: 'Live search',
+    runCommand: 'Run a command',
+    openPage: 'Open a page',
+    menu: 'Mention',
+    mentionButton: 'Mention a file, person or source',
+  },
+  fr: {
+    files: 'Fichiers',
+    people: 'Personnes',
+    sources: 'Sources',
+    tools: 'Outils',
+    projectRoot: 'Racine du projet',
+    designLead: 'Lead design',
+    backend: 'Backend',
+    issuesAndCycles: 'Tickets et cycles',
+    teamWiki: "Wiki de l'équipe",
+    liveSearch: 'Recherche en direct',
+    runCommand: 'Lancer une commande',
+    openPage: 'Ouvrir une page',
+    menu: 'Mention',
+    mentionButton: 'Mentionner un fichier, une personne ou une source',
+  },
+});
+type CopyKey = keyof (typeof COPY)['en'];
+
+/* Titles and hints are getters: they read the locale at the moment they are used. */
+const cand = (label: string, kind: MentionKind, hint: string | CopyKey): MentionCandidate => ({
+  label,
+  kind,
+  get hint() {
+    return hint in COPY.en ? copyOf(COPY)[hint as CopyKey] : hint;
+  },
+});
+const group = (titleKey: CopyKey, kind: MentionKind, items: MentionCandidate[]) => ({
+  get title() {
+    return copyOf(COPY)[titleKey];
+  },
+  kind,
+  items,
+});
+
 export const MENTION_GROUPS: { title: string; kind: MentionKind; items: MentionCandidate[] }[] = [
-  {
-    title: 'Files',
-    kind: 'file',
-    items: [
-      { label: 'app.tsx', kind: 'file', hint: 'src/app.tsx' },
-      { label: 'schema.sql', kind: 'file', hint: 'db/schema.sql' },
-      { label: 'README.md', kind: 'file', hint: 'Project root' },
-    ],
-  },
-  {
-    title: 'People',
-    kind: 'person',
-    items: [
-      { label: 'Ana', kind: 'person', hint: 'Design lead' },
-      { label: 'Léo', kind: 'person', hint: 'Backend' },
-    ],
-  },
-  {
-    title: 'Sources',
-    kind: 'source',
-    items: [
-      { label: 'Linear', kind: 'source', hint: 'Issues and cycles' },
-      { label: 'Notion', kind: 'source', hint: 'Team wiki' },
-      { label: 'Web', kind: 'source', hint: 'Live search' },
-    ],
-  },
-  {
-    title: 'Tools',
-    kind: 'tool',
-    items: [
-      { label: 'Terminal', kind: 'tool', hint: 'Run a command' },
-      { label: 'Browser', kind: 'tool', hint: 'Open a page' },
-    ],
-  },
+  group('files', 'file', [cand('app.tsx', 'file', 'src/app.tsx'), cand('schema.sql', 'file', 'db/schema.sql'), cand('README.md', 'file', 'projectRoot')]),
+  group('people', 'person', [cand('Ana', 'person', 'designLead'), cand('Léo', 'person', 'backend')]),
+  group('sources', 'source', [cand('Linear', 'source', 'issuesAndCycles'), cand('Notion', 'source', 'teamWiki'), cand('Web', 'source', 'liveSearch')]),
+  group('tools', 'tool', [cand('Terminal', 'tool', 'runCommand'), cand('Browser', 'tool', 'openPage')]),
 ];
 
 /** Chip tints, one per kind; literal strings so Tailwind sees them. */
@@ -197,6 +220,7 @@ export function mentionMatches(query: string) {
 
 /** The listbox of matches. The field keeps focus (and aria-activedescendant points at `${id}-${active}`). */
 export function MentionMenu({ id, matches, active, onPick, onActive, style }: { id: string; matches: MentionMatches; active: number; onPick: (c: MentionCandidate) => void; onActive: (index: number) => void; style?: CSSProperties }) {
+  const t = useCopy(COPY);
   const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
     list.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
@@ -206,7 +230,7 @@ export function MentionMenu({ id, matches, active, onPick, onActive, style }: { 
       ref={list}
       id={id}
       role="listbox"
-      aria-label="Mention"
+      aria-label={t.menu}
       style={style}
       className="animate-in fade-in-0 slide-in-from-bottom-1 scrollbar-thin absolute z-30 max-h-64 w-64 overflow-y-auto rounded-xl border border-border-button-default bg-dropdown-background p-1 shadow-dropdown duration-150"
     >
@@ -243,14 +267,17 @@ export function MentionMenu({ id, matches, active, onPick, onActive, style }: { 
 }
 
 /** The toolbar's @: keeps the field's focus and selection, and lets the composer type the "@". */
-export const MentionButton = ({ onClick }: { onClick: () => void }) => (
+export function MentionButton({ onClick }: { onClick: () => void }) {
+  const t = useCopy(COPY);
+  return (
   <button
     type="button"
-    aria-label="Mention a file, person or source"
+    aria-label={t.mentionButton}
     onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}
     className="grid size-9 shrink-0 place-items-center rounded-full text-foreground-icon-secondary transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary"
   >
     <AtSign className="size-[18px]" />
   </button>
-);
+  );
+}

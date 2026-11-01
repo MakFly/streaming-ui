@@ -1,4 +1,4 @@
-/* Rebuild prompt for the model picker (/model-picker → Prompt): what it is, the one-line install from this site's
+/* Rebuild prompt for the model picker (/components/model-picker → Prompt): what it is, the one-line install from this site's
  * registry, then every source file it needs verbatim. provider-logos.ts is described, not inlined (≈38 KB of
  * data URIs). Raw files load only when the prompt is opened. */
 
@@ -60,7 +60,7 @@ export function ModelSlot() {
   for (const { path, code } of sources) L.push(`### \`${path}\``, '', fence(code, 'tsx'), '');
   L.push('### `src/components/composer/provider-logos.ts`', '');
   L.push(
-    'Exports `PROVIDER_LOGOS: Record<string, string>`, one SVG data URI per provider `file` id used in `PROVIDERS`: `openai`, `anthropic`, `perplexity`, `cursor`, `openrouter`, `deepseek`, `jina`, `ollama`, `gemini`, `meta`, `mistral`, `xai`, `qwen`, `groq`, `cohere`, `moonshot`, `zhipu`, `aws`. Monochrome black marks (dark mode inverts them), 18–20px. Use the providers\' own marks; the registry install ships the originals.',
+    'Exports `PROVIDER_LOGOS: Record<string, string>`, one SVG data URI per provider `file` id used in `PROVIDERS`: `openai`, `anthropic`, `perplexity`, `cursor`, `openrouter`, `deepseek`, `jina`, `ollama`, `gemini`, `meta`, `mistral`, `xai`, `qwen`, `groq`, `cohere`, `moonshot`, `zhipu`, `aws`. Brand-coloured marks, 18–20px; also exports `isMonoLogo(id)`, true for the plain black ones (OpenAI, Cursor, xAI…) that dark mode inverts. Use the providers\' own marks; the registry install ships the originals.',
     '',
   );
   L.push('## Acceptance checklist', '');

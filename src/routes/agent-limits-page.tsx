@@ -3,6 +3,7 @@ import { DocsPage, DocsPreview } from '@/components/docs/docs-page';
 import { CopyLine, InstallButton } from '@/components/composers/install-button';
 import { PromptButton } from '@/components/prompt-button';
 import { AgentLimitsCard, ContextMeter } from '@/templates/kit/agent-limits';
+import { CodeBlock } from '@/templates/kit/markdown';
 import { AGENT_LIMITS, applyHead } from '@/seo/routes';
 
 /* `/components/agent-limits-card`: the composer kit's budget widget on its own page, named as in BoardUI and
@@ -12,9 +13,18 @@ const loadPrompt = () => import('@/templates/agent-limits-prompt').then((m) => m
 
 const USAGE = `import { AgentLimitsCard, ContextMeter } from '@/components/composer/agent-limits';
 
-<AgentLimitsCard />                 // collapsed, sample data
-<AgentLimitsCard defaultOpen />     // breakdown open
-<ContextMeter percent={82} />       // the ring that opens it`;
+export function Budget() {
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Collapsed, with sample data */}
+      <AgentLimitsCard />
+      {/* Breakdown open on mount */}
+      <AgentLimitsCard defaultOpen />
+      {/* The ring that opens it, for a composer's toolbar */}
+      <ContextMeter percent={82} />
+    </div>
+  );
+}`;
 
 export function AgentLimitsPage() {
   useEffect(() => {
@@ -23,7 +33,7 @@ export function AgentLimitsPage() {
 
   return (
     <DocsPage
-      title="Agent Limits Card"
+      title="Agent Limits Card: context window and token usage"
       description="The agent budget widget: a context window bar segmented by token bucket with a used / max readout, and plan usage limits with reset times. Expanding the context window grows the card to reveal the per-bucket breakdown, free space, deferred buckets and collapsible member lists."
       actions={
         <>
@@ -48,7 +58,7 @@ export function AgentLimitsPage() {
           children: (
             <div className="flex flex-col gap-3">
               <CopyLine text={`npx shadcn@latest add ${typeof window === 'undefined' ? '' : window.location.origin}/r/agent-limits-card.json`} />
-              <pre className="scrollbar-thin overflow-x-auto rounded-2xl bg-background-secondary-default p-4 font-mono text-caption-1-regular text-text-secondary">{USAGE}</pre>
+              <CodeBlock lang="tsx" title="budget.tsx" code={USAGE} />
             </div>
           ),
         },

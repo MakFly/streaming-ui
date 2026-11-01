@@ -9,7 +9,7 @@ import { getTemplate, templates } from '@/templates/registry';
 import { paths } from '@/lib/paths';
 import { applyHead, isPromptPath } from '@/seo/routes';
 import { NotFound } from '@/routes/not-found';
-import { useDocsCrumbs } from '@/components/docs/in-docs';
+import { useDocsCrumbs, useDocsSubnav } from '@/components/docs/in-docs';
 
 const TemplateCode = lazy(() => import('@/components/template-code'));
 const buildPrompt = async (slug: string) => (await import('@/templates/prompt')).buildTemplatePrompt(getTemplate(slug)!);
@@ -35,6 +35,8 @@ export function TemplatePage() {
   const { slug } = useParams();
   const t = getTemplate(slug);
   useDocsCrumbs(t ? [{ label: t.name }] : []);
+  // Every template, nested under Templates in the sidebar.
+  useDocsSubnav({ item: 'Templates', links: templates.map((x) => ({ label: x.name, to: paths.template(x.slug), on: x.slug === slug })) });
   const navigate = useNavigate();
   const [tab, setTab] = useState<'preview' | 'code'>('preview');
   const [device, setDevice] = useState<Device>('desktop');

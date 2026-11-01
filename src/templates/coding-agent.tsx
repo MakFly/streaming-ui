@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Check, FileCode, FileDiff, FolderGit2, GitBranch, GitPullRequest, LoaderCircle, Pencil, Search, ShieldCheck, Terminal, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { copyOf, defineCopy, useCopy } from './kit/i18n';
 import { useChatEngine, type ChatScriptApi, type Message, type Part } from './kit/engine';
 import { CodeBlock, type DiffMark } from './kit/markdown';
 import { AssistantMessage, Badge, Canvas, ChatSurface, Composer, Frame, FrameHeader, FramePanel, Surface, HeaderTools, UserMessage, paneIn, textOf } from './kit/parts';
@@ -8,6 +9,89 @@ import { AssistantMessage, Badge, Canvas, ChatSurface, Composer, Frame, FrameHea
 /* Coding Agent — the agent plans, searches, reads and edits files, then runs the tests. The chat card shows
  * an Agent Progress plan and Trace lines; the workbench card follows along with the live diff
  * (a CodeBlock with +/− gutters) and the terminal. */
+
+const COPY = defineCopy({
+  en: {
+    userPrompt: "Add a dark mode toggle to the header that remembers the user's choice.",
+    planning: 'Planning',
+    thoughts: ['Theme is applied in layout.tsx via a data attribute', 'Need persistence and a system-preference fallback'],
+    plan: ['Find where the theme is applied', 'Persist the choice in localStorage', 'Add a ThemeToggle to the header', 'Run the test suite'],
+    searched: 'Searched',
+    read: 'Read',
+    ran: 'Ran',
+    searchArg: '"theme" in src/',
+    matches: '4 matches',
+    lines84: '84 lines',
+    lines20: '20 lines',
+    passed: '9 passed',
+    done: `Done. The header now has a **ThemeToggle**, and the choice survives a reload:
+
+- \`readTheme()\` prefers the saved value and falls back to the system setting.
+- \`applyTheme()\` toggles the \`dark\` class and stores the choice.
+- All 9 tests pass. Ready to open a pull request.`,
+    scoping: (q: string) => `Scoping: ${q}`,
+    applied: 'Applied. I also set `color-scheme` so native form controls and scrollbars follow the theme. Tests still pass.',
+    planTitle: 'Plan',
+    allDone: 'All done',
+    stepsLeft: (n: number) => `${n} step${n > 1 ? 's' : ''} left`,
+    changes: 'Changes',
+    terminal: 'Terminal',
+    createPr: 'Create PR',
+    new: 'new',
+    waiting: '$ waiting for the agent…',
+    emptyDiff: 'Edits appear here as the agent makes them.',
+    created: 'Created',
+    edited: 'Edited',
+    placeholder: 'Ask the agent to change something',
+    autoAccept: 'Auto-accept edits',
+    askBefore: 'Ask before edits',
+    filesChanged: (n: number) => `${n} file${n > 1 ? 's' : ''} changed`,
+    noChanges: 'No changes yet',
+    messages: (n: number) => `${n} messages`,
+    paneChat: 'chat',
+    paneChanges: 'changes',
+  },
+  fr: {
+    userPrompt: 'Ajoute un bouton de mode sombre dans l’en-tête qui garde en mémoire le choix de l’utilisateur.',
+    planning: 'Planification',
+    thoughts: ['Le thème est appliqué dans layout.tsx via un attribut data', 'Il faut de la persistance et un repli sur la préférence système'],
+    plan: ['Trouver où le thème est appliqué', 'Enregistrer le choix dans localStorage', 'Ajouter un ThemeToggle à l’en-tête', 'Lancer la suite de tests'],
+    searched: 'Recherche',
+    read: 'Lecture',
+    ran: 'Exécution',
+    searchArg: '« theme » dans src/',
+    matches: '4 résultats',
+    lines84: '84 lignes',
+    lines20: '20 lignes',
+    passed: '9 réussis',
+    done: `Terminé. L’en-tête a maintenant un **ThemeToggle**, et le choix survit à un rechargement :
+
+- \`readTheme()\` privilégie la valeur enregistrée et se replie sur le réglage du système.
+- \`applyTheme()\` bascule la classe \`dark\` et enregistre le choix.
+- Les 9 tests passent. Prêt à ouvrir une pull request.`,
+    scoping: (q: string) => `Cadrage : ${q}`,
+    applied: 'Appliqué. J’ai aussi défini `color-scheme` pour que les champs de formulaire natifs et les barres de défilement suivent le thème. Les tests passent toujours.',
+    planTitle: 'Plan',
+    allDone: 'Tout est fait',
+    stepsLeft: (n: number) => `${n} ${n > 1 ? 'étapes restantes' : 'étape restante'}`,
+    changes: 'Modifications',
+    terminal: 'Terminal',
+    createPr: 'Créer la PR',
+    new: 'nouveau',
+    waiting: '$ en attente de l’agent…',
+    emptyDiff: 'Les modifications apparaissent ici au fil de l’agent.',
+    created: 'Créé',
+    edited: 'Modifié',
+    placeholder: 'Demandez à l’agent de modifier quelque chose',
+    autoAccept: 'Accepter les modifications automatiquement',
+    askBefore: 'Demander avant de modifier',
+    filesChanged: (n: number) => `${n} fichier${n > 1 ? 's' : ''} modifié${n > 1 ? 's' : ''}`,
+    noChanges: 'Aucune modification',
+    messages: (n: number) => `${n} messages`,
+    paneChat: 'chat',
+    paneChanges: 'modifications',
+  },
+});
 
 type PlanItem = { t: string; s: 'todo' | 'active' | 'done' };
 type DiffLine = { k: DiffMark; t: string };
@@ -76,45 +160,40 @@ async function edit(api: ChatScriptApi, a: ReturnType<ChatScriptApi['assistant']
 }
 
 async function intro(api: ChatScriptApi) {
+  const t = copyOf(COPY);
   await api.sleep(500);
-  await api.user("Add a dark mode toggle to the header that remembers the user's choice.", { type: true });
+  await api.user(t.userPrompt, { type: true });
   const a = api.assistant();
-  await a.think('Planning', ['Theme is applied in layout.tsx via a data attribute', 'Need persistence and a system-preference fallback'], 600);
+  await a.think(t.planning, t.thoughts, 600);
   const plan: PlanItem[] = [
-    { t: 'Find where the theme is applied', s: 'active' },
-    { t: 'Persist the choice in localStorage', s: 'todo' },
-    { t: 'Add a ThemeToggle to the header', s: 'todo' },
-    { t: 'Run the test suite', s: 'todo' },
+    { t: t.plan[0], s: 'active' },
+    { t: t.plan[1], s: 'todo' },
+    { t: t.plan[2], s: 'todo' },
+    { t: t.plan[3], s: 'todo' },
   ];
   const setPlan = a.custom('plan', { items: plan });
   const step = (i: number) => {
     plan.forEach((p, j) => (p.s = j < i ? 'done' : j === i ? 'active' : 'todo'));
     setPlan({ items: plan.map((p) => ({ ...p })) });
   };
-  await a.tool('Searched', '"theme" in src/', { ms: 800, meta: '4 matches' });
-  await a.tool('Read', 'src/app/layout.tsx', { ms: 700, meta: '84 lines' });
+  await a.tool(t.searched, t.searchArg, { ms: 800, meta: t.matches });
+  await a.tool(t.read, 'src/app/layout.tsx', { ms: 700, meta: t.lines84 });
   step(1);
   await edit(api, a, 'src/lib/theme.ts', THEME_DIFF);
   step(2);
   await edit(api, a, 'src/components/theme-toggle.tsx', TOGGLE_DIFF, true);
   step(3);
-  await a.tool('Ran', 'npm test', { ms: 600, output: TEST_OUTPUT, lineMs: 160, meta: '9 passed' });
+  await a.tool(t.ran, 'npm test', { ms: 600, output: TEST_OUTPUT, lineMs: 160, meta: t.passed });
   step(4);
-  await a.stream(
-    `Done. The header now has a **ThemeToggle**, and the choice survives a reload:
-
-- \`readTheme()\` prefers the saved value and falls back to the system setting.
-- \`applyTheme()\` toggles the \`dark\` class and stores the choice.
-- All 9 tests pass. Ready to open a pull request.`,
-    28,
-  );
+  await a.stream(t.done, 28);
   a.done();
 }
 
 async function reply(api: ChatScriptApi, text: string) {
+  const t = copyOf(COPY);
   const a = api.assistant();
-  await a.think('Planning', [`Scoping: ${text.slice(0, 60)}`], 600);
-  await a.tool('Read', 'src/lib/theme.ts', { ms: 600, meta: '20 lines' });
+  await a.think(t.planning, [t.scoping(text.slice(0, 60))], 600);
+  await a.tool(t.read, 'src/lib/theme.ts', { ms: 600, meta: t.lines20 });
   await edit(api, a, 'src/lib/theme.ts', [
     { k: '@', t: '@@ -16,4 +16,5 @@' },
     { k: ' ', t: 'export function applyTheme(theme: Theme) {' },
@@ -122,15 +201,14 @@ async function reply(api: ChatScriptApi, text: string) {
     { k: '+', t: '  document.documentElement.style.colorScheme = theme;' },
     { k: ' ', t: '  try { localStorage.setItem(KEY, theme); } catch {}' },
   ]);
-  await a.tool('Ran', 'npm test', { ms: 500, output: TEST_OUTPUT.slice(-2), lineMs: 160, meta: '9 passed' });
-  await a.stream('Applied. I also set `color-scheme` so native form controls and scrollbars follow the theme. Tests still pass.', 28);
+  await a.tool(t.ran, 'npm test', { ms: 500, output: TEST_OUTPUT.slice(-2), lineMs: 160, meta: t.passed });
+  await a.stream(t.applied, 28);
   a.done();
 }
 
-const toolIcon = (name: string) => ({ Searched: <Search />, Read: <FileCode />, Ran: <Terminal /> })[name] ?? <FileCode />;
-
 /** Agent Progress: a ring that fills with the plan, rows that check off and strike through. */
 function Plan({ items }: { items: PlanItem[] }) {
+  const t = useCopy(COPY);
   const done = items.filter((i) => i.s === 'done').length;
   const left = items.length - done;
   const r = 6.75;
@@ -150,9 +228,9 @@ function Plan({ items }: { items: PlanItem[] }) {
           </svg>
           )
         }
-        title="Plan"
+        title={t.planTitle}
       >
-        <span className="text-caption-1-medium text-text-tertiary tabular-nums">{left ? `${left} step${left > 1 ? 's' : ''} left` : 'All done'}</span>
+        <span className="text-caption-1-medium text-text-tertiary tabular-nums">{left ? t.stepsLeft(left) : t.allDone}</span>
       </FrameHeader>
       <FramePanel>
         <ul className="flex flex-col py-1.5">
@@ -186,12 +264,13 @@ const Stat = ({ added, removed }: { added: number; removed: number }) => (
 );
 
 function Workbench({ messages, busy, tab, setTab, file, setFile, ready }: { messages: Message[]; busy: boolean; tab: 'diff' | 'terminal'; setTab: (t: 'diff' | 'terminal') => void; file: string | null; setFile: (f: string) => void; ready: boolean }) {
+  const t = useCopy(COPY);
   const diffs = useMemo(() => {
     const byFile = new Map<string, DiffPart>();
     for (const m of messages) for (const p of m.parts) if (p.kind === 'custom' && p.type === 'diff') byFile.set((p as DiffPart).data.file, p as DiffPart);
     return [...byFile.values()];
   }, [messages]);
-  const runs = useMemo(() => messages.flatMap((m) => m.parts.filter((p): p is Extract<Part, { kind: 'tool' }> => p.kind === 'tool' && p.name === 'Ran')), [messages]);
+  const runs = useMemo(() => messages.flatMap((m) => m.parts.filter((p): p is Extract<Part, { kind: 'tool' }> => p.kind === 'tool' && p.name === t.ran)), [messages]);
   const current = diffs.find((d) => d.data.file === file) ?? diffs[diffs.length - 1];
   const total = diffs.reduce((a, d) => ({ added: a.added + d.data.added, removed: a.removed + d.data.removed }), { added: 0, removed: 0 });
   const seg = (on: boolean) => cn('flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-body-2-medium transition-colors [&_svg]:size-4', on ? 'bg-background-primary-default text-text-primary shadow-xs' : 'text-text-secondary hover:text-text-primary');
@@ -201,18 +280,18 @@ function Workbench({ messages, busy, tab, setTab, file, setFile, ready }: { mess
       <div className="flex h-12 shrink-0 items-center gap-2 px-3">
         <div role="tablist" className="flex rounded-[10px] bg-background-tertiary-default p-0.5">
           <button type="button" role="tab" aria-selected={tab === 'diff'} className={seg(tab === 'diff')} onClick={() => setTab('diff')}>
-            <FileDiff /> Changes
+            <FileDiff /> {t.changes}
             {diffs.length > 0 && <Badge tone="neutral" className="h-[18px] px-1">{diffs.length}</Badge>}
           </button>
           <button type="button" role="tab" aria-selected={tab === 'terminal'} className={seg(tab === 'terminal')} onClick={() => setTab('terminal')}>
-            <Terminal /> Terminal
+            <Terminal /> {t.terminal}
           </button>
         </div>
         {busy && <LoaderCircle className="size-4 animate-spin text-text-tertiary" />}
         <span className="ms-auto flex items-center gap-2">
           {diffs.length > 0 && <Stat {...total} />}
           <button type="button" disabled={!ready} className="flex h-8 items-center gap-1.5 rounded-lg bg-text-primary px-3 text-body-2-medium text-background-primary-default shadow-xs transition-opacity disabled:opacity-30">
-            <GitPullRequest className="size-4" /> Create PR
+            <GitPullRequest className="size-4" /> {t.createPr}
           </button>
         </span>
       </div>
@@ -230,7 +309,7 @@ function Workbench({ messages, busy, tab, setTab, file, setFile, ready }: { mess
                   >
                     {d.data.shown < d.data.lines.length ? <LoaderCircle className="size-3 animate-spin" /> : <FileCode className="size-3.5" />}
                     {d.data.file.split('/').pop()}
-                    {d.data.fresh && <Badge tone="success" className="h-4 px-1 text-[10px]">new</Badge>}
+                    {d.data.fresh && <Badge tone="success" className="h-4 px-1 text-[10px]">{t.new}</Badge>}
                   </button>
                 ))}
               </div>
@@ -250,7 +329,7 @@ function Workbench({ messages, busy, tab, setTab, file, setFile, ready }: { mess
           ) : (
             <div className="grid flex-1 place-items-center rounded-xl border border-dashed border-border-button-default text-center">
               <p className="flex flex-col items-center gap-2 text-body-2-regular text-text-tertiary">
-                <FileDiff className="size-5" /> Edits appear here as the agent makes them.
+                <FileDiff className="size-5" /> {t.emptyDiff}
               </p>
             </div>
           )
@@ -263,7 +342,7 @@ function Workbench({ messages, busy, tab, setTab, file, setFile, ready }: { mess
               <span className="ms-2 font-mono text-caption-1-regular text-[#a1a1aa]">zsh — acme/web</span>
             </div>
             <pre className="scrollbar-thin min-h-0 flex-1 overflow-auto p-4 font-mono text-[12.5px] leading-6 text-[#d4d4d8] [font-variant-ligatures:none]">
-              {runs.length === 0 && <span className="text-[#71717a]">$ waiting for the agent…</span>}
+              {runs.length === 0 && <span className="text-[#71717a]">{t.waiting}</span>}
               {runs.map((t) => (
                 <div key={t.id} className="mb-3">
                   <div>
@@ -285,6 +364,7 @@ function Workbench({ messages, busy, tab, setTab, file, setFile, ready }: { mess
 }
 
 export default function CodingAgentTemplate() {
+  const t = useCopy(COPY);
   const chat = useChatEngine({ intro, reply });
   const [tab, setTab] = useState<'diff' | 'terminal'>('diff');
   const [file, setFile] = useState<string | null>(null);
@@ -292,6 +372,8 @@ export default function CodingAgentTemplate() {
   const [auto, setAuto] = useState(true);
   const ready = !chat.busy && chat.messages.some((m) => m.role === 'assistant' && m.done);
   const files = new Set(chat.messages.flatMap((m) => m.parts.filter((p) => p.kind === 'custom' && p.type === 'diff').map((p) => (p as DiffPart).data.file))).size;
+
+  const toolIcon = (name: string) => ({ [t.searched]: <Search />, [t.read]: <FileCode />, [t.ran]: <Terminal /> })[name] ?? <FileCode />;
 
   const renderCustom = (p: Extract<Part, { kind: 'custom' }>) => {
     if (p.type === 'plan') return <Plan items={p.data.items as PlanItem[]} />;
@@ -310,7 +392,7 @@ export default function CodingAgentTemplate() {
         >
           <span className="grid size-4 shrink-0 place-items-center">{writing ? <LoaderCircle className="size-4 animate-spin" /> : <Pencil className="size-4" />}</span>
           <span className={cn('min-w-0 truncate', writing && 'agent-progress-loading-text')}>
-            <span className="text-text-primary">{d.data.fresh ? 'Created' : 'Edited'}</span>
+            <span className="text-text-primary">{d.data.fresh ? t.created : t.edited}</span>
             <span className="ms-1.5 font-mono text-[12.5px] underline decoration-separator-border underline-offset-4">{d.data.file}</span>
           </span>
           <Stat added={d.data.added} removed={d.data.removed} />
@@ -350,7 +432,7 @@ export default function CodingAgentTemplate() {
             onSend={chat.send}
             onStop={chat.stop}
             busy={chat.busy}
-            placeholder="Ask the agent to change something"
+            placeholder={t.placeholder}
             tools={
               <button
                 type="button"
@@ -358,15 +440,15 @@ export default function CodingAgentTemplate() {
                 className={cn('flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-body-2-medium transition-colors', auto ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'border-border-button-default text-text-secondary hover:bg-background-primary-hover')}
               >
                 {auto ? <Zap className="size-4" /> : <ShieldCheck className="size-4" />}
-                {auto ? 'Auto-accept edits' : 'Ask before edits'}
+                {auto ? t.autoAccept : t.askBefore}
               </button>
             }
             status={
               <>
                 <span className="flex items-center gap-1">
-                  <GitBranch /> {files ? `${files} file${files > 1 ? 's' : ''} changed` : 'No changes yet'}
+                  <GitBranch /> {files ? t.filesChanged(files) : t.noChanges}
                 </span>
-                <span className="tabular-nums">{chat.messages.length} messages</span>
+                <span className="tabular-nums">{t.messages(chat.messages.length)}</span>
               </>
             }
           />
@@ -397,11 +479,12 @@ export default function CodingAgentTemplate() {
 }
 
 function PaneSwitch({ pane, setPane }: { pane: 'chat' | 'changes'; setPane: (p: 'chat' | 'changes') => void }) {
+  const t = useCopy(COPY);
   return (
     <div className="flex rounded-[10px] bg-background-tertiary-default p-0.5 lg:hidden">
       {(['chat', 'changes'] as const).map((p) => (
         <button key={p} type="button" onClick={() => setPane(p)} className={cn('h-7 rounded-lg px-2.5 text-caption-1-medium capitalize transition-colors', pane === p ? 'bg-background-primary-default text-text-primary shadow-xs' : 'text-text-secondary')}>
-          {p}
+          {p === 'chat' ? t.paneChat : t.paneChanges}
         </button>
       ))}
     </div>

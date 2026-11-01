@@ -5,6 +5,36 @@ import { cn } from '@/lib/utils';
 import { ComposerLoader } from '../primitives';
 import { AttachmentStrip } from '../attachments';
 import { withAttachments, AddButton, Field, SendButton, Status, useField, type VariantProps } from '../composer-kit';
+import { defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({
+  en: {
+    styles: { auto: 'Auto', photo: 'Photo', illustration: 'Illustration', '3d': '3D', anime: 'Anime' },
+    drop: 'Drop reference images',
+    aspect: 'Aspect ratio',
+    stylize: 'Stylize',
+    chaos: 'Chaos',
+    stylizeChaos: (s: number, c: number) => `Stylize ${s}, chaos ${c}`,
+    stylizeHint: "Low follows the prompt closely; high leans on the model's own taste.",
+    variety: 'Variety (chaos)',
+    varietyHint: 'How different the images in one batch are from each other.',
+    style: 'Style',
+    perPrompt: 'Images per prompt',
+  },
+  fr: {
+    styles: { auto: 'Auto', photo: 'Photo', illustration: 'Illustration', '3d': '3D', anime: 'Anime' },
+    drop: 'Déposez les images de référence',
+    aspect: 'Format',
+    stylize: 'Stylisation',
+    chaos: 'Chaos',
+    stylizeChaos: (s: number, c: number) => `Stylisation ${s}, chaos ${c}`,
+    stylizeHint: 'Une valeur basse suit le prompt de près, une valeur haute laisse parler le goût du modèle.',
+    variety: 'Variété (chaos)',
+    varietyHint: 'À quel point les images d\'un même lot diffèrent les unes des autres.',
+    style: 'Style',
+    perPrompt: 'Images par prompt',
+  },
+});
 
 /* Media composer — an image-generation prompt bar. References use the Composer
  * Attachments strip above the prompt (press + or drop images on the card), then a row
@@ -25,11 +55,11 @@ const RATIOS = [
 type Ratio = (typeof RATIOS)[number]['id'];
 
 const STYLES = [
-  { id: 'auto', label: 'Auto', swatch: 'bg-gradient-to-br from-text-tertiary/40 via-background-tertiary-default to-text-tertiary/20' },
-  { id: 'photo', label: 'Photo', swatch: 'bg-gradient-to-br from-amber-200 via-orange-400 to-sky-700' },
-  { id: 'illustration', label: 'Illustration', swatch: 'bg-gradient-to-br from-rose-300 via-fuchsia-300 to-indigo-300' },
-  { id: '3d', label: '3D', swatch: 'bg-gradient-to-br from-cyan-300 via-blue-500 to-violet-700' },
-  { id: 'anime', label: 'Anime', swatch: 'bg-gradient-to-br from-pink-300 via-sky-300 to-emerald-300' },
+  { id: 'auto', swatch: 'bg-gradient-to-br from-text-tertiary/40 via-background-tertiary-default to-text-tertiary/20' },
+  { id: 'photo', swatch: 'bg-gradient-to-br from-amber-200 via-orange-400 to-sky-700' },
+  { id: 'illustration', swatch: 'bg-gradient-to-br from-rose-300 via-fuchsia-300 to-indigo-300' },
+  { id: '3d', swatch: 'bg-gradient-to-br from-cyan-300 via-blue-500 to-violet-700' },
+  { id: 'anime', swatch: 'bg-gradient-to-br from-pink-300 via-sky-300 to-emerald-300' },
 ] as const;
 type Style = (typeof STYLES)[number]['id'];
 
@@ -95,11 +125,13 @@ function Slider({ label, value, min, max, step, onChange, hint }: { label: strin
 /* ------------------------------------------------------------------ composer */
 
 export function MediaComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
   const [params, setParams] = useState<Params>(DEFAULTS);
   const set = <K extends keyof Params>(k: K, v: Params[K]) => setParams((s) => ({ ...s, [k]: v }));
   const field = useField({ value: p.value, busy: p.busy, onStop: p.onStop, onSend: (v) => p.onSend(withFlags(v, params)) });
   const [drag, setDrag] = useState(false);
   const style = STYLES.find((s) => s.id === params.style)!;
+  const styleLabel = t.styles[style.id];
   const ratio = RATIOS.find((r) => r.id === params.ar)!;
 
   return (
@@ -129,7 +161,7 @@ export function MediaComposerView(p: VariantProps) {
         >
           {drag && (
             <div className="pointer-events-none absolute inset-1 z-10 grid place-items-center rounded-xl border-2 border-dashed border-accent-500/60 bg-background-primary-default/80 text-body-2-medium text-accent-500 backdrop-blur-[2px]">
-              Drop reference images
+              {t.drop}
             </div>
           )}
           {/* References: the Composer Attachments strip, as in every other composer. */}
@@ -138,10 +170,10 @@ export function MediaComposerView(p: VariantProps) {
           <div className="flex items-center gap-1.5">
             <AddButton onClick={p.att.add} />
             <div className="scrollbar-none -mx-0.5 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto px-0.5 py-0.5">
-              <ChipPopover label={`Aspect ratio ${params.ar}`} trigger={<><RatioBox w={ratio.w} h={ratio.h} max={14} className="text-foreground-icon-secondary" /><span className="tabular-nums">{params.ar}</span></>} className="w-[272px]">
+              <ChipPopover label={`${t.aspect} ${params.ar}`} trigger={<><RatioBox w={ratio.w} h={ratio.h} max={14} className="text-foreground-icon-secondary" /><span className="tabular-nums">{params.ar}</span></>} className="w-[272px]">
                 <div className="flex flex-col gap-2">
-                  <span className={heading}>Aspect ratio</span>
-                  <div role="radiogroup" aria-label="Aspect ratio" className="grid grid-cols-3 gap-1.5">
+                  <span className={heading}>{t.aspect}</span>
+                  <div role="radiogroup" aria-label={t.aspect} className="grid grid-cols-3 gap-1.5">
                     {RATIOS.map((r) => (
                       <button
                         key={r.id}
@@ -164,33 +196,33 @@ export function MediaComposerView(p: VariantProps) {
                 </div>
               </ChipPopover>
               <ChipPopover
-                label={`Stylize ${params.stylize}, chaos ${params.chaos}`}
+                label={t.stylizeChaos(params.stylize, params.chaos)}
                 trigger={
                   <>
                     <SlidersHorizontal />
-                    <span className="tabular-nums">Stylize {params.stylize}</span>
-                    {params.chaos > 0 && <span className="text-text-tertiary tabular-nums">· Chaos {params.chaos}</span>}
+                    <span className="tabular-nums">{t.stylize} {params.stylize}</span>
+                    {params.chaos > 0 && <span className="text-text-tertiary tabular-nums">· {t.chaos} {params.chaos}</span>}
                   </>
                 }
                 className="flex w-[280px] flex-col gap-4"
               >
-                <Slider label="Stylize" value={params.stylize} min={0} max={1000} step={25} onChange={(v) => set('stylize', v)} hint="Low follows the prompt closely; high leans on the model's own taste." />
-                <Slider label="Variety (chaos)" value={params.chaos} min={0} max={100} step={5} onChange={(v) => set('chaos', v)} hint="How different the images in one batch are from each other." />
+                <Slider label={t.stylize} value={params.stylize} min={0} max={1000} step={25} onChange={(v) => set('stylize', v)} hint={t.stylizeHint} />
+                <Slider label={t.variety} value={params.chaos} min={0} max={100} step={5} onChange={(v) => set('chaos', v)} hint={t.varietyHint} />
               </ChipPopover>
-              <ChipPopover label={`Style ${style.label}`} trigger={<><span aria-hidden="true" className={cn('size-4 shrink-0 rounded-full ring-1 ring-border-button-default', style.swatch)} /><span>{style.label}</span></>} className="w-[248px]">
+              <ChipPopover label={`${t.style} ${styleLabel}`} trigger={<><span aria-hidden="true" className={cn('size-4 shrink-0 rounded-full ring-1 ring-border-button-default', style.swatch)} /><span>{styleLabel}</span></>} className="w-[248px]">
                 <div className="flex flex-col gap-2">
-                  <span className={heading}>Style</span>
-                  <div role="radiogroup" aria-label="Style" className="grid grid-cols-5 gap-1">
+                  <span className={heading}>{t.style}</span>
+                  <div role="radiogroup" aria-label={t.style} className="grid grid-cols-5 gap-1">
                     {STYLES.map((s) => (
                       <button key={s.id} type="button" role="radio" aria-checked={params.style === s.id} onClick={() => set('style', s.id)} className="group/sw flex cursor-pointer flex-col items-center gap-1 rounded-lg p-1 outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
                         <span className={cn('size-9 rounded-lg ring-1 transition-[box-shadow,scale] group-active/sw:scale-95', s.swatch, params.style === s.id ? 'ring-2 ring-accent-500 ring-offset-2 ring-offset-background-primary-default' : 'ring-border-button-default group-hover/sw:ring-border-button-hover')} />
-                        <span className={cn('max-w-full truncate text-[10.5px] leading-4 font-medium', params.style === s.id ? 'text-text-primary' : 'text-text-tertiary')}>{s.label}</span>
+                        <span className={cn('max-w-full truncate text-[10.5px] leading-4 font-medium', params.style === s.id ? 'text-text-primary' : 'text-text-tertiary')}>{t.styles[s.id]}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               </ChipPopover>
-              <div role="radiogroup" aria-label="Images per prompt" className="flex h-8 shrink-0 items-center gap-0.5 rounded-full bg-background-tertiary-default p-0.5">
+              <div role="radiogroup" aria-label={t.perPrompt} className="flex h-8 shrink-0 items-center gap-0.5 rounded-full bg-background-tertiary-default p-0.5">
                 {BATCHES.map((b) => (
                   <button
                     key={b}

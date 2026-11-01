@@ -6,8 +6,9 @@ import { lookTarget, TURN_TIME } from '@/vendor/bloub/gaze';
 import { DEFAULT_EXPRESSION, EXPRESSION_BY_ID, type ExpressionId } from '@/vendor/bloub/expressions';
 import { COLOR_BY_ID, DEFAULT_COLOR, DEFAULT_SHAPE, SHAPE_BY_ID, mixHex, type ColorId, type ShapeId } from '@/vendor/bloub/skins';
 import { DEMI_VIEWBOX as VB, RAYON as R } from '@/vendor/bloub/repere';
-import { STATE_BY_ID, type StateId } from '@/vendor/bloub/states';
+import { SEQUENCE, STATE_BY_ID, type StateId } from '@/vendor/bloub/states';
 import { useTheme } from '@/providers/theme-provider';
+import { copyOf, defineCopy } from './i18n';
 
 /* React port of bloub's <BloubBot> (github.com/jeremy-prt/bloub, MIT). The engine in src/vendor/bloub is
  * framework- and clock-free: `engine.sample(t)` is a pure function of time, so this component only owns the
@@ -20,13 +21,62 @@ export { EXPRESSIONS } from '@/vendor/bloub/expressions';
 export { SEQUENCE, POSES } from '@/vendor/bloub/states';
 export type { ColorId, ShapeId, ExpressionId, StateId };
 
-/** English names, from bloub's own en locale. */
-export const BLOUB_NAMES: Record<string, string> = {
+/** Our bloub characters. Each one is a body silhouette from the skin catalogue, so it keeps every animation,
+ * colour and expression: the character only decides the shape the bloub rests in. */
+export const BLOUBS = [
+  { id: 'default', shape: 'cercle' },
+  { id: 'chat', shape: 'chat' },
+  { id: 'chien', shape: 'chien' },
+  { id: 'fleur', shape: 'fleur' },
+] as const satisfies readonly { id: string; shape: ShapeId }[];
+export type BloubVariant = (typeof BLOUBS)[number]['id'];
+const VARIANT_SHAPE = new Map<string, ShapeId>(BLOUBS.map((b) => [b.id, b.shape]));
+
+/** Silhouettes that ARE the character: an animation that swaps the body (egg, hexagon, orbit...) would drop the
+ * ears or petals, so a character only plays the states that keep the chosen body (`baseBody`). */
+const CHARACTER_SHAPES = new Set<string>(BLOUBS.filter((b) => b.id !== 'default').map((b) => b.shape));
+/** Alert, exclamation and sleep draw their own glyph instead of the body; a character plays our body-keeping
+ * versions, with the "!" or the "Z"s beside its head (src/vendor/bloub/states.ts). */
+const CHARACTER_TWIN: Partial<Record<StateId, StateId>> = { alert: 'alertBody', exclaim: 'exclaimBody', sleep: 'sleepBody' };
+const keepsBody = (s: StateId) => STATE_BY_ID.get(s)?.baseBody === true || s in CHARACTER_TWIN;
+/** What a character plays instead of a body-swapping state: the closest state that keeps its silhouette. */
+const CHARACTER_FALLBACK: Partial<Record<StateId, StateId>> = { thinking: 'swirl', orbit: 'swirl', burst: 'swirl', comet: 'swirl' };
+
+/** The animations a shape or character can play: all 14, or only the body-keeping ones for a character. */
+export function statesFor(shapeOrVariant: string): StateId[] {
+  const shape = VARIANT_SHAPE.get(shapeOrVariant) ?? shapeOrVariant;
+  return CHARACTER_SHAPES.has(shape) ? SEQUENCE.filter(keepsBody) : SEQUENCE;
+}
+
+/** The state actually played: `state` itself, or its stand-in when a character cannot play it. */
+export function stateFor(state: StateId, shapeOrVariant: string): StateId {
+  const shape = VARIANT_SHAPE.get(shapeOrVariant) ?? shapeOrVariant;
+  if (!CHARACTER_SHAPES.has(shape) || keepsBody(state)) return state;
+  return CHARACTER_FALLBACK[state] ?? 'idle';
+}
+
+const AVATAR = defineCopy({ en: { label: 'Agent avatar' }, fr: { label: "Avatar de l'agent" } });
+const NAMES = defineCopy<Record<string, string>>({
+  en: {
   idle: 'Idle', thinking: 'Thinking', wink: 'Wink', wide: 'Wide eyes', alert: 'Alert', notify: 'Notification', exclaim: 'Exclamation', sleep: 'Sleep', egg: 'Egg', hexagon: 'Hexagon', play: 'Play', orbit: 'Orbit', burst: 'Burst', comet: 'Comet', swirl: 'Swirl',
   cercle: 'Circle', galet: 'Pebble', squircle: 'Squircle', capsule: 'Capsule', triangle: 'Triangle', hexagone: 'Hexagon', nuage: 'Cloud', goutte: 'Droplet',
+  default: 'Bloub', chat: 'Cat', chien: 'Dog', fleur: 'Flower',
   encre: 'Ink', creme: 'Cream', brun: 'Brown', rouge: 'Red', orange: 'Orange', ambre: 'Amber', vert: 'Green', turquoise: 'Turquoise', bleu: 'Blue', violet: 'Purple', rose: 'Pink', gris: 'Grey',
   neutre: 'Neutral', attentif: 'Attentive', surpris: 'Surprised', excite: 'Excited', heureux: 'Happy', hilare: 'Laughing', colere: 'Angry', triste: 'Sad', effraye: 'Scared', mefiant: 'Suspicious', confus: 'Confused', curieux: 'Curious', fier: 'Proud', timide: 'Shy', blase: 'Unimpressed', somnolent: 'Sleepy',
-};
+},
+  fr: {
+  idle: 'Repos', thinking: 'Réflexion', wink: 'Clin d\'œil', wide: 'Grands yeux', alert: 'Alerte', notify: 'Notification', exclaim: 'Exclamation', sleep: 'Sommeil', egg: 'Œuf', hexagon: 'Hexagone', play: 'Lecture', orbit: 'Orbite', burst: 'Éclat', comet: 'Comète', swirl: 'Tourbillon',
+  cercle: 'Cercle', galet: 'Galet', squircle: 'Squircle', capsule: 'Capsule', triangle: 'Triangle', hexagone: 'Hexagone', nuage: 'Nuage', goutte: 'Goutte',
+  default: 'Bloub', chat: 'Chat', chien: 'Chien', fleur: 'Fleur',
+  encre: 'Encre', creme: 'Crème', brun: 'Brun', rouge: 'Rouge', orange: 'Orange', ambre: 'Ambre', vert: 'Vert', turquoise: 'Turquoise', bleu: 'Bleu', violet: 'Violet', rose: 'Rose', gris: 'Gris',
+  neutre: 'Neutre', attentif: 'Attentif', surpris: 'Surpris', excite: 'Excité', heureux: 'Heureux', hilare: 'Hilare', colere: 'En colère', triste: 'Triste', effraye: 'Effrayé', mefiant: 'Méfiant', confus: 'Confus', curieux: 'Curieux', fier: 'Fier', timide: 'Timide', blase: 'Blasé', somnolent: 'Somnolent',
+},
+});
+
+/** Names of the states, shapes, colours and expressions, in the current language at the moment each is read. */
+export const BLOUB_NAMES: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get: (_, id) => (typeof id === 'string' ? copyOf(NAMES)[id] : undefined),
+});
 
 /** What the eye holes show: the theme's background-secondary (chat surfaces) or background-primary (cards, panels). */
 const PAPER = {
@@ -37,6 +87,9 @@ const PAPER = {
 export interface BloubProps {
   state?: StateId;
   size?: number;
+  /** One of our characters (default, chat, chien, fleur). Wins over `shape`. A character only plays the states
+   * that keep its body; any other `state` is replaced by its closest stand-in (`stateFor`). */
+  variant?: BloubVariant;
   shape?: ShapeId | string;
   color?: ColorId | string;
   expression?: ExpressionId | string;
@@ -50,7 +103,13 @@ export interface BloubProps {
   className?: string;
 }
 
-export function Bloub({ state = 'idle', size = 40, shape = DEFAULT_SHAPE, color = DEFAULT_COLOR, expression = DEFAULT_EXPRESSION, paper = 'surface', frozenAt, follow = false, label = 'Agent avatar', className }: BloubProps) {
+export function Bloub({ variant, ...props }: BloubProps) {
+  const shape = (variant && VARIANT_SHAPE.get(variant)) ?? props.shape ?? DEFAULT_SHAPE;
+  const state = stateFor(props.state ?? 'idle', shape);
+  return <BloubSvg {...props} shape={shape} state={(CHARACTER_SHAPES.has(shape) && CHARACTER_TWIN[state]) || state} />;
+}
+
+function BloubSvg({ state = 'idle', size = 40, shape = DEFAULT_SHAPE, color = DEFAULT_COLOR, expression = DEFAULT_EXPRESSION, paper = 'surface', frozenAt, follow = false, label = copyOf(AVATAR).label, className }: BloubProps) {
   const { theme } = useTheme();
   const bg = paper === 'surface' ? PAPER.surface[theme] : paper === 'panel' ? PAPER.panel[theme] : paper;
   const ink = COLOR_BY_ID.get(color)?.hex ?? '#0a0a0c';

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, BookOpen, Compass, ExternalLink, Globe, Library, Lock, PanelRightClose, Plus, Quote, RotateCw, Search, Share, Telescope, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { copyOf, defineCopy, useCopy } from './kit/i18n';
 import { useChatEngine, type ChatScriptApi, type Message, type Part, type ReplyRef } from './kit/engine';
 import { Cite, Markdown } from './kit/markdown';
 import { AgentLog } from './kit/primitives';
@@ -16,108 +17,272 @@ type Step = { q: string; status: 'running' | 'done'; n?: number };
 /** A source and the page the side browser renders for it; `quote` is the passage the answer cites, highlighted on load. */
 type Source = { title: string; domain: string; path: string; site: string; color: string; snippet: string; crumbs: string; byline: string; body: string[]; quote: string };
 
-const SOURCES: Source[] = [
-  {
-    title: 'Using server-sent events',
-    domain: 'developer.mozilla.org',
-    path: '/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events',
-    site: 'MDN Web Docs',
-    color: '#0f172a',
-    snippet: 'Developing a web application that uses server-sent events is straightforward…',
-    crumbs: 'References › Web APIs › Server-sent events',
-    byline: 'MDN contributors · Updated Jul 2026 · 6 min read',
-    body: [
-      'Server-sent events let a server push text to the page over a single long-lived HTTP response. The browser exposes them through the EventSource interface, and the payload is plain UTF-8 lines prefixed with field names such as data, event and id.',
-      '## Receiving events',
-      'Create an EventSource with the URL of the stream, then listen for message events. Each message arrives as soon as the server flushes it, so the page can render tokens one after the other without waiting for the response to end.',
-      '## Reconnection',
-      'Unlike a fetch call, the stream is resilient by default. If the connection drops, the browser reconnects on its own and resends the ID of the last event it received, so the server can resume where it left off.',
-      'Because events travel one way, send user input with a regular POST and keep the event stream for what the server has to say.',
-    ],
-    quote: 'If the connection drops, the browser reconnects on its own and resends the ID of the last event it received',
-  },
-  {
-    title: 'Streaming responses with the Fetch API',
-    domain: 'web.dev',
-    path: '/articles/streams',
-    site: 'web.dev',
-    color: '#2563eb',
-    snippet: 'Streams let you start processing data as soon as it arrives…',
-    crumbs: 'Articles › Performance',
-    byline: 'Chrome DevRel · Mar 2026 · 9 min read',
-    body: [
-      'A response body is a ReadableStream. Instead of awaiting the whole payload with json() or text(), you can read it chunk by chunk and update the interface as each piece lands.',
-      '## Why it matters',
-      'Showing the first chunk as soon as it arrives makes the page feel ready long before the response has finished downloading. On slow networks the gap between the first chunk and the last can be several seconds.',
-      '## Decoding text',
-      'Pipe the body through a TextDecoderStream to get strings instead of bytes, then append each string to the state that renders the answer. Keep the container height stable so the text does not push the layout around as it grows.',
-    ],
-    quote: 'Showing the first chunk as soon as it arrives makes the page feel ready long before the response has finished downloading',
-  },
-  {
-    title: 'How we cut time-to-first-token by 40%',
-    domain: 'engineering.linear.app',
-    path: '/time-to-first-token',
-    site: 'Linear Engineering',
-    color: '#5e6ad2',
-    snippet: 'Perceived latency is dominated by the first visible token…',
-    crumbs: 'Engineering › Performance',
-    byline: 'Platform team · Feb 2026 · 7 min read',
-    body: [
-      'When we shipped AI search, the median answer took four seconds. People abandoned it far more than the numbers suggested they should, and almost all of the drop-off happened before the first word appeared.',
-      '## Measuring the right thing',
-      'We stopped tracking total response time and started tracking time to first visible token. Moving the first flush earlier in the pipeline cut that number by 40% without making the full answer any faster.',
-      '## Showing the work',
-      'Showing what the agent was doing during the search, as long as each step reflected real work, cut abandoned queries more than any backend change. Fake progress had the opposite effect once people noticed it never matched the result.',
-      'We also reserved space for the answer before it streamed, so nothing below it jumped as the text grew.',
-    ],
-    quote: 'Showing what the agent was doing during the search, as long as each step reflected real work, cut abandoned queries more than any backend change',
-  },
-  {
-    title: 'Perceived performance in chat interfaces',
-    domain: 'nngroup.com',
-    path: '/articles/perceived-performance-chat',
-    site: 'Nielsen Norman Group',
-    color: '#dc2626',
-    snippet: 'Users rate progressive responses as faster even when total time is equal…',
-    crumbs: 'Articles › Response times',
-    byline: 'UX research · Jan 2026 · 8 min read',
-    body: [
-      'Response-time limits have not changed much since the early web: about a tenth of a second feels instant, a second keeps the flow of thought, and ten seconds is where attention starts to wander.',
-      '## Progressive answers',
-      'In our study, participants rated answers that appeared progressively as faster, even when the total wait was identical. Reading could start right away, so the wait was spent on the answer instead of on a spinner.',
-      '## When not to stream',
-      'For short factual results, such as a single number or a yes or no, a fast complete answer was preferred: watching a few words trickle in felt slower than seeing the result at once.',
-    ],
-    quote: 'participants rated answers that appeared progressively as faster, even when the total wait was identical',
-  },
+/** What does not change with the language: where the page lives and how its site looks. */
+const SOURCE_BASE = [
+  { domain: 'developer.mozilla.org', path: '/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events', site: 'MDN Web Docs', color: '#0f172a' },
+  { domain: 'web.dev', path: '/articles/streams', site: 'web.dev', color: '#2563eb' },
+  { domain: 'engineering.linear.app', path: '/time-to-first-token', site: 'Linear Engineering', color: '#5e6ad2' },
+  { domain: 'nngroup.com', path: '/articles/perceived-performance-chat', site: 'Nielsen Norman Group', color: '#dc2626' },
 ];
 
-const urlOf = (s: Source) => `https://${s.domain}${s.path}`;
-
-const ANSWER = `Users judge a chat answer by **time to first token**, not total time. Interfaces that show the first words within about a second are rated faster even when the full answer takes longer [2][4].
+const COPY = defineCopy({
+  en: {
+    sources: [
+      {
+        title: 'Using server-sent events',
+        snippet: 'Developing a web application that uses server-sent events is straightforward…',
+        crumbs: 'References › Web APIs › Server-sent events',
+        byline: 'MDN contributors · Updated Jul 2026 · 6 min read',
+        body: [
+          'Server-sent events let a server push text to the page over a single long-lived HTTP response. The browser exposes them through the EventSource interface, and the payload is plain UTF-8 lines prefixed with field names such as data, event and id.',
+          '## Receiving events',
+          'Create an EventSource with the URL of the stream, then listen for message events. Each message arrives as soon as the server flushes it, so the page can render tokens one after the other without waiting for the response to end.',
+          '## Reconnection',
+          'Unlike a fetch call, the stream is resilient by default. If the connection drops, the browser reconnects on its own and resends the ID of the last event it received, so the server can resume where it left off.',
+          'Because events travel one way, send user input with a regular POST and keep the event stream for what the server has to say.',
+        ],
+        quote: 'If the connection drops, the browser reconnects on its own and resends the ID of the last event it received',
+      },
+      {
+        title: 'Streaming responses with the Fetch API',
+        snippet: 'Streams let you start processing data as soon as it arrives…',
+        crumbs: 'Articles › Performance',
+        byline: 'Chrome DevRel · Mar 2026 · 9 min read',
+        body: [
+          'A response body is a ReadableStream. Instead of awaiting the whole payload with json() or text(), you can read it chunk by chunk and update the interface as each piece lands.',
+          '## Why it matters',
+          'Showing the first chunk as soon as it arrives makes the page feel ready long before the response has finished downloading. On slow networks the gap between the first chunk and the last can be several seconds.',
+          '## Decoding text',
+          'Pipe the body through a TextDecoderStream to get strings instead of bytes, then append each string to the state that renders the answer. Keep the container height stable so the text does not push the layout around as it grows.',
+        ],
+        quote: 'Showing the first chunk as soon as it arrives makes the page feel ready long before the response has finished downloading',
+      },
+      {
+        title: 'How we cut time-to-first-token by 40%',
+        snippet: 'Perceived latency is dominated by the first visible token…',
+        crumbs: 'Engineering › Performance',
+        byline: 'Platform team · Feb 2026 · 7 min read',
+        body: [
+          'When we shipped AI search, the median answer took four seconds. People abandoned it far more than the numbers suggested they should, and almost all of the drop-off happened before the first word appeared.',
+          '## Measuring the right thing',
+          'We stopped tracking total response time and started tracking time to first visible token. Moving the first flush earlier in the pipeline cut that number by 40% without making the full answer any faster.',
+          '## Showing the work',
+          'Showing what the agent was doing during the search, as long as each step reflected real work, cut abandoned queries more than any backend change. Fake progress had the opposite effect once people noticed it never matched the result.',
+          'We also reserved space for the answer before it streamed, so nothing below it jumped as the text grew.',
+        ],
+        quote: 'Showing what the agent was doing during the search, as long as each step reflected real work, cut abandoned queries more than any backend change',
+      },
+      {
+        title: 'Perceived performance in chat interfaces',
+        snippet: 'Users rate progressive responses as faster even when total time is equal…',
+        crumbs: 'Articles › Response times',
+        byline: 'UX research · Jan 2026 · 8 min read',
+        body: [
+          'Response-time limits have not changed much since the early web: about a tenth of a second feels instant, a second keeps the flow of thought, and ten seconds is where attention starts to wander.',
+          '## Progressive answers',
+          'In our study, participants rated answers that appeared progressively as faster, even when the total wait was identical. Reading could start right away, so the wait was spent on the answer instead of on a spinner.',
+          '## When not to stream',
+          'For short factual results, such as a single number or a yes or no, a fast complete answer was preferred: watching a few words trickle in felt slower than seeing the result at once.',
+        ],
+        quote: 'participants rated answers that appeared progressively as faster, even when the total wait was identical',
+      },
+    ],
+    answer: `Users judge a chat answer by **time to first token**, not total time. Interfaces that show the first words within about a second are rated faster even when the full answer takes longer [2][4].
 
 ## What the research says
 - Streaming text in place keeps attention on the answer instead of on a spinner [4].
 - A visible reasoning or search phase makes long waits feel purposeful, as long as it shows real progress [3].
 - Server-sent events are the simplest transport for one-way token streams and reconnect on their own [1].
 
-In practice: stream from the first token, show what the agent is doing while it searches, and keep the layout stable so text does not jump as it grows [3].`;
+In practice: stream from the first token, show what the agent is doing while it searches, and keep the layout stable so text does not jump as it grows [3].`,
+    shortAnswer: `Short answer: it depends on what people are waiting for [1].
 
-const RELATED = [
-  { title: 'How do you measure time to first token?', hint: 'metrics' },
-  { title: 'SSE vs WebSockets for AI chat', hint: 'transport' },
-  { title: 'Designing a good thinking indicator', hint: 'UX' },
-];
+- If the answer is a single number or yes/no, a fast complete result beats a stream [4].
+- For explanations and code, streaming wins because people start reading immediately [2].
+- Either way, show progress that reflects real work, such as the searches above [3].`,
+    related: [
+      { title: 'How do you measure time to first token?', hint: 'metrics' },
+      { title: 'SSE vs WebSockets for AI chat', hint: 'transport' },
+      { title: 'Designing a good thinking indicator', hint: 'UX' },
+    ],
+    introQuery: 'Does streaming an AI answer actually make it feel faster?',
+    searchQueries: ['time to first token perceived speed study', 'streaming text UX research'],
+    readingTitle: 'Reading 4 sources',
+    readingSteps: ['Comparing the latency studies', 'Checking claims against the MDN docs'],
+    searchedWeb: (n: number) => `Searched the web · ${n} queries`,
+    searchingWeb: 'Searching the web',
+    results: (n: number) => `${n} results`,
+    sourcesLabel: 'Sources',
+    showQuoted: 'Show the quoted answer',
+    answer_: 'Answer',
+    searches: (n: number) => `${n} searches`,
+    openSource: (n: number, title: string) => `Open source ${n}: ${title}`,
+    replyRef: 'Answer',
+    related_: 'Related',
+    docs: 'Docs',
+    articles: 'Articles',
+    about: 'About',
+    furtherReading: 'Further reading',
+    searchOrAddress: 'Search or enter address',
+    browserTabs: 'Browser tabs',
+    newTab: 'New tab',
+    closeTab: 'Close tab',
+    closeBrowser: 'Close browser',
+    back: 'Back',
+    forward: 'Forward',
+    stop: 'Stop',
+    reload: 'Reload',
+    openNewWindow: 'Open in a new window',
+    citedAs: 'Cited as',
+    jumpToPassage: 'Jump to passage',
+    askAnything: 'Ask anything…',
+    askFollowUp: 'Ask a follow-up',
+    proSearch: 'Pro search',
+    newSearch: 'New search',
+    discover: 'Discover',
+    library: 'Library',
+    title: 'Research',
+    share: 'Share',
+    welcomeTitle: 'Where knowledge begins',
+    welcomeSubtitle: 'Every answer cites the sources it used.',
+  },
+  fr: {
+    sources: [
+      {
+        title: 'Utiliser les évènements envoyés par le serveur',
+        snippet: 'Développer une application web qui utilise les évènements envoyés par le serveur est simple…',
+        crumbs: 'Références › API web › Server-sent events',
+        byline: 'Contributeurs MDN · Mis à jour en juil. 2026 · 6 min de lecture',
+        body: [
+          'Les évènements envoyés par le serveur (SSE) permettent à un serveur de pousser du texte vers la page à travers une unique réponse HTTP de longue durée. Le navigateur les expose via l’interface EventSource, et la charge utile est constituée de simples lignes UTF-8 préfixées par des noms de champ comme data, event et id.',
+          '## Recevoir des évènements',
+          'Créez un EventSource avec l’URL du flux, puis écoutez les évènements message. Chaque message arrive dès que le serveur le transmet, ce qui permet à la page d’afficher les tokens les uns après les autres sans attendre la fin de la réponse.',
+          '## Reconnexion',
+          'Contrairement à un appel fetch, le flux est résilient par défaut. Si la connexion tombe, le navigateur se reconnecte tout seul et renvoie l’identifiant du dernier évènement reçu, ce qui permet au serveur de reprendre là où il s’était arrêté.',
+          'Comme les évènements circulent dans un seul sens, envoyez les saisies de l’utilisateur avec un POST classique et réservez le flux d’évènements à ce que le serveur a à dire.',
+        ],
+        quote: 'Si la connexion tombe, le navigateur se reconnecte tout seul et renvoie l’identifiant du dernier évènement reçu',
+      },
+      {
+        title: 'Diffuser des réponses en continu avec l’API Fetch',
+        snippet: 'Les flux permettent de traiter les données dès qu’elles arrivent…',
+        crumbs: 'Articles › Performance',
+        byline: 'Chrome DevRel · mars 2026 · 9 min de lecture',
+        body: [
+          'Le corps d’une réponse est un ReadableStream. Au lieu d’attendre toute la charge utile avec json() ou text(), vous pouvez la lire morceau par morceau et mettre à jour l’interface à mesure que chaque partie arrive.',
+          '## Pourquoi c’est important',
+          'Afficher le premier morceau dès son arrivée donne l’impression que la page est prête bien avant la fin du téléchargement de la réponse. Sur les réseaux lents, l’écart entre le premier et le dernier morceau peut atteindre plusieurs secondes.',
+          '## Décoder le texte',
+          'Faites passer le corps dans un TextDecoderStream pour obtenir des chaînes plutôt que des octets, puis ajoutez chaque chaîne à l’état qui affiche la réponse. Gardez une hauteur de conteneur stable pour que le texte ne déplace pas la mise en page en grandissant.',
+        ],
+        quote: 'Afficher le premier morceau dès son arrivée donne l’impression que la page est prête bien avant la fin du téléchargement de la réponse',
+      },
+      {
+        title: 'Comment nous avons réduit le temps jusqu’au premier token de 40 %',
+        snippet: 'La latence perçue est dominée par le premier token visible…',
+        crumbs: 'Ingénierie › Performance',
+        byline: 'Équipe plateforme · févr. 2026 · 7 min de lecture',
+        body: [
+          'Quand nous avons lancé la recherche IA, la réponse médiane prenait quatre secondes. Les gens l’abandonnaient bien plus que ne le laissaient prévoir les chiffres, et presque tous les abandons avaient lieu avant l’apparition du premier mot.',
+          '## Mesurer la bonne chose',
+          'Nous avons cessé de suivre le temps de réponse total pour suivre le temps jusqu’au premier token visible. Avancer le premier envoi dans le pipeline a réduit ce chiffre de 40 % sans accélérer la réponse complète.',
+          '## Montrer le travail',
+          'Montrer ce que l’agent faisait pendant la recherche, tant que chaque étape reflétait un vrai travail, a réduit les requêtes abandonnées plus que n’importe quel changement côté serveur. Une fausse progression produisait l’effet inverse dès que les gens remarquaient qu’elle ne correspondait jamais au résultat.',
+          'Nous avons aussi réservé la place de la réponse avant son affichage, pour que rien en dessous ne bouge quand le texte grandit.',
+        ],
+        quote: 'Montrer ce que l’agent faisait pendant la recherche, tant que chaque étape reflétait un vrai travail, a réduit les requêtes abandonnées plus que n’importe quel changement côté serveur',
+      },
+      {
+        title: 'La performance perçue dans les interfaces de chat',
+        snippet: 'Les utilisateurs jugent les réponses progressives plus rapides, à durée totale égale…',
+        crumbs: 'Articles › Temps de réponse',
+        byline: 'Recherche UX · janv. 2026 · 8 min de lecture',
+        body: [
+          'Les seuils de temps de réponse ont peu changé depuis les débuts du web : environ un dixième de seconde paraît instantané, une seconde préserve le fil de la pensée, et dix secondes est le moment où l’attention commence à se disperser.',
+          '## Des réponses progressives',
+          'Dans notre étude, les participants ont jugé plus rapides les réponses qui s’affichaient progressivement, même quand l’attente totale était identique. La lecture pouvait commencer tout de suite : l’attente était consacrée à la réponse plutôt qu’à un spinner.',
+          '## Quand ne pas diffuser en continu',
+          'Pour les résultats factuels courts, comme un chiffre unique ou un oui ou non, une réponse complète et rapide était préférée : voir quelques mots arriver au compte-gouttes paraissait plus lent que voir le résultat d’un coup.',
+        ],
+        quote: 'les participants ont jugé plus rapides les réponses qui s’affichaient progressivement, même quand l’attente totale était identique',
+      },
+    ],
+    answer: `Les utilisateurs jugent une réponse de chat au **temps jusqu’au premier token**, pas au temps total. Les interfaces qui affichent les premiers mots en une seconde environ sont jugées plus rapides, même quand la réponse complète est plus longue [2][4].
+
+## Ce que dit la recherche
+- Afficher le texte au fil de l’eau garde l’attention sur la réponse plutôt que sur un spinner [4].
+- Une phase de raisonnement ou de recherche visible donne du sens aux longues attentes, à condition de montrer une vraie progression [3].
+- Les évènements envoyés par le serveur sont le transport le plus simple pour des flux de tokens à sens unique, et ils se reconnectent seuls [1].
+
+En pratique : diffusez dès le premier token, montrez ce que fait l’agent pendant sa recherche, et gardez une mise en page stable pour que le texte ne saute pas en grandissant [3].`,
+    shortAnswer: `En bref : cela dépend de ce que les gens attendent [1].
+
+- Si la réponse est un chiffre unique ou un oui/non, un résultat complet et rapide vaut mieux qu’un flux [4].
+- Pour des explications et du code, le flux gagne, car on commence à lire immédiatement [2].
+- Dans les deux cas, montrez une progression qui reflète un vrai travail, comme les recherches ci-dessus [3].`,
+    related: [
+      { title: 'Comment mesurer le temps jusqu’au premier token ?', hint: 'métriques' },
+      { title: 'SSE ou WebSockets pour un chat IA', hint: 'transport' },
+      { title: 'Concevoir un bon indicateur de réflexion', hint: 'UX' },
+    ],
+    introQuery: 'Diffuser une réponse IA en continu la rend-elle vraiment plus rapide ?',
+    searchQueries: ['étude temps jusqu’au premier token vitesse perçue', 'recherche UX texte en streaming'],
+    readingTitle: 'Lecture de 4 sources',
+    readingSteps: ['Comparaison des études sur la latence', 'Vérification des affirmations dans la doc MDN'],
+    searchedWeb: (n: number) => `Recherche web effectuée · ${n} requêtes`,
+    searchingWeb: 'Recherche sur le web',
+    results: (n: number) => `${n} résultats`,
+    sourcesLabel: 'Sources',
+    showQuoted: 'Afficher la réponse citée',
+    answer_: 'Réponse',
+    searches: (n: number) => `${n} recherches`,
+    openSource: (n: number, title: string) => `Ouvrir la source ${n} : ${title}`,
+    replyRef: 'Réponse',
+    related_: 'Questions liées',
+    docs: 'Docs',
+    articles: 'Articles',
+    about: 'À propos',
+    furtherReading: 'Pour aller plus loin',
+    searchOrAddress: 'Rechercher ou saisir une adresse',
+    browserTabs: 'Onglets du navigateur',
+    newTab: 'Nouvel onglet',
+    closeTab: 'Fermer l’onglet',
+    closeBrowser: 'Fermer le navigateur',
+    back: 'Précédent',
+    forward: 'Suivant',
+    stop: 'Arrêter',
+    reload: 'Actualiser',
+    openNewWindow: 'Ouvrir dans une nouvelle fenêtre',
+    citedAs: 'Cité comme',
+    jumpToPassage: 'Aller au passage',
+    askAnything: 'Posez n’importe quelle question…',
+    askFollowUp: 'Poser une question de suivi',
+    proSearch: 'Recherche Pro',
+    newSearch: 'Nouvelle recherche',
+    discover: 'Découvrir',
+    library: 'Bibliothèque',
+    title: 'Recherche',
+    share: 'Partager',
+    welcomeTitle: 'Là où commence le savoir',
+    welcomeSubtitle: 'Chaque réponse cite les sources utilisées.',
+  },
+});
+
+const sourcesOf = (t: (typeof COPY)['en']): Source[] => SOURCE_BASE.map((b, i) => ({ ...b, ...t.sources[i] }));
+const useSources = () => sourcesOf(useCopy(COPY));
+
+const urlOf = (s: Source) => `https://${s.domain}${s.path}`;
 
 async function research(api: ChatScriptApi, query: string, answer: string) {
+  const t = copyOf(COPY);
+  const SOURCES = sourcesOf(t);
   const a = api.assistant();
   const steps: Step[] = [];
   const setSteps = a.custom('steps', { items: [] });
   for (const [q, n] of [
     [query.length > 60 ? `${query.slice(0, 57)}…` : query, 12],
-    ['time to first token perceived speed study', 8],
-    ['streaming text UX research', 6],
+    [t.searchQueries[0], 8],
+    [t.searchQueries[1], 6],
   ] as const) {
     steps.push({ q, status: 'running' });
     setSteps({ items: [...steps] });
@@ -130,31 +295,24 @@ async function research(api: ChatScriptApi, query: string, answer: string) {
     setSources({ items: SOURCES.slice(0, i) });
     await api.sleep(220);
   }
-  await a.think('Reading 4 sources', ['Comparing the latency studies', 'Checking claims against the MDN docs'], 600);
+  await a.think(t.readingTitle, t.readingSteps, 600);
   await a.stream(answer, 24);
-  a.custom('related', { items: RELATED });
+  a.custom('related', { items: t.related });
   a.done();
 }
 
 async function intro(api: ChatScriptApi) {
   await api.sleep(500);
-  await api.user('Does streaming an AI answer actually make it feel faster?', { type: true });
-  await research(api, 'Does streaming an AI answer actually make it feel faster?', ANSWER);
+  const t = copyOf(COPY);
+  await api.user(t.introQuery, { type: true });
+  await research(api, t.introQuery, t.answer);
 }
 
 async function reply(api: ChatScriptApi, text: string) {
-  await research(
-    api,
-    text,
-    `Short answer: it depends on what people are waiting for [1].
-
-- If the answer is a single number or yes/no, a fast complete result beats a stream [4].
-- For explanations and code, streaming wins because people start reading immediately [2].
-- Either way, show progress that reflects real work, such as the searches above [3].`,
-  );
+  await research(api, text, copyOf(COPY).shortAnswer);
 }
 
-const Favicon = ({ s, className }: { s: Source; className?: string }) => (
+const Favicon = ({ s, className }: { s: Pick<Source, 'domain' | 'color'>; className?: string }) => (
   <span className={cn('grid size-4 shrink-0 place-items-center rounded-full text-[8.5px] font-bold text-white ring-2 ring-background-secondary-default', className)} style={{ backgroundColor: s.color }}>
     {s.domain[0].toUpperCase()}
   </span>
@@ -162,10 +320,12 @@ const Favicon = ({ s, className }: { s: Source; className?: string }) => (
 
 /** Web Search: one trail row per query; a shimmer while it runs, then favicons and a count. */
 function SearchTrail({ items }: { items: Step[] }) {
+  const t = useCopy(COPY);
+  const SOURCES = useSources();
   return (
     <div className="flex flex-col gap-1">
       <p className="flex items-center gap-2 text-body-2-medium text-text-secondary">
-        <Globe className="size-4" /> {items.every((s) => s.status === 'done') ? `Searched the web · ${items.length} queries` : 'Searching the web'}
+        <Globe className="size-4" /> {items.every((s) => s.status === 'done') ? t.searchedWeb(items.length) : t.searchingWeb}
       </p>
       <AgentLog className="ms-[7px]">
         {items.map((s, i) => (
@@ -179,7 +339,7 @@ function SearchTrail({ items }: { items: Step[] }) {
                     <Favicon key={src.domain} s={src} />
                   ))}
                 </span>
-                <span className="text-caption-1-medium text-text-tertiary tabular-nums">{s.n} results</span>
+                <span className="text-caption-1-medium text-text-tertiary tabular-nums">{t.results(s.n)}</span>
               </span>
             )}
           </div>
@@ -203,9 +363,10 @@ const sourceLink = (s: Source, i: number, onOpen: OpenSource) => ({
 });
 
 function SourceCards({ items, current, onOpen }: { items: Source[]; current: number | null; onOpen: OpenSource }) {
+  const t = useCopy(COPY);
   return (
     <Frame>
-      <FrameHeader icon={<Library />} title="Sources">
+      <FrameHeader icon={<Library />} title={t.sourcesLabel}>
         <Badge tone="outline">{items.length}</Badge>
       </FrameHeader>
       <div className="grid grid-cols-2 gap-[3px] lg:grid-cols-4">
@@ -260,6 +421,8 @@ const Heading = ({ icon, children }: { icon: React.ReactNode; children: React.Re
 
 /** One query and its answer, with the Answer / Sources tabs under the title. */
 function Turn({ query, replyTo, answer, isLast, first, onPick, onReply, current, onOpen }: { query: string; /** The answer this question replies to: quoted above it. */ replyTo?: ReplyRef; answer?: Message; isLast: boolean; first: boolean; onPick: (q: string) => void; onReply: (ref: ReplyRef) => void; current: number | null; onOpen: OpenSource }) {
+  const t = useCopy(COPY);
+  const SOURCES = useSources();
   const [tab, setTab] = useState<'answer' | 'sources'>('answer');
   const custom = (type: string) => answer?.parts.find((p): p is Extract<Part, { kind: 'custom' }> => p.kind === 'custom' && p.type === type)?.data.items;
   const sources = (custom('sources') as Source[] | undefined) ?? [];
@@ -269,20 +432,20 @@ function Turn({ query, replyTo, answer, isLast, first, onPick, onReply, current,
     <section className={cn('flex flex-col gap-6', !first && 'border-t border-separator-border pt-8')}>
       <div className="flex flex-col gap-4">
         {replyTo && (
-          <button type="button" onClick={() => revealMessage(replyTo.id)} title="Show the quoted answer" className="-mb-2 flex max-w-full cursor-pointer self-start rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
+          <button type="button" onClick={() => revealMessage(replyTo.id)} title={t.showQuoted} className="-mb-2 flex max-w-full cursor-pointer self-start rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring">
             <ReplyQuote text={replyTo.text} />
           </button>
         )}
         <h1 className="animate-in fade-in-0 slide-in-from-bottom-1 text-title-1-semibold tracking-[-0.015em] text-balance duration-300">{query}</h1>
         <div role="tablist" className="flex gap-5 border-b border-separator-border text-body-2-medium">
           <button type="button" role="tab" aria-selected={tab === 'answer'} onClick={() => setTab('answer')} className={tabCls(tab === 'answer')}>
-            <BookOpen className="size-4" /> Answer
+            <BookOpen className="size-4" /> {t.answer_}
           </button>
           <button type="button" role="tab" aria-selected={tab === 'sources'} onClick={() => setTab('sources')} className={tabCls(tab === 'sources')}>
-            <Library className="size-4" /> Sources
+            <Library className="size-4" /> {t.sourcesLabel}
             {sources.length > 0 && <Badge tone="neutral" round className="h-[18px] px-1.5">{sources.length}</Badge>}
           </button>
-          <span className="ms-auto hidden pb-2.5 text-caption-1-medium text-text-tertiary sm:block">{steps.length ? `${steps.length} searches` : ''}</span>
+          <span className="ms-auto hidden pb-2.5 text-caption-1-medium text-text-tertiary sm:block">{steps.length ? t.searches(steps.length) : ''}</span>
         </div>
       </div>
       {tab === 'sources' ? (
@@ -297,28 +460,28 @@ function Turn({ query, replyTo, answer, isLast, first, onPick, onReply, current,
               if (p.kind === 'text')
                 return (
                   <div key={p.id} className="flex flex-col gap-3">
-                    <Heading icon={<Telescope />}>Answer</Heading>
+                    <Heading icon={<Telescope />}>{t.answer_}</Heading>
                     <Markdown
                       text={p.text.slice(0, p.shown)}
                       streaming={!p.done}
                       className="text-[15.5px] leading-7"
                       cite={(n) =>
                         SOURCES[n - 1] ? (
-                          <button type="button" onClick={() => onOpen(n - 1)} aria-label={`Open source ${n}: ${SOURCES[n - 1].title}`} className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring [&>span]:cursor-pointer">
-                            <Cite n={n} title={`${SOURCES[n - 1].title} — ${SOURCES[n - 1].domain}`} />
+                          <button type="button" onClick={() => onOpen(n - 1)} aria-label={t.openSource(n, SOURCES[n - 1].title)} className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring [&>span]:cursor-pointer">
+                            <Cite n={n} title={`${SOURCES[n - 1].title} · ${SOURCES[n - 1].domain}`} />
                           </button>
                         ) : (
                           <Cite n={n} />
                         )
                       }
                     />
-                    {p.done && <ActionBar message={answer} isLast={isLast} onRegenerate={() => onPick(query)} onReply={() => onReply(replyRefOf(answer, 'Answer'))} />}
+                    {p.done && <ActionBar message={answer} isLast={isLast} onRegenerate={() => onPick(query)} onReply={() => onReply(replyRefOf(answer, t.replyRef))} />}
                   </div>
                 );
               if (p.kind === 'custom' && p.type === 'related')
                 return (
                   <div key={p.id} className="tpl-reveal flex flex-col gap-2">
-                    <Heading icon={<Compass />}>Related</Heading>
+                    <Heading icon={<Compass />}>{t.related_}</Heading>
                     <Suggestions variant="list" items={p.data.items as { title: string; hint: string }[]} onPick={onPick} className="-mx-2" />
                   </div>
                 );
@@ -410,15 +573,17 @@ function useViewportWidth() {
 
 /** The page a source renders to: the site's own header, the article, the cited passage highlighted, further reading. */
 function SourcePage({ s, n, onGo }: { s: Source; n: number; onGo: (i: number) => void }) {
+  const t = useCopy(COPY);
+  const SOURCES = useSources();
   return (
     <div className="tpl-stream-in min-h-full">
       <header className="flex h-12 items-center gap-2.5 px-5 text-white" style={{ backgroundColor: s.color }}>
         <span className="grid size-6 place-items-center rounded-md bg-white/15 text-[12px] font-bold">{s.site[0]}</span>
         <span className="truncate text-body-2-semibold">{s.site}</span>
         <nav aria-hidden="true" className="ms-auto hidden gap-4 text-caption-1-medium text-white/70 sm:flex">
-          <span>Docs</span>
-          <span>Articles</span>
-          <span>About</span>
+          <span>{t.docs}</span>
+          <span>{t.articles}</span>
+          <span>{t.about}</span>
         </nav>
       </header>
       <article className="mx-auto max-w-[620px] px-6 pt-8 pb-24">
@@ -440,7 +605,7 @@ function SourcePage({ s, n, onGo }: { s: Source; n: number; onGo: (i: number) =>
           })}
         </div>
         <div className="mt-10 border-t border-separator-border pt-5">
-          <p className="text-caption-1-semibold tracking-wide text-text-tertiary uppercase">Further reading</p>
+          <p className="text-caption-1-semibold tracking-wide text-text-tertiary uppercase">{t.furtherReading}</p>
           <ul className="mt-2 flex flex-col">
             {SOURCES.map((o, i) =>
               i === n - 1 ? null : (
@@ -462,13 +627,15 @@ function SourcePage({ s, n, onGo }: { s: Source; n: number; onGo: (i: number) =>
 
 /** New tab: a search field and the sources from this research as shortcuts. */
 function StartPage({ onGo }: { onGo: (i: number) => void }) {
+  const t = useCopy(COPY);
+  const SOURCES = useSources();
   return (
     <div className="tpl-stream-in flex min-h-full flex-col items-center justify-center gap-6 px-6 py-12">
       <span className="grid size-12 place-items-center rounded-2xl bg-accent-500 text-white shadow-xs">
         <Telescope className="size-6" />
       </span>
       <div className="flex h-11 w-full max-w-[420px] items-center gap-2 rounded-full border border-border-button-default bg-background-primary-default px-4 text-body-2-regular text-text-tertiary shadow-xs">
-        <Search className="size-4" /> Search or enter address
+        <Search className="size-4" /> {t.searchOrAddress}
       </div>
       <div className="grid w-full max-w-[420px] grid-cols-4 gap-2">
         {SOURCES.map((s, i) => (
@@ -505,6 +672,8 @@ const navBtn = (enabled: boolean) => cn(!enabled && 'pointer-events-none opacity
 
 /** Canvas mode: a browser beside the answer with tabs, history, reload, an address bar and the page itself. */
 function SourceBrowser({ b }: { b: SourceBrowserState }) {
+  const L = useCopy(COPY);
+  const SOURCES = useSources();
   const [loading, setLoading] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const s = b.page !== null && b.page !== NEW_TAB ? SOURCES[b.page] : null;
@@ -535,7 +704,7 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
       {/* Chrome in three tones: the tab strip on the surface, the active tab and toolbar as one raised block
        * (concave feet join the tab to the bar), and a recessed address field. The page sits on the full background. */}
       <div className="flex h-11 shrink-0 items-end gap-1 pe-1.5">
-        <div role="tablist" aria-label="Browser tabs" className="scrollbar-none flex min-w-0 flex-1 items-end overflow-x-auto px-2.5">
+        <div role="tablist" aria-label={L.browserTabs} className="scrollbar-none flex min-w-0 flex-1 items-end overflow-x-auto px-2.5">
           {b.tabs.map((t, i) => {
             const p = t.hist[t.pos];
             const src = p === NEW_TAB ? null : SOURCES[p];
@@ -557,11 +726,11 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
                 {!on && <span aria-hidden="true" className="absolute inset-x-0.5 inset-y-1 -z-10 rounded-lg transition-colors group-hover/tab:bg-black/[0.05] dark:group-hover/tab:bg-white/[0.06]" />}
                 <button type="button" onClick={() => b.select(t.id)} className="flex min-w-0 flex-1 items-center gap-2 outline-none">
                   {src ? <Favicon s={src} className="ring-1 ring-black/10 dark:ring-white/20" /> : <Globe className="size-3.5 shrink-0 text-foreground-icon-tertiary" />}
-                  <span className="truncate">{src ? src.title : 'New tab'}</span>
+                  <span className="truncate">{src ? src.title : L.newTab}</span>
                 </button>
                 <button
                   type="button"
-                  aria-label="Close tab"
+                  aria-label={L.closeTab}
                   onClick={() => b.closeTab(t.id)}
                   className={cn(
                     'grid size-5 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-[color,background-color,opacity] outline-none hover:bg-black/[0.06] hover:text-foreground-icon-primary focus-visible:opacity-100 dark:hover:bg-white/10 [&_svg]:size-3',
@@ -573,23 +742,23 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
               </div>
             );
           })}
-          <IconButton label="New tab" onClick={b.newTab} className="mb-0.5 ms-1.5">
+          <IconButton label={L.newTab} onClick={b.newTab} className="mb-0.5 ms-1.5">
             <Plus />
           </IconButton>
         </div>
-        <IconButton label="Close browser" onClick={b.close} className="mb-0.5">
+        <IconButton label={L.closeBrowser} onClick={b.close} className="mb-0.5">
           <PanelRightClose />
         </IconButton>
       </div>
 
       <div className="flex h-11 shrink-0 items-center gap-0.5 border-b border-separator-border-strong bg-background-primary-default px-2">
-        <IconButton label="Back" onClick={b.back} className={navBtn(b.canBack)}>
+        <IconButton label={L.back} onClick={b.back} className={navBtn(b.canBack)}>
           <ArrowLeft />
         </IconButton>
-        <IconButton label="Forward" onClick={b.forward} className={navBtn(b.canForward)}>
+        <IconButton label={L.forward} onClick={b.forward} className={navBtn(b.canForward)}>
           <ArrowRight />
         </IconButton>
-        <IconButton label={loading ? 'Stop' : 'Reload'} onClick={loading ? () => setLoading(false) : b.reload}>
+        <IconButton label={loading ? L.stop : L.reload} onClick={loading ? () => setLoading(false) : b.reload}>
           {loading ? <X /> : <RotateCw />}
         </IconButton>
         <div className="mx-1 flex h-8 min-w-0 flex-1 items-center gap-2 rounded-full bg-background-secondary-default px-3 text-body-2-regular">
@@ -601,12 +770,12 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
                 <span className="text-text-tertiary">{s.path}</span>
               </>
             ) : (
-              <span className="text-text-tertiary">Search or enter address</span>
+              <span className="text-text-tertiary">{L.searchOrAddress}</span>
             )}
           </span>
         </div>
         {s && (
-          <a href={urlOf(s)} target="_blank" rel="noreferrer" aria-label="Open in a new window" title="Open in a new window" className="grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary dark:hover:bg-background-primary-hover [&_svg]:size-4">
+          <a href={urlOf(s)} target="_blank" rel="noreferrer" aria-label={L.openNewWindow} title={L.openNewWindow} className="grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary dark:hover:bg-background-primary-hover [&_svg]:size-4">
             <ExternalLink />
           </a>
         )}
@@ -623,7 +792,7 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
             onClick={() => jump()}
             className="tpl-stream-in absolute bottom-3 left-1/2 flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border border-border-button-default bg-background-primary-default ps-2 pe-3 text-caption-1-medium whitespace-nowrap text-text-secondary shadow-dropdown transition-colors hover:text-text-primary"
           >
-            <Quote className="size-3.5 text-accent-500" /> Cited as <Cite n={b.page! + 1} /> · Jump to passage
+            <Quote className="size-3.5 text-accent-500" /> {L.citedAs} <Cite n={b.page! + 1} /> · {L.jumpToPassage}
           </button>
         )}
       </div>
@@ -632,6 +801,7 @@ function SourceBrowser({ b }: { b: SourceBrowserState }) {
 }
 
 export default function ResearchTemplate() {
+  const t = useCopy(COPY);
   const chat = useChatEngine({ intro, reply });
   const browser = useSourceBrowser();
   const vw = useViewportWidth();
@@ -666,10 +836,10 @@ export default function ResearchTemplate() {
       onSend={chat.send}
       onStop={chat.stop}
       busy={chat.busy}
-      placeholder={empty ? 'Ask anything…' : 'Ask a follow-up'}
+      placeholder={empty ? t.askAnything : t.askFollowUp}
       tools={
         <button type="button" className="flex h-8 items-center gap-1.5 rounded-full border border-border-button-default px-2.5 text-body-2-medium text-accent-500 transition-colors hover:bg-background-primary-hover">
-          <Telescope className="size-4" /> Pro search
+          <Telescope className="size-4" /> {t.proSearch}
         </button>
       }
     />
@@ -681,13 +851,13 @@ export default function ResearchTemplate() {
         <span className="mb-2 grid size-9 place-items-center rounded-xl bg-accent-500 text-white shadow-xs">
           <Telescope className="size-[18px]" />
         </span>
-        <button type="button" aria-label="New search" onClick={newSearch} className={cn(rail, 'bg-background-primary-default text-foreground-icon-primary shadow-xs')}>
+        <button type="button" aria-label={t.newSearch} onClick={newSearch} className={cn(rail, 'bg-background-primary-default text-foreground-icon-primary shadow-xs')}>
           <Plus />
         </button>
-        <button type="button" aria-label="Discover" className={rail}>
+        <button type="button" aria-label={t.discover} className={rail}>
           <Compass />
         </button>
-        <button type="button" aria-label="Library" className={rail}>
+        <button type="button" aria-label={t.library} className={rail}>
           <Library />
         </button>
       </Surface>
@@ -697,16 +867,16 @@ export default function ResearchTemplate() {
         width="max-w-[46rem]"
         header={
           <>
-            <span className="px-1 text-headline-medium text-text-primary">Research</span>
+            <span className="px-1 text-headline-medium text-text-primary">{t.title}</span>
             <Badge tone="info" round>
-              Pro search
+              {t.proSearch}
             </Badge>
             <span className="ms-auto flex items-center gap-1">
               <HeaderTools />
               <HeaderButton outline>
-                <Share /> <span className="hidden sm:inline">Share</span>
+                <Share /> <span className="hidden sm:inline">{t.share}</span>
               </HeaderButton>
-              <IconButton label="New search" onClick={newSearch} className="sm:hidden">
+              <IconButton label={t.newSearch} onClick={newSearch} className="sm:hidden">
                 <Plus />
               </IconButton>
             </span>
@@ -715,9 +885,9 @@ export default function ResearchTemplate() {
         footer={!empty && composer}
       >
         {empty ? (
-          <Welcome title="Where knowledge begins" subtitle="Every answer cites the sources it used.">
+          <Welcome title={t.welcomeTitle} subtitle={t.welcomeSubtitle}>
             <div className="mt-2 w-full text-start">{composer}</div>
-            <Suggestions variant="list" items={RELATED} onPick={chat.send} className="text-start" />
+            <Suggestions variant="list" items={t.related} onPick={chat.send} className="text-start" />
           </Welcome>
         ) : (
           chat.messages.map((m, i) =>

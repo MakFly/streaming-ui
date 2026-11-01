@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Check, Copy } from 'lucide-react';
 import { PageShell } from '@/components/page-shell';
 import { ThinkingOrb, type OrbSize, type OrbState } from '@/components/thinking-orb';
 import { OrbStatus } from '@/components/thinking-orb/orb-status';
 import { InstallButton } from '@/components/composers/install-button';
 import { ORBS, applyHead } from '@/seo/routes';
 import { useTheme } from '@/providers/theme-provider';
+import { CodeBlock } from '@/templates/kit/markdown';
 
-/* `/orbs`: the thinking orbs of Jakub Antalik (libraries.dev/orbs, MIT), installable from our registry as
+/* `/components/thinking-orbs`: the thinking orbs of Jakub Antalik (libraries.dev/orbs, MIT), installable from our registry as
  * `thinking-orb` and `orb-status`. The nine-state showcase, then a playground to pick a state and a size.
  * Layout, surfaces and the label shimmer are measured on libraries.dev/orbs. */
 
@@ -71,50 +71,13 @@ function Choice<T extends string | number>({ label, options, value, onChange, fo
   );
 }
 
-async function copyText(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.append(ta);
-    ta.select();
-    document.execCommand('copy');
-    ta.remove();
-  }
-}
-
-function Snippet({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 1500);
-    return () => clearTimeout(t);
-  }, [copied]);
-  return (
-    <div className="relative rounded-2xl bg-(--orbs-stage) p-5 pe-14">
-      <pre className="scrollbar-none overflow-x-auto font-mono text-caption-1-regular leading-6 text-text-primary">
-        <code>{code}</code>
-      </pre>
-      <button
-        type="button"
-        aria-label="Copy playground snippet"
-        onClick={() => void copyText(code).then(() => setCopied(true))}
-        className="absolute end-3 top-3 grid size-8 place-items-center rounded-lg text-text-tertiary transition-colors hover:bg-background-tertiary-default hover:text-text-primary"
-      >
-        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-      </button>
-    </div>
-  );
-}
-
 function Playground() {
   const { theme } = useTheme();
   const [state, setState] = useState<OrbState>('listening');
   const [size, setSize] = useState<OrbSize>(64);
   const [playing, setPlaying] = useState(false);
   // The path `shadcn add …/r/thinking-orb.json` installs to, not the upstream npm package name.
-  const code = `import { ThinkingOrb } from '@/components/thinking-orb';\n\n<ThinkingOrb state="${state}" size={${size}} />`;
+  const code = `import { ThinkingOrb } from '@/components/thinking-orb';\n\nexport function Status() {\n  return <ThinkingOrb state="${state}" size={${size}} />;\n}`;
   return (
     <section aria-labelledby="orbs-playground" className="flex flex-col gap-3">
       <p id="orbs-playground" className="text-body-2-medium leading-[14px] text-(--orbs-title)">
@@ -132,7 +95,7 @@ function Playground() {
           <Choice label="Size" options={SIZES} value={size} onChange={setSize} format={(s) => `${s}px`} />
         </div>
       </div>
-      <Snippet code={code} />
+      <CodeBlock lang="tsx" title="status.tsx" code={code} />
     </section>
   );
 }
@@ -180,7 +143,7 @@ export function OrbsPage() {
         <div className="flex w-full flex-col gap-6">
           <header className="flex flex-col items-start gap-3">
             <p className="font-mono text-caption-1-medium tracking-[0.12em] text-text-tertiary uppercase">Orbs</p>
-            <h1 className="text-display-4-semibold tracking-[-0.02em] text-text-primary">Thinking orbs</h1>
+            <h1 className="text-display-4-semibold tracking-[-0.02em] text-text-primary">Thinking orbs for AI agents</h1>
             <p className="max-w-[720px] text-headline-regular text-text-secondary">
               Thought-orb loading indicators for AI interfaces, with nine hand-tuned animated states, drawn on a plain 2D canvas.
             </p>

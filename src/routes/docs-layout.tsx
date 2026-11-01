@@ -5,7 +5,7 @@ import { Icon } from '@/components/icon';
 import { Logo } from '@/components/logo';
 import { PalettePicker } from '@/components/palette-picker';
 import { DOCS_NAV, DocsSidebar } from '@/components/docs/docs-sidebar';
-import { DocsCrumbs, InDocs, type Crumb } from '@/components/docs/in-docs';
+import { DocsCrumbs, DocsSubnav, InDocs, type Crumb, type Subnav } from '@/components/docs/in-docs';
 import { useTheme } from '@/providers/theme-provider';
 import { paths } from '@/lib/paths';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 // The palette pulls in the whole response registry: load it on first use (or hover), never with the page.
 const loadPalette = () => import('@/components/command-palette');
 const CommandPalette = lazy(loadPalette);
+// Same for the Browse sub-links: they need the registries, so they arrive after the page.
+const loadBrowse = () => import('@/components/docs/browse-subnav');
 
 /** "Streaming UI › Components › Composers" or "Streaming UI › Responses › Agent", from the sidebar entry the page
  * belongs to, then whatever the page adds (useDocsCrumbs). */
@@ -62,6 +64,16 @@ export function DocsLayout() {
   const [paletteUsed, setPaletteUsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [crumbs, setCrumbs] = useState<Crumb[]>([]);
+  const [subnav, setSubnav] = useState<Subnav | null>(null);
+  const [browse, setBrowse] = useState<Awaited<ReturnType<typeof loadBrowse>>['BROWSE_SUBNAV'] | null>(null);
+  useEffect(() => {
+    void loadBrowse().then((m) => setBrowse(m.BROWSE_SUBNAV));
+  }, []);
+  // Every entry with sub-links: the page's own wins for its entry, the defaults mark the link matching the URL.
+  const subnavs: Subnav[] = Object.entries(browse ?? {}).map(([item, links]) =>
+    subnav?.item === item ? subnav : { item, links: links.map((l) => ({ ...l, on: l.to === pathname })) },
+  );
+  if (subnav && !subnavs.includes(subnav)) subnavs.push(subnav);
   const openSearch = () => {
     setPaletteUsed(true);
     setSearch(true);
@@ -99,13 +111,15 @@ export function DocsLayout() {
   return (
     <InDocs.Provider value={true}>
       <DocsCrumbs.Provider value={setCrumbs}>
+      <DocsSubnav.Provider value={setSubnav}>
         <div className="flex min-h-screen w-full bg-background-full">
-          <DocsSidebar onSearch={openSearch} onWarmSearch={() => void loadPalette()} className="sticky top-3 m-3 hidden h-[calc(100vh-24px)] lg:flex" />
+          <DocsSidebar subnavs={subnavs} onSearch={openSearch} onWarmSearch={() => void loadPalette()} className="sticky top-3 m-3 hidden h-[calc(100vh-24px)] lg:flex" />
 
           {/* Below lg: a compact bar, the sidebar as a drawer. */}
           <div className={cn('fixed inset-0 z-50 lg:hidden', drawer ? 'pointer-events-auto' : 'pointer-events-none')}>
             <div aria-hidden="true" onClick={() => setDrawer(false)} className={cn('absolute inset-0 bg-black/30 transition-opacity duration-200', drawer ? 'opacity-100' : 'opacity-0')} />
             <DocsSidebar
+              subnavs={subnavs}
               onSearch={() => {
                 setDrawer(false);
                 openSearch();
@@ -143,6 +157,7 @@ export function DocsLayout() {
           </Suspense>
         )}
         <ScrollRestoration />
+      </DocsSubnav.Provider>
       </DocsCrumbs.Provider>
     </InDocs.Provider>
   );

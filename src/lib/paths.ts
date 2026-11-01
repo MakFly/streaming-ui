@@ -16,12 +16,20 @@ export const paths = {
   prompts: () => '/prompts',
   /** The context-window and plan-limits card, named as in BoardUI. */
   agentLimits: () => '/components/agent-limits-card',
+  /** Rail of user turns for a long thread, with a hover preview. */
+  threadNavigator: () => '/components/thread-navigator',
+  /** Several agents at work, as a rolling three-row window. */
+  agentFeed: () => '/components/agent-feed',
+  /** Our animated agent avatar in four characters: default, cat, dog and flower. */
+  bloub: () => '/components/bloub',
+  /** The streaming Markdown renderer, with tables. */
+  markdown: () => '/components/markdown',
   /** The five interchangeable composers, each in a live thread; `#<variant>` jumps to one. */
-  composers: (variant?: string) => (variant ? `/composers#${variant}` : '/composers'),
+  composers: (variant?: string) => (variant ? `/components/composers#${variant}` : '/components/composers'),
   /** Thinking-orb loaders: the nine states and a playground. */
-  orbs: () => '/orbs',
+  orbs: () => '/components/thinking-orbs',
   /** The composers' model picker on its own: demo, install and prompt. */
-  modelPicker: () => '/model-picker',
+  modelPicker: () => '/components/model-picker',
   /** Every piece together: composer, model picker, thinking style, palette, responses, templates. */
   playground: () => '/playground',
   /** Bare template, no site chrome: what the preview iframes load. */

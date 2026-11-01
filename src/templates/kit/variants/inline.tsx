@@ -4,6 +4,46 @@ import { cn } from '@/lib/utils';
 import { AttachmentStrip } from '../attachments';
 import { ComposerLoader } from '../primitives';
 import { withAttachments, SendButton, Status, useField, type VariantProps } from '../composer-kit';
+import { defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({
+  en: {
+    suggest: { edit: 'Make this shorter and clearer', ask: 'Explain what this means' },
+    removeSelection: 'Remove selection',
+    noSelection: 'No selection',
+    describeEdit: 'Describe the edit…',
+    askSelection: 'Ask about the selection…',
+    editInstruction: 'Edit instruction',
+    question: 'Question',
+    modeLabel: 'Mode',
+    edit: 'Edit',
+    ask: 'Ask',
+    modeName: { edit: 'edit', ask: 'ask' },
+    stop: 'stop',
+    focus: 'focus',
+    accept: 'accept',
+    close: 'close',
+    attach: 'Attach file',
+  },
+  fr: {
+    suggest: { edit: 'Rends ça plus court et plus clair', ask: 'Explique ce que ça veut dire' },
+    removeSelection: 'Retirer la sélection',
+    noSelection: 'Aucune sélection',
+    describeEdit: 'Décrivez la modification…',
+    askSelection: 'Posez une question sur la sélection…',
+    editInstruction: 'Instruction de modification',
+    question: 'Question',
+    modeLabel: 'Mode',
+    edit: 'Modifier',
+    ask: 'Demander',
+    modeName: { edit: 'modifier', ask: 'demander' },
+    stop: 'arrêter',
+    focus: 'focus',
+    accept: 'accepter',
+    close: 'fermer',
+    attach: 'Joindre un fichier',
+  },
+});
 
 /* Inline (Selection bar, ⌘K): a compact single-line bar meant to sit on a selection. Select text anywhere on the
  * page, press ⌘K / Ctrl+K: the bar takes focus and carries the selection as a quote chip. Edit or Ask decides
@@ -12,7 +52,6 @@ import { withAttachments, SendButton, Status, useField, type VariantProps } from
 
 type Mode = 'edit' | 'ask';
 
-const SUGGEST: Record<Mode, string> = { edit: 'Make this shorter and clearer', ask: 'Explain what this means' };
 
 const isMac = () => typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform);
 
@@ -21,6 +60,7 @@ const kbd = 'inline-flex h-4 min-w-4 items-center justify-center rounded border 
 const Key = ({ children }: { children: ReactNode }) => <kbd className={kbd}>{children}</kbd>;
 
 export function InlineComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
   const field = useField(p);
   const input = useRef<HTMLInputElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -84,7 +124,7 @@ export function InlineComposerView(p: VariantProps) {
     }
     if (e.key === 'Tab' && !e.shiftKey && !p.value) {
       e.preventDefault();
-      p.onChange(SUGGEST[mode]);
+      p.onChange(t.suggest[mode]);
       return;
     }
     if (e.key === 'Escape') {
@@ -130,12 +170,12 @@ export function InlineComposerView(p: VariantProps) {
               <span title={quote} className="flex h-6 max-w-[38%] min-w-0 shrink items-center gap-1 rounded-md border border-border-button-default bg-background-tertiary-default ps-1.5 pe-0.5 text-caption-1-medium text-text-secondary">
                 <TextQuote className="size-3 shrink-0 text-foreground-icon-tertiary" />
                 <span className="truncate">{quote}</span>
-                <button type="button" aria-label="Remove selection" onClick={() => setQuote(null)} className="grid size-4 shrink-0 place-items-center rounded text-foreground-icon-tertiary hover:bg-background-primary-hover hover:text-foreground-icon-primary">
+                <button type="button" aria-label={t.removeSelection} onClick={() => setQuote(null)} className="grid size-4 shrink-0 place-items-center rounded text-foreground-icon-tertiary hover:bg-background-primary-hover hover:text-foreground-icon-primary">
                   <X className="size-3" />
                 </button>
               </span>
             ) : (
-              <span className="hidden h-6 shrink-0 items-center rounded-md border border-dashed border-border-button-default px-1.5 text-caption-1-medium text-text-tertiary sm:flex">No selection</span>
+              <span className="hidden h-6 shrink-0 items-center rounded-md border border-dashed border-border-button-default px-1.5 text-caption-1-medium text-text-tertiary sm:flex">{t.noSelection}</span>
             )}
             <input
               ref={input}
@@ -143,13 +183,13 @@ export function InlineComposerView(p: VariantProps) {
               onChange={(e) => p.onChange(e.target.value)}
               onKeyDown={onKeyDown}
               onFocus={read}
-              placeholder={quote ? (mode === 'edit' ? 'Describe the edit…' : 'Ask about the selection…') : p.placeholder}
-              aria-label={mode === 'edit' ? 'Edit instruction' : 'Question'}
+              placeholder={quote ? (mode === 'edit' ? t.describeEdit : t.askSelection) : p.placeholder}
+              aria-label={mode === 'edit' ? t.editInstruction : t.question}
               className="h-6 min-w-0 flex-1 bg-transparent px-1 text-body-2-regular text-text-primary caret-accent-500 outline-none placeholder:text-text-tertiary"
             />
-            <div role="radiogroup" aria-label="Mode" className="flex shrink-0 items-center rounded-lg bg-background-tertiary-default p-0.5">
-              {segment('edit', 'Edit')}
-              {segment('ask', 'Ask')}
+            <div role="radiogroup" aria-label={t.modeLabel} className="flex shrink-0 items-center rounded-lg bg-background-tertiary-default p-0.5">
+              {segment('edit', t.edit)}
+              {segment('ask', t.ask)}
             </div>
             {p.model && <span className="hidden shrink-0 items-center sm:flex [&_button]:h-7 [&_button]:text-caption-1-medium">{p.model}</span>}
             <SendButton busy={p.busy} onStop={p.onStop} disabled={!p.value.trim()} className="size-7 rounded-lg [&_svg]:size-4" stopClassName="size-7 rounded-lg" />
@@ -157,28 +197,28 @@ export function InlineComposerView(p: VariantProps) {
           <div className="flex h-7 items-center gap-3 border-t border-separator-border ps-3 pe-1.5 text-caption-2-medium text-text-tertiary">
             {p.busy ? (
               <button type="button" onClick={p.onStop} className="flex items-center gap-1 hover:text-text-primary">
-                <Key>Esc</Key> stop
+                <Key>Esc</Key> {t.stop}
               </button>
             ) : (
               <>
                 <span className="flex items-center gap-1">
-                  <Key>{mod === '⌘' ? '⌘K' : 'Ctrl K'}</Key> focus
+                  <Key>{mod === '⌘' ? '⌘K' : 'Ctrl K'}</Key> {t.focus}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Key>↵</Key> {mode}
+                  <Key>↵</Key> {t.modeName[mode]}
                 </span>
                 <span className="hidden items-center gap-1 sm:flex">
-                  <Key>{mod === '⌘' ? '⌥↵' : 'Alt ↵'}</Key> ask
+                  <Key>{mod === '⌘' ? '⌥↵' : 'Alt ↵'}</Key> {t.ask.toLowerCase()}
                 </span>
                 <span className="hidden items-center gap-1 md:flex">
-                  <Key>Tab</Key> accept
+                  <Key>Tab</Key> {t.accept}
                 </span>
                 <span className="hidden items-center gap-1 sm:flex">
-                  <Key>Esc</Key> close
+                  <Key>Esc</Key> {t.close}
                 </span>
               </>
             )}
-            <button type="button" aria-label="Attach file" onClick={p.att.add} className="ms-auto grid size-6 place-items-center rounded-md hover:bg-background-tertiary-default dark:hover:bg-background-primary-hover hover:text-text-primary">
+            <button type="button" aria-label={t.attach} onClick={p.att.add} className="ms-auto grid size-6 place-items-center rounded-md hover:bg-background-tertiary-default dark:hover:bg-background-primary-hover hover:text-text-primary">
               <Paperclip className="size-3.5" />
             </button>
           </div>

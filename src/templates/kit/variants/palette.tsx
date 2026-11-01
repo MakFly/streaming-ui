@@ -4,25 +4,80 @@ import { cn } from '@/lib/utils';
 import { ComposerLoader } from '../primitives';
 import { AttachmentStrip } from '../attachments';
 import { withAttachments, SendButton, Status, type VariantProps } from '../composer-kit';
+import { defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({
+  en: {
+    commands: {
+      summarize: { label: 'Summarize thread', prompt: 'Summarize this thread in three bullet points' },
+      translate: { label: 'Translate to French', prompt: 'Translate the last message to French' },
+      grammar: { label: 'Fix grammar', prompt: 'Fix the grammar of my last message' },
+      explain: { label: 'Explain code', prompt: 'Explain the code in the last message step by step' },
+      reply: { label: 'Draft reply', prompt: 'Draft a short, friendly reply to the last message' },
+    },
+    recents: ['Rewrite this paragraph to be shorter', 'What changed in the last release?'],
+    useWith: (q: string) => `Use “${q}” with`,
+    commandsGroup: 'Commands',
+    recent: 'Recent',
+    command: 'Command',
+    askAi: 'Ask AI',
+    run: 'Run',
+    actions: 'Actions',
+    askWithQuery: 'Ask AI with the query',
+    editInField: 'Edit in the field',
+    attach: 'Attach file',
+    clearQuery: 'Clear query',
+    comboLabel: 'Ask AI or search commands',
+    listLabel: 'Ask AI and commands',
+    typeQuestion: 'Type a question',
+    quickAi: 'Quick AI',
+    stop: 'Stop',
+  },
+  fr: {
+    commands: {
+      summarize: { label: 'Résumer le fil', prompt: 'Résume ce fil en trois points' },
+      translate: { label: 'Traduire en anglais', prompt: 'Traduis le dernier message en anglais' },
+      grammar: { label: 'Corriger la grammaire', prompt: 'Corrige la grammaire de mon dernier message' },
+      explain: { label: 'Expliquer le code', prompt: 'Explique pas à pas le code du dernier message' },
+      reply: { label: 'Rédiger une réponse', prompt: 'Rédige une courte réponse amicale au dernier message' },
+    },
+    recents: ['Réécris ce paragraphe en plus court', 'Quoi de neuf dans la dernière version ?'],
+    useWith: (q: string) => `Utiliser « ${q} » avec`,
+    commandsGroup: 'Commandes',
+    recent: 'Récent',
+    command: 'Commande',
+    askAi: "Demander à l'IA",
+    run: 'Exécuter',
+    actions: 'Actions',
+    askWithQuery: "Demander à l'IA avec la requête",
+    editInField: 'Modifier dans le champ',
+    attach: 'Joindre un fichier',
+    clearQuery: 'Effacer la requête',
+    comboLabel: "Demander à l'IA ou chercher une commande",
+    listLabel: "Demander à l'IA et commandes",
+    typeQuestion: 'Posez une question',
+    quickAi: 'IA rapide',
+    stop: 'Arrêter',
+  },
+});
 
 /* Palette composer (Command palette): a command palette whose query is also the prompt. One large search row with
  * the model on the right; under it a list that opens on focus: "Ask AI" first, then the commands the query filters
  * and the last prompts. Arrows move the active row, Enter runs it, Tab always hands the raw query to AI, ⌘K turns
  * the list into the actions for the active row. A launcher-style action bar closes the palette. */
 
-const COMMANDS = [
-  { id: 'summarize', label: 'Summarize thread', prompt: 'Summarize this thread in three bullet points', icon: <FileText /> },
-  { id: 'translate', label: 'Translate to French', prompt: 'Translate the last message to French', icon: <Languages /> },
-  { id: 'grammar', label: 'Fix grammar', prompt: 'Fix the grammar of my last message', icon: <SpellCheck /> },
-  { id: 'explain', label: 'Explain code', prompt: 'Explain the code in the last message step by step', icon: <Code /> },
-  { id: 'reply', label: 'Draft reply', prompt: 'Draft a short, friendly reply to the last message', icon: <Reply /> },
-] as const;
-
-const FIRST_RECENTS = ['Rewrite this paragraph to be shorter', 'What changed in the last release?'];
+const COMMAND_ICONS = {
+  summarize: <FileText />,
+  translate: <Languages />,
+  grammar: <SpellCheck />,
+  explain: <Code />,
+  reply: <Reply />,
+};
+type Command = { id: keyof typeof COMMAND_ICONS; label: string; prompt: string; icon: ReactNode };
 
 type Row =
   | { kind: 'ai'; key: string; group: null }
-  | { kind: 'cmd'; key: string; group: string; cmd: (typeof COMMANDS)[number] }
+  | { kind: 'cmd'; key: string; group: string; cmd: Command }
   | { kind: 'recent'; key: string; group: string; text: string }
   | { kind: 'action'; key: string; group: string; label: string; icon: ReactNode; hint?: string; run: () => void };
 
@@ -36,13 +91,15 @@ const kbd = 'inline-flex h-[18px] min-w-[18px] items-center justify-center round
 const Kbd = ({ children, className }: { children: ReactNode; className?: string }) => <kbd className={cn(kbd, className)}>{children}</kbd>;
 
 export function PaletteComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
+  const COMMANDS: Command[] = (Object.keys(COMMAND_ICONS) as Command['id'][]).map((id) => ({ id, ...t.commands[id], icon: COMMAND_ICONS[id] }));
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const [focused, setFocused] = useState(false);
   const [active, setActive] = useState(0);
   const [actions, setActions] = useState(false);
-  const [recents, setRecents] = useState(FIRST_RECENTS);
+  const [recents, setRecents] = useState<string[]>(() => t.recents);
 
   const query = p.value.trim();
   const q = query.toLowerCase();
@@ -57,35 +114,35 @@ export function PaletteComposerView(p: VariantProps) {
     setActions(false);
     setActive(0);
   };
-  const runCommand = (c: (typeof COMMANDS)[number]) => send(!query || filtering ? c.prompt : `${c.label}: ${query}`);
+  const runCommand = (c: Command) => send(!query || filtering ? c.prompt : `${c.label}: ${query}`);
 
   const base: Row[] = [
     { kind: 'ai', key: 'ai', group: null },
-    ...(filtering ? hits : COMMANDS).map((cmd): Row => ({ kind: 'cmd', key: cmd.id, group: query && !filtering ? `Use “${query}” with` : 'Commands', cmd })),
-    ...recents.filter((t) => !q || t.toLowerCase().includes(q)).map((text, i): Row => ({ kind: 'recent', key: `recent-${i}`, group: 'Recent', text })),
+    ...(filtering ? hits : COMMANDS).map((cmd): Row => ({ kind: 'cmd', key: cmd.id, group: query && !filtering ? t.useWith(query) : t.commandsGroup, cmd })),
+    ...recents.filter((t) => !q || t.toLowerCase().includes(q)).map((text, i): Row => ({ kind: 'recent', key: `recent-${i}`, group: t.recent, text })),
   ];
   const at = Math.min(active, base.length - 1);
   const target = base[at];
-  const targetLabel = target.kind === 'ai' ? 'Ask AI' : target.kind === 'cmd' ? target.cmd.label : target.kind === 'recent' ? target.text : '';
+  const targetLabel = target.kind === 'ai' ? t.askAi : target.kind === 'cmd' ? target.cmd.label : target.kind === 'recent' ? target.text : '';
 
   const actionRows: Row[] = [
-    { kind: 'action', key: 'run', group: `Actions · ${targetLabel}`, label: target.kind === 'ai' ? 'Ask AI' : 'Run', icon: <CornerDownLeft />, hint: '↵', run: () => runRow(target) },
-    { kind: 'action', key: 'ask', group: `Actions · ${targetLabel}`, label: 'Ask AI with the query', icon: <Sparkles />, hint: 'Tab', run: () => send(query) },
+    { kind: 'action', key: 'run', group: `${t.actions} · ${targetLabel}`, label: target.kind === 'ai' ? t.askAi : t.run, icon: <CornerDownLeft />, hint: '↵', run: () => runRow(target) },
+    { kind: 'action', key: 'ask', group: `${t.actions} · ${targetLabel}`, label: t.askWithQuery, icon: <Sparkles />, hint: 'Tab', run: () => send(query) },
     ...(target.kind === 'cmd' || target.kind === 'recent'
-      ? [{ kind: 'action', key: 'insert', group: `Actions · ${targetLabel}`, label: 'Edit in the field', icon: <TextCursorInput />, run: () => fill(target.kind === 'cmd' ? `${target.cmd.label}: ` : target.text) } satisfies Row]
+      ? [{ kind: 'action', key: 'insert', group: `${t.actions} · ${targetLabel}`, label: t.editInField, icon: <TextCursorInput />, run: () => fill(target.kind === 'cmd' ? `${target.cmd.label}: ` : target.text) } satisfies Row]
       : []),
     {
       kind: 'action',
       key: 'attach',
-      group: `Actions · ${targetLabel}`,
-      label: 'Attach file',
+      group: `${t.actions} · ${targetLabel}`,
+      label: t.attach,
       icon: <Paperclip />,
       run: () => {
         p.att.add();
         setActions(false);
       },
     },
-    { kind: 'action', key: 'clear', group: `Actions · ${targetLabel}`, label: 'Clear query', icon: <Eraser />, hint: 'esc', run: () => fill('') },
+    { kind: 'action', key: 'clear', group: `${t.actions} · ${targetLabel}`, label: t.clearQuery, icon: <Eraser />, hint: 'esc', run: () => fill('') },
   ];
 
   const rows = actions ? actionRows : base;
@@ -195,7 +252,7 @@ export function PaletteComposerView(p: VariantProps) {
               onBlur={() => setFocused(false)}
               placeholder={p.placeholder}
               role="combobox"
-              aria-label="Ask AI or search commands"
+              aria-label={t.comboLabel}
               aria-expanded={open}
               aria-controls={`${uid}-list`}
               aria-activedescendant={activeId}
@@ -216,7 +273,7 @@ export function PaletteComposerView(p: VariantProps) {
               ref={list}
               id={`${uid}-list`}
               role="listbox"
-              aria-label={actions ? 'Actions' : 'Ask AI and commands'}
+              aria-label={actions ? t.actions : t.listLabel}
               className="animate-in fade-in-0 scrollbar-thin max-h-[212px] overflow-y-auto border-t border-separator-border p-1.5 duration-150"
             >
               {rows.map((r, i) => {
@@ -247,8 +304,8 @@ export function PaletteComposerView(p: VariantProps) {
                           <span className="grid size-5 shrink-0 place-items-center rounded-md bg-accent-500 text-white [&_svg]:size-3!">
                             <Sparkles />
                           </span>
-                          <span className="shrink-0">Ask AI</span>
-                          <span className={cn('min-w-0 flex-1 truncate', query ? 'text-text-secondary' : 'text-text-tertiary')}>{query ? `· ${query}` : 'Type a question'}</span>
+                          <span className="shrink-0">{t.askAi}</span>
+                          <span className={cn('min-w-0 flex-1 truncate', query ? 'text-text-secondary' : 'text-text-tertiary')}>{query ? `· ${query}` : t.typeQuestion}</span>
                           <Kbd>Tab</Kbd>
                         </>
                       )}
@@ -256,14 +313,14 @@ export function PaletteComposerView(p: VariantProps) {
                         <>
                           <span className="grid size-5 shrink-0 place-items-center rounded-md bg-background-tertiary-default text-foreground-icon-secondary [&_svg]:size-3.5!">{r.cmd.icon}</span>
                           <span className="min-w-0 flex-1 truncate">{r.cmd.label}</span>
-                          <span className="shrink-0 text-caption-1-regular text-text-tertiary">Command</span>
+                          <span className="shrink-0 text-caption-1-regular text-text-tertiary">{t.command}</span>
                         </>
                       )}
                       {r.kind === 'recent' && (
                         <>
                           <History className="ms-0.5 me-0.5 text-foreground-icon-tertiary" />
                           <span className="min-w-0 flex-1 truncate text-text-secondary">{r.text}</span>
-                          <span className="shrink-0 text-caption-1-regular text-text-tertiary">Recent</span>
+                          <span className="shrink-0 text-caption-1-regular text-text-tertiary">{t.recent}</span>
                         </>
                       )}
                       {r.kind === 'action' && (
@@ -285,24 +342,24 @@ export function PaletteComposerView(p: VariantProps) {
               <span className="grid size-4 shrink-0 place-items-center rounded-[5px] bg-accent-500 text-white">
                 <Sparkles className="size-2.5" />
               </span>
-              <span className="truncate">Quick AI</span>
+              <span className="truncate">{t.quickAi}</span>
             </span>
             {p.busy ? (
               <button type="button" onClick={p.onStop} className={cn(chip, 'ms-auto')}>
-                Stop <Kbd>esc</Kbd>
+                {t.stop} <Kbd>esc</Kbd>
               </button>
             ) : (
               <span className="ms-auto flex shrink-0 items-center">
                 <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => send(query)} disabled={!query} className={cn(chip, 'hidden sm:flex')}>
-                  Ask AI <Kbd>Tab</Kbd>
+                  {t.askAi} <Kbd>Tab</Kbd>
                 </button>
                 <span className="mx-1 hidden h-3.5 w-px bg-separator-border sm:block" />
                 <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => runRow(rows[current])} disabled={!query && current === 0 && !actions} className={chip}>
-                  Run <Kbd>↵</Kbd>
+                  {t.run} <Kbd>↵</Kbd>
                 </button>
                 <span className="mx-1 h-3.5 w-px bg-separator-border" />
                 <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={toggleActions} aria-pressed={actions} className={cn(chip, actions && 'bg-background-tertiary-default text-text-primary')}>
-                  Actions
+                  {t.actions}
                   <span className="flex items-center gap-0.5">
                     <Kbd>
                       <Command className="size-2.5" />

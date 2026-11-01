@@ -4,11 +4,18 @@ import { cn } from '@/lib/utils';
 import { ComposerLoader } from '../primitives';
 import { AttachmentStrip } from '../attachments';
 import { withAttachments, Field, SendButton, Status, useField, type VariantProps } from '../composer-kit';
+import { defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({
+  en: { addAttachment: 'Add attachment', mention: 'Mention', searchWeb: 'Search the web' },
+  fr: { addAttachment: 'Ajouter une pièce jointe', mention: 'Mentionner', searchWeb: 'Rechercher sur le web' },
+});
 
 /* Dock (Floating toolbar): a floating glass toolbar with grouped tools and an accent send.
  * Use <DockComposer> on its own, or the view inside a switcher that owns the attachments. */
 
 export function DockComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
   const field = useField(p);
   const [web, setWeb] = useState(false);
   const tool = 'grid size-8 shrink-0 place-items-center rounded-[10px] text-foreground-icon-secondary transition-colors hover:bg-background-tertiary-default hover:text-foreground-icon-primary [&_svg]:size-[18px]';
@@ -25,12 +32,12 @@ export function DockComposerView(p: VariantProps) {
           className="flex min-h-12 w-full items-end gap-1 p-1.5"
         >
           <div className="flex shrink-0 items-center gap-0.5 rounded-xl bg-background-tertiary-default/70 p-0.5">
-            <button type="button" aria-label="Add attachment" onClick={p.att.add} className={tool}>
+            <button type="button" aria-label={t.addAttachment} onClick={p.att.add} className={tool}>
               <Plus />
             </button>
             <button
               type="button"
-              aria-label="Mention"
+              aria-label={t.mention}
               onClick={() => {
                 p.onChange(p.value && !/s$/.test(p.value) ? `${p.value} @` : `${p.value}@`);
                 field.ref.current?.focus();
@@ -39,7 +46,7 @@ export function DockComposerView(p: VariantProps) {
             >
               <AtSign />
             </button>
-            <button type="button" aria-label="Search the web" aria-pressed={web} onClick={() => setWeb((w) => !w)} className={cn(tool, web && 'bg-accent-500/15 text-accent-500 hover:bg-accent-500/20 hover:text-accent-500')}>
+            <button type="button" aria-label={t.searchWeb} aria-pressed={web} onClick={() => setWeb((w) => !w)} className={cn(tool, web && 'bg-accent-500/15 text-accent-500 hover:bg-accent-500/20 hover:text-accent-500')}>
               <Globe />
             </button>
           </div>

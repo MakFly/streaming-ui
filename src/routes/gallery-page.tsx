@@ -1,8 +1,8 @@
 import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, Outlet, useLocation, useNavigationType, useParams, useSearchParams } from 'react-router';
-import { SiteHeader } from '@/components/site-header';
+import { Link, Navigate, Outlet, useLocation, useNavigationType, useParams, useSearchParams } from 'react-router';
+import { PlaybackControls, SiteHeader } from '@/components/site-header';
 import { PageShell } from '@/components/page-shell';
-import { LibraryChips } from '@/components/library-chips';
+import { useDocsSubnav } from '@/components/docs/in-docs';
 import { DemoCard } from '@/components/demo-card';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -60,7 +60,12 @@ export function GalleryPage() {
   const view: GalleryView = (params.get('view') ?? storage.get(STORAGE_KEYS.view, 'grid')) === 'list' ? 'list' : 'grid';
 
   useEffect(() => storage.set(STORAGE_KEYS.view, view), [view]);
-  const { pathname, key: locationKey } = useLocation();
+  const { pathname, search, key: locationKey } = useLocation();
+  // The collections filter lives in the sidebar, nested under Responses; the query string (search, layout) rides along.
+  useDocsSubnav({
+    item: 'Responses',
+    links: libraries.map((l) => ({ label: l.name, to: paths.gallery(l.slug) + search, count: l.count, on: library?.slug === l.slug })),
+  });
   useEffect(() => {
     if (librarySlug && !library) return;
     applyHead({
@@ -129,22 +134,25 @@ export function GalleryPage() {
     );
 
   if (librarySlug && !library) return <NotFound />;
+  // No "All" page: 249 live previews on one page is too heavy. Bare /responses opens the first collection; a search
+  // (?q=, from Quick Search) still runs across every collection.
+  if (!library && !query) return <Navigate to={{ pathname: paths.gallery(libraries[0].slug), search }} replace />;
 
   const grid = view === 'grid';
   return (
     <PageShell width={grid ? 'wide' : 'narrow'}>
-      <SiteHeader crumbs={library ? [{ label: library.name }] : []}>
+      <SiteHeader crumbs={library ? [{ label: library.name }] : []} controls={false}>
         <div className="flex flex-col gap-2">
           <h1 className="text-title-1-semibold text-text-primary">{library ? library.name : 'Streaming Responses'}</h1>
-          <p className="text-body-regular text-text-secondary">
+          <p className="max-w-[68ch] text-body-regular text-pretty text-text-secondary">
             {library ? `${library.count} streaming responses in the ${library.name} collection, each shown in the collection's own theme.` : INTRO}
           </p>
         </div>
       </SiteHeader>
 
-      {/* Near-opaque, no blur: the nav above already frosts, and a second backdrop-filter over 249 live demos is
-          re-blurred on every scroll frame. */}
-      <div className="sticky top-14 z-30 lg:top-0 -mx-6 mt-8 flex flex-col gap-3 border-b border-separator-border bg-background-full/95 px-6 py-3 sm:-mx-10 sm:px-10">
+      {/* Opaque, no blur and no rule: the page colour alone separates it from the tiles scrolling under it, and a
+          backdrop-filter over live demos is re-blurred on every scroll frame. */}
+      <div className="sticky top-14 z-30 lg:top-0 -mx-6 mt-8 flex flex-col gap-3 bg-background-full px-6 py-3 sm:-mx-10 sm:px-10">
         <div className="flex flex-wrap items-center gap-2">
           <label className="relative flex h-9 min-w-0 basis-full items-center gap-2 rounded-full bg-background-tertiary-default px-3 sm:max-w-[320px] sm:flex-1 sm:basis-auto">
             <Icon name="search-line" className="size-[18px] text-foreground-icon-secondary" />
@@ -160,28 +168,29 @@ export function GalleryPage() {
           <span className="text-body-2-medium tabular-nums text-text-tertiary" aria-live="polite">
             {visible.length} {visible.length === 1 ? 'response' : 'responses'}
           </span>
+          <div className="ms-auto">
+            <PlaybackControls />
+          </div>
           <ToggleGroup
             type="single"
             aria-label="Layout"
-            className="ms-auto"
             value={view}
             onValueChange={(v) => v && setParam('view', v === 'grid' ? null : v)}
           >
             <ToggleGroupItem value="grid" aria-label="Grid">
               <Icon name="layout-grid-line" className="size-4" />
-              Grid
+              <span className="max-sm:hidden">Grid</span>
             </ToggleGroupItem>
             <ToggleGroupItem value="list" aria-label="List">
               <Icon name="list-unordered" className="size-4" />
-              List
+              <span className="max-sm:hidden">List</span>
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
-        <LibraryChips active={library?.slug} />
       </div>
 
       {visible.length > 0 ? (
-        <main className={cn('w-full min-w-0', grid ? 'grid grid-cols-1 gap-x-8 lg:grid-cols-2' : 'flex flex-col')}>
+        <main className={cn('w-full min-w-0 pt-6', grid ? 'grid grid-cols-1 gap-6 lg:grid-cols-2' : 'flex flex-col gap-6')}>
           {shown.map((d) => (
             <DemoCard key={d.slug} demo={d} compact={grid} library={library?.slug} />
           ))}
@@ -190,7 +199,7 @@ export function GalleryPage() {
         <div className="flex flex-col items-center gap-3 py-20 text-center">
           <p className="text-body-regular text-text-secondary">No response matches this filter.</p>
           <Button asChild className="px-3">
-            <Link to={{ pathname: paths.gallery(), search: grid ? '' : '?view=list' }} preventScrollReset>
+            <Link to={{ pathname: paths.gallery(library?.slug), search: grid ? '' : '?view=list' }} preventScrollReset>
               Clear filters
             </Link>
           </Button>

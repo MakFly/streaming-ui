@@ -1,6 +1,59 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Brain, Check, ChevronDown, ChevronRight, Copy, Flag, LoaderCircle, Moon, MoreHorizontal, Pencil, RefreshCw, Reply, Sun, TextCursorInput, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react';
 import { useTheme } from '@/providers/theme-provider';
+import { LOCALES, defineCopy, setLocale, useCopy, useLocale } from './i18n';
+
+/** The kit's own copy: labels of the parts every template shares. */
+const KIT_COPY = defineCopy({
+  en: {
+    language: 'Language',
+    lightMode: 'Use light mode',
+    darkMode: 'Use dark mode',
+    close: 'Close',
+    edit: 'Edit',
+    showQuoted: 'Show the quoted message',
+    moreActions: 'More actions',
+    more: 'More',
+    copyMarkdown: 'Copy as Markdown',
+    readAloud: 'Read aloud',
+    report: 'Report a problem',
+    copy: 'Copy',
+    copied: 'Copied',
+    good: 'Good response',
+    bad: 'Bad response',
+    reply: 'Reply',
+    regenerate: 'Regenerate',
+    thoughtFor: (s: number) => `Thought for ${s}s`,
+    templateDefault: 'Template default',
+    templateDefaultHint: 'Each template keeps its own composer',
+    composerStyle: 'Composer style',
+    composerScope: 'Composer · applies to every template',
+  },
+  fr: {
+    language: 'Langue',
+    lightMode: 'Passer en mode clair',
+    darkMode: 'Passer en mode sombre',
+    close: 'Fermer',
+    edit: 'Modifier',
+    showQuoted: 'Afficher le message cité',
+    moreActions: "Plus d'actions",
+    more: 'Plus',
+    copyMarkdown: 'Copier en Markdown',
+    readAloud: 'Lire à voix haute',
+    report: 'Signaler un problème',
+    copy: 'Copier',
+    copied: 'Copié',
+    good: 'Bonne réponse',
+    bad: 'Mauvaise réponse',
+    reply: 'Répondre',
+    regenerate: 'Régénérer',
+    thoughtFor: (s: number) => `Réflexion : ${s} s`,
+    templateDefault: 'Par défaut du template',
+    templateDefaultHint: 'Chaque template garde son propre composer',
+    composerStyle: 'Style du composer',
+    composerScope: "Composer · s'applique à tous les templates",
+  },
+});
 import { PalettePicker } from '@/components/palette-picker';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -43,11 +96,38 @@ export function IconButton({ label, onClick, children, className, active }: { la
   );
 }
 
+/** EN / FR for the templates: a two-option pill, the current language pressed. Shared with every preview frame. */
+export function LocaleSwitch({ className }: { className?: string }) {
+  const locale = useLocale();
+  const t = useCopy(KIT_COPY);
+  return (
+    <div role="radiogroup" aria-label={t.language} className={cn('flex shrink-0 items-center rounded-full p-0.5', className)}>
+      {LOCALES.map((l) => (
+        <button
+          key={l.id}
+          type="button"
+          role="radio"
+          aria-checked={locale === l.id}
+          aria-label={l.label}
+          onClick={() => setLocale(l.id)}
+          className={cn(
+            'h-7 cursor-pointer rounded-full px-2 text-caption-1-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-border-focus-ring',
+            locale === l.id ? 'bg-background-tertiary-default text-text-primary' : 'text-text-tertiary hover:text-text-primary',
+          )}
+        >
+          {l.short}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Light / dark switch for template headers; the choice is shared with the site and every preview frame. */
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
+  const t = useCopy(KIT_COPY);
   return (
-    <IconButton label={theme === 'dark' ? 'Use light mode' : 'Use dark mode'} onClick={toggleTheme} className={className}>
+    <IconButton label={theme === 'dark' ? t.lightMode : t.darkMode} onClick={toggleTheme} className={className}>
       {theme === 'dark' ? <Sun className="animate-in spin-in-45 fade-in-0 duration-300" /> : <Moon className="animate-in spin-in-45 fade-in-0 duration-300" />}
     </IconButton>
   );
@@ -165,6 +245,7 @@ export function SideRail({ open, width, side = 'start', className, children }: {
  * the same motion backwards before unmounting. Backdrop click and Escape close it.
  */
 export function Drawer({ open, onClose, side = 'start', className, children }: { open: boolean; onClose: () => void; side?: 'start' | 'end'; className?: string; children: ReactNode }) {
+  const t = useCopy(KIT_COPY);
   const [mounted, setMounted] = useState(open);
   const [shown, setShown] = useState(false);
   useEffect(() => {
@@ -195,7 +276,7 @@ export function Drawer({ open, onClose, side = 'start', className, children }: {
   if (!mounted) return null;
   return (
     <div className={cn('absolute inset-0 z-30 flex rounded-[inherit] p-2', side === 'end' && 'justify-end', className)}>
-      <button type="button" aria-label="Close" tabIndex={-1} onClick={onClose} className={cn('absolute inset-0 cursor-default rounded-[inherit] bg-black/30 backdrop-blur-[2px] transition-opacity duration-300', EASE, shown ? 'opacity-100' : 'opacity-0')} />
+      <button type="button" aria-label={t.close} tabIndex={-1} onClick={onClose} className={cn('absolute inset-0 cursor-default rounded-[inherit] bg-black/30 backdrop-blur-[2px] transition-opacity duration-300', EASE, shown ? 'opacity-100' : 'opacity-0')} />
       <div
         role="dialog"
         aria-modal="true"
@@ -263,6 +344,8 @@ export function ChatSurface({
   empty,
   className,
   columnClassName,
+  scrollRef,
+  overlay,
 }: {
   header?: ReactNode;
   footer?: ReactNode;
@@ -272,8 +355,19 @@ export function ChatSurface({
   empty?: boolean;
   className?: string;
   columnClassName?: string;
+  /** A caller that owns the scroll (useThreadReading) gets the scroller; the surface then stops following the end itself. */
+  scrollRef?: RefObject<HTMLDivElement | null>;
+  /** Laid over the thread between the header and the composer: a thread navigator rail. */
+  overlay?: ReactNode;
 }) {
-  const { ref, scrolled } = useThreadScroll<HTMLDivElement>(dep);
+  const { ref, scrolled } = useThreadScroll<HTMLDivElement>(scrollRef ? null : dep);
+  const setScroller = useCallback(
+    (el: HTMLDivElement | null) => {
+      ref.current = el;
+      if (scrollRef) scrollRef.current = el;
+    },
+    [ref, scrollRef],
+  );
   // The footer floats over the thread (ChatGPT-style): the column keeps its height free at the bottom, so the
   // last line still ends above the composer and only scrolled-up content passes under the glass.
   const footerRef = useRef<HTMLDivElement>(null);
@@ -309,7 +403,7 @@ export function ChatSurface({
           {header}
         </header>
       )}
-      <div ref={ref} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
+      <div ref={setScroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
         <div
           className={cn('mx-auto flex w-full flex-col gap-6 px-4 pb-8', width, header ? 'pt-[68px]' : 'pt-5', empty && 'min-h-full justify-center pb-24', columnClassName)}
           style={footer ? { paddingBottom: footerH + (empty ? 48 : 32) } : undefined}
@@ -317,6 +411,11 @@ export function ChatSurface({
           {children}
         </div>
       </div>
+      {overlay && (
+        <div className="pointer-events-none absolute inset-x-0 z-20 *:pointer-events-auto" style={{ top: header ? 48 : 0, bottom: footer ? footerH : 0 }}>
+          {overlay}
+        </div>
+      )}
       {footer && (
         <div ref={footerRef} className="absolute inset-x-0 bottom-0 z-10 rounded-[inherit] px-2.5 pb-2.5 sm:px-3 sm:pb-3">
           {/* The glass: blur and tint fade in over 2rem above the composer, so lines slide under it instead of being cut. */}
@@ -357,19 +456,20 @@ export { Quote, ReplyChip } from './reply';
 export const replyRefOf = (m: Message, label?: string): ReplyRef => ({ id: m.id, text: excerptOf(m), label });
 
 export function UserMessage({ children, onEdit, replyTo, className }: { children: ReactNode; onEdit?: () => void; /** The message this one answers: shown as a quote that scrolls back to it. */ replyTo?: ReplyRef; className?: string }) {
+  const t = useCopy(KIT_COPY);
   return (
     <div className={cn('group/user animate-in fade-in-0 slide-in-from-bottom-1 grid grid-cols-[minmax(72px,1fr)_minmax(0,auto)] duration-200', className)}>
       <div className="relative col-start-2 max-w-full">
         {onEdit && (
           <span className="absolute start-0 top-1/2 -translate-x-full -translate-y-1/2 pe-1.5 opacity-0 transition-opacity group-hover/user:opacity-100 rtl:translate-x-full">
-            <IconButton label="Edit" onClick={onEdit}>
+            <IconButton label={t.edit} onClick={onEdit}>
               <Pencil />
             </IconButton>
           </span>
         )}
         <div className="rounded-2xl bg-background-primary-default px-3.5 py-[11px] text-body-regular leading-6 break-words whitespace-pre-wrap text-text-primary shadow-card">
           {replyTo && (
-            <button type="button" onClick={() => revealMessage(replyTo.id)} title="Show the quoted message" className="mb-1.5 flex w-[18rem] max-w-full cursor-pointer rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring sm:w-[22rem]">
+            <button type="button" onClick={() => revealMessage(replyTo.id)} title={t.showQuoted} className="mb-1.5 flex w-[18rem] max-w-full cursor-pointer rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring sm:w-[22rem]">
               <Quote text={replyTo.text} />
             </button>
           )}
@@ -380,10 +480,15 @@ export function UserMessage({ children, onEdit, replyTo, className }: { children
   );
 }
 
-export const textOf = (m: Message) => m.parts.map((p) => (p.kind === 'text' ? p.text : '')).join('\n\n');
+/** The message's words: text parts only, so a tool row or a custom block before the answer adds no blank paragraph. */
+export const textOf = (m: Message) =>
+  m.parts
+    .flatMap((p) => (p.kind === 'text' ? [p.text] : []))
+    .join('\n\n');
 
 /** The action bar's last button: "…" opens the less frequent actions (Markdown copy, read aloud, report). */
 function MoreActions({ message, onReport }: { message: Message; onReport: () => void }) {
+  const t = useCopy(KIT_COPY);
   const item = 'flex items-center gap-2 rounded-md py-1.5 text-body-2-regular [&_svg]:size-4 [&_svg]:text-foreground-icon-tertiary';
   return (
     <DropdownMenu>
@@ -392,18 +497,18 @@ function MoreActions({ message, onReport }: { message: Message; onReport: () => 
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="More actions"
+              aria-label={t.moreActions}
               className="grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-[color,background-color,scale] outline-none hover:bg-background-tertiary-default hover:text-foreground-icon-primary dark:hover:bg-background-primary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring active:scale-90 data-[state=open]:bg-background-tertiary-default data-[state=open]:text-foreground-icon-primary [&_svg]:size-4"
             >
               <MoreHorizontal />
             </button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
-        <TooltipContent>More</TooltipContent>
+        <TooltipContent>{t.more}</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="start" className="w-48 p-1">
         <DropdownMenuItem className={item} onSelect={() => void navigator.clipboard?.writeText(textOf(message)).catch(() => {})}>
-          <Copy /> Copy as Markdown
+          <Copy /> {t.copyMarkdown}
         </DropdownMenuItem>
         <DropdownMenuItem
           className={item}
@@ -413,10 +518,10 @@ function MoreActions({ message, onReport }: { message: Message; onReport: () => 
             window.speechSynthesis.speak(new SpeechSynthesisUtterance(textOf(message).replace(/[*_`#>-]/g, '')));
           }}
         >
-          <Volume2 /> Read aloud
+          <Volume2 /> {t.readAloud}
         </DropdownMenuItem>
         <DropdownMenuItem className={item} onSelect={onReport}>
-          <Flag /> Report a problem
+          <Flag /> {t.report}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -425,12 +530,13 @@ function MoreActions({ message, onReport }: { message: Message; onReport: () => 
 
 /** Action bar: copy (check swap), feedback, regenerate, then "…" for the rest. Hidden on older turns until hover. */
 export function ActionBar({ message, isLast, onRegenerate, onReply, extra }: { message: Message; isLast?: boolean; onRegenerate?: () => void; /** Shows Reply: quote this message in the composer. */ onReply?: () => void; extra?: ReactNode }) {
+  const t = useCopy(KIT_COPY);
   const [copied, setCopied] = useState(false);
   const [vote, setVote] = useState<'up' | 'down' | null>(null);
   return (
     <div className={cn('-ms-1 flex items-center gap-0.5 pt-1 transition-opacity duration-200', !isLast && 'opacity-0 group-hover/message:opacity-100 focus-within:opacity-100')}>
       <IconButton
-        label={copied ? 'Copied' : 'Copy'}
+        label={copied ? t.copied : t.copy}
         onClick={() => {
           void navigator.clipboard?.writeText(textOf(message)).catch(() => {});
           setCopied(true);
@@ -439,19 +545,19 @@ export function ActionBar({ message, isLast, onRegenerate, onReply, extra }: { m
       >
         {copied ? <Check className="animate-in zoom-in-50 fade-in-0 duration-200" /> : <Copy />}
       </IconButton>
-      <IconButton label="Good response" active={vote === 'up'} onClick={() => setVote((v) => (v === 'up' ? null : 'up'))}>
+      <IconButton label={t.good} active={vote === 'up'} onClick={() => setVote((v) => (v === 'up' ? null : 'up'))}>
         <ThumbsUp />
       </IconButton>
-      <IconButton label="Bad response" active={vote === 'down'} onClick={() => setVote((v) => (v === 'down' ? null : 'down'))}>
+      <IconButton label={t.bad} active={vote === 'down'} onClick={() => setVote((v) => (v === 'down' ? null : 'down'))}>
         <ThumbsDown />
       </IconButton>
       {onReply && (
-        <IconButton label="Reply" onClick={onReply}>
+        <IconButton label={t.reply} onClick={onReply}>
           <Reply />
         </IconButton>
       )}
       {onRegenerate && (
-        <IconButton label="Regenerate" onClick={onRegenerate}>
+        <IconButton label={t.regenerate} onClick={onRegenerate}>
           <RefreshCw />
         </IconButton>
       )}
@@ -464,6 +570,7 @@ export function ActionBar({ message, isLast, onRegenerate, onReply, extra }: { m
 /** Reasoning: Agent Thinking while it runs, with each step on the agent-log trail;
  *  then a ghost disclosure "Thought for Ns", folded. */
 export function Reasoning({ part }: { part: Extract<Part, { kind: 'thinking' }> }) {
+  const t = useCopy(KIT_COPY);
   const [open, setOpen] = useState(true);
   useEffect(() => {
     if (part.done) setOpen(false);
@@ -478,7 +585,7 @@ export function Reasoning({ part }: { part: Extract<Part, { kind: 'thinking' }> 
           className="flex w-fit origin-left items-center gap-2 py-1 text-body-2-medium text-text-secondary transition-[color,scale] hover:text-text-primary active:scale-[0.98]"
         >
           <Brain className="size-4" />
-          Thought for {part.seconds}s
+          {t.thoughtFor(part.seconds ?? 0)}
           <ChevronDown className={cn('size-4 transition-transform duration-200', !open && '-rotate-90')} />
         </button>
       ) : (
@@ -572,6 +679,7 @@ export function AssistantMessage({
   /** Enriches plain text runs, e.g. mention chips. */
   decorate?: Decorate;
 }) {
+  const t = useCopy(KIT_COPY);
   return (
     <div data-message-id={message.id} className={cn('group/message flex min-w-0 flex-col gap-3 rounded-lg', className)}>
       {message.parts.map((p) => {
@@ -585,7 +693,7 @@ export function AssistantMessage({
       {/* No action bar (Support Copilot's drafts carry their own buttons): Reply alone, revealed the same way. */}
       {!actions && onReply && message.done && message.parts.some((p) => p.kind === 'text') && (
         <div className={cn('-ms-1 -mt-2 flex transition-opacity duration-200', !isLast && 'opacity-0 group-hover/message:opacity-100 focus-within:opacity-100')}>
-          <IconButton label="Reply" onClick={() => onReply({ id: message.id, text: excerptOf(message) })}>
+          <IconButton label={t.reply} onClick={() => onReply({ id: message.id, text: excerptOf(message) })}>
             <Reply />
           </IconButton>
         </div>
@@ -666,22 +774,23 @@ export function ComposerGlyph({ id }: { id: ComposerChoice }) {
 
 /** Swaps the composer of every template (saved, shared with the other preview frames). */
 export function ComposerPicker({ className }: { className?: string }) {
+  const t = useCopy(KIT_COPY);
   const { choice, setChoice } = useComposerChoice();
-  const items: { id: ComposerChoice; name: string; hint: string }[] = [{ id: 'auto', name: 'Template default', hint: 'Each template keeps its own composer' }, ...COMPOSER_VARIANTS.map((v) => ({ id: v.id, name: v.name, hint: `${v.from} · ${v.hint}` }))];
+  const items: { id: ComposerChoice; name: string; hint: string }[] = [{ id: 'auto', name: t.templateDefault, hint: t.templateDefaultHint }, ...COMPOSER_VARIANTS.map((v) => ({ id: v.id, name: v.name, hint: `${v.from} · ${v.hint}` }))];
   return (
     <DropdownMenu>
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>
-            <button type="button" aria-label="Composer style" className={cn('grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-colors outline-none hover:bg-background-tertiary-default hover:text-foreground-icon-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring data-[state=open]:bg-background-tertiary-default', className)}>
+            <button type="button" aria-label={t.composerStyle} className={cn('grid size-7 shrink-0 place-items-center rounded-md text-foreground-icon-tertiary transition-colors outline-none hover:bg-background-tertiary-default hover:text-foreground-icon-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring data-[state=open]:bg-background-tertiary-default', className)}>
               <TextCursorInput className="size-4" />
             </button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
-        <TooltipContent>Composer style</TooltipContent>
+        <TooltipContent>{t.composerStyle}</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="scrollbar-thin max-h-[min(70vh,600px)] w-80 overflow-y-auto p-1.5">
-        <p className="px-2 pt-1 pb-2 text-caption-1-medium text-text-tertiary">Composer · applies to every template</p>
+        <p className="px-2 pt-1 pb-2 text-caption-1-medium text-text-tertiary">{t.composerScope}</p>
         {items.map((it) => (
           <DropdownMenuItem key={it.id} onSelect={() => setChoice(it.id)} className="flex items-center gap-3 rounded-lg py-2">
             <ComposerGlyph id={it.id} />
@@ -755,7 +864,7 @@ export function Suggestions({ items, onPick, variant = 'pills', decorate, classN
           type="button"
           onClick={() => onPick(s.title)}
           style={{ animationDelay: `${i * 60}ms` }}
-          className="animate-in fade-in-0 slide-in-from-bottom-1 fill-mode-both rounded-full bg-background-primary-default px-3.5 py-2 text-body-2-medium text-text-secondary shadow-xs transition-colors duration-300 hover:bg-background-primary-hover hover:text-text-primary"
+          className="animate-in fade-in-0 slide-in-from-bottom-1 fill-mode-both rounded-full bg-background-primary-default px-3.5 py-2 text-body-2-medium text-text-primary/75 shadow-xs transition-colors duration-300 outline-none hover:bg-background-primary-hover hover:text-text-primary focus-visible:ring-2 focus-visible:ring-border-focus-ring"
         >
           {decorate ? decorate(s.title) : s.title}
         </button>

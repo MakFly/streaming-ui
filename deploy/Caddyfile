@@ -9,6 +9,11 @@
 	root * /srv
 	encode zstd gzip
 
+	# The component pages moved under /components. Permanent, so search engines carry the old URLs over.
+	redir /composers /components/composers 301
+	redir /orbs /components/thinking-orbs 301
+	redir /model-picker /components/model-picker 301
+
 	# Own handle: a catch-all handle below would swallow this and serve index.html.
 	handle /health {
 		respond 200

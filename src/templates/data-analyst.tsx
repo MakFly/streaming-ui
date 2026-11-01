@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChartColumn, ChevronDown, Database, Download, Hash, NotebookPen, Plus, Table2, Type, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { copyOf, defineCopy, getLocale, intlLocale, useCopy } from './kit/i18n';
 import { useChatEngine, type ChatScriptApi, type Part } from './kit/engine';
 import { CodeBlock } from './kit/markdown';
 import { AssistantMessage, Badge, Canvas, ChatSurface, Composer, Frame, FrameFooter, FrameHeader, FramePanel, HeaderButton, Suggestions, Surface, HeaderTools, UserMessage, Welcome, textOf } from './kit/parts';
@@ -28,22 +29,101 @@ GROUP BY region
 ORDER BY revenue DESC;`;
 
 type Row = [string, number, number, number];
-const ROWS: Row[] = [
-  ['North America', 482_300, 9_412, 51.24],
-  ['Europe', 391_850, 8_133, 48.18],
-  ['Asia Pacific', 266_400, 6_027, 44.2],
-  ['Latin America', 118_900, 3_311, 35.91],
-  ['Middle East & Africa', 64_200, 1_874, 34.26],
+const ROW_DATA: [number, number, number][] = [
+  [482_300, 9_412, 51.24],
+  [391_850, 8_133, 48.18],
+  [266_400, 6_027, 44.2],
+  [118_900, 3_311, 35.91],
+  [64_200, 1_874, 34.26],
 ];
 
-const money = (n: number) => `$${n.toLocaleString('en-US')}`;
-const compact = (n: number) => (n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${Math.round(n / 1000)}K`);
+const COPY = defineCopy({
+  en: {
+    regions: ['North America', 'Europe', 'Asia Pacific', 'Latin America', 'Middle East & Africa'],
+    introPrompt: 'Which regions drove revenue this year?',
+    introInsight: `**North America leads with $482K (36%)**, but Europe is close behind at $392K with almost the same order count.
+
+- Average order value falls steadily from NA ($51) to MEA ($34).
+- Asia Pacific has the third-largest volume (6K orders) at a lower ticket, a good upsell target.
+- The top two regions make up **66%** of revenue.`,
+    thinking: 'Thinking',
+    step1: 'orders has revenue, region and created_at',
+    step2: (dim: string) => `Group by ${dim} for 2025, sort by revenue`,
+    planInsight: `**Business** brings in the most revenue from far fewer orders: its average order is more than twice Pro's. Pro wins on volume with 14K orders.`,
+    writingSql: 'Writing SQL…',
+    running: 'Running…',
+    rowsCount: (n: number) => `${n} rows`,
+    table: 'Table',
+    chart: 'Chart',
+    rowsOf: (n: number) => `${n} of ${n} rows`,
+    openNotebook: 'Open in notebook',
+    exportCsv: 'Export CSV',
+    totalRevenue: '{t.totalRevenue}',
+    revenue: 'Revenue',
+    datasets: 'Datasets',
+    addDataset: 'Add dataset',
+    datasetRows: ['48.2K rows', '9.4K rows', '1.1K rows'],
+    columnsOf: 'orders · columns',
+    typeNames: { num: 'numeric', date: 'date', text: 'text' },
+    readOnly: 'analytics-prod · read-only',
+    starters: ['Break it down by plan', 'Show the monthly trend', 'Which region is growing fastest?'],
+    connected: 'Connected',
+    newNotebook: 'New notebook',
+    welcomeTitle: 'Ask your data anything',
+    welcomeSubtitle: 'Questions become SQL, tables and charts on the orders dataset.',
+    placeholder: 'Ask a question about your data',
+  },
+  fr: {
+    regions: ['Amérique du Nord', 'Europe', 'Asie-Pacifique', 'Amérique latine', 'Moyen-Orient et Afrique'],
+    introPrompt: "Quelles régions ont tiré le chiffre d'affaires cette année ?",
+    introInsight: `**L'Amérique du Nord est en tête avec 482 k$ (36 %)**, mais l'Europe la suit de près avec 392 k$ pour presque le même nombre de commandes.
+
+- Le panier moyen baisse régulièrement, de l'Amérique du Nord (51 $) au Moyen-Orient et Afrique (34 $).
+- L'Asie-Pacifique a le troisième plus gros volume (6 k commandes) avec un panier plus bas : une bonne cible pour la montée en gamme.
+- Les deux premières régions représentent **66 %** du chiffre d'affaires.`,
+    thinking: 'Réflexion',
+    step1: 'orders contient revenue, region et created_at',
+    step2: (dim: string) => `Regrouper par ${dim} pour 2025, trier par revenue`,
+    planInsight: `**Business** rapporte le plus de chiffre d'affaires avec bien moins de commandes : son panier moyen fait plus du double de celui de Pro. Pro gagne en volume avec 14 k commandes.`,
+    writingSql: 'Rédaction du SQL…',
+    running: 'Exécution…',
+    rowsCount: (n: number) => `${n} lignes`,
+    table: 'Tableau',
+    chart: 'Graphique',
+    rowsOf: (n: number) => `${n} lignes sur ${n}`,
+    openNotebook: 'Ouvrir dans un notebook',
+    exportCsv: 'Exporter en CSV',
+    totalRevenue: "Chiffre d'affaires total · 2025",
+    revenue: "Chiffre d'affaires",
+    datasets: 'Jeux de données',
+    addDataset: 'Ajouter un jeu de données',
+    datasetRows: ['48,2 k lignes', '9,4 k lignes', '1,1 k lignes'],
+    columnsOf: 'orders · colonnes',
+    typeNames: { num: 'numérique', date: 'date', text: 'texte' },
+    readOnly: 'analytics-prod · lecture seule',
+    starters: ['Détailler par formule', "Montrer la tendance mensuelle", 'Quelle région croît le plus vite ?'],
+    connected: 'Connecté',
+    newNotebook: 'Nouveau notebook',
+    welcomeTitle: 'Posez toutes vos questions à vos données',
+    welcomeSubtitle: 'Vos questions deviennent du SQL, des tableaux et des graphiques sur le jeu de données orders.',
+    placeholder: 'Posez une question sur vos données',
+  },
+});
+
+const regionRows = (): Row[] => copyOf(COPY).regions.map((r, i) => [r, ...ROW_DATA[i]] as Row);
+
+/* Money stays in dollars; the separators and the symbol position follow the locale. */
+const fmt = (n: number, digits = 0) => n.toLocaleString(intlLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
+const usd = (s: string) => (getLocale() === 'fr' ? `${s} $` : `$${s}`);
+const money = (n: number) => usd(fmt(n));
+const compact = (n: number) => (n >= 1e6 ? (getLocale() === 'fr' ? `${fmt(n / 1e6, 2)} M$` : `$${fmt(n / 1e6, 2)}M`) : getLocale() === 'fr' ? `${Math.round(n / 1000)} k$` : `$${Math.round(n / 1000)}K`);
 
 type Receipt = { name: string; dim: string; sql: string; shown: number; status: 'writing' | 'running' | 'done'; rows: Row[]; grown: boolean; delta: string };
 
 async function analyse(api: ChatScriptApi, name: string, dim: string, sql: string, rows: Row[], delta: string, insight: string) {
+  const t = copyOf(COPY);
   const a = api.assistant();
-  await a.think('Thinking', ['orders has revenue, region and created_at', `Group by ${dim} for 2025, sort by revenue`], 550);
+  await a.think(t.thinking, [t.step1, t.step2(dim)], 550);
   const set = a.custom('receipt', { name, dim, sql, shown: 0, status: 'writing', rows: [], grown: false, delta } satisfies Receipt);
   for (let i = 0; i <= sql.length; i += 4) {
     set({ shown: i });
@@ -64,20 +144,17 @@ async function analyse(api: ChatScriptApi, name: string, dim: string, sql: strin
 }
 
 async function intro(api: ChatScriptApi) {
+  const t = copyOf(COPY);
   await api.sleep(500);
-  await api.user('Which regions drove revenue this year?', { type: true });
+  await api.user(t.introPrompt, { type: true });
   await analyse(
     api,
     'revenue_by_region.sql',
     'region',
     SQL,
-    ROWS,
+    regionRows(),
     '+18.4%',
-    `**North America leads with $482K (36%)**, but Europe is close behind at $392K with almost the same order count.
-
-- Average order value falls steadily from NA ($51) to MEA ($34).
-- Asia Pacific has the third-largest volume (6K orders) at a lower ticket, a good upsell target.
-- The top two regions make up **66%** of revenue.`,
+    t.introInsight,
   );
 }
 
@@ -93,7 +170,7 @@ async function reply(api: ChatScriptApi, text: string) {
       ['Team', 223_100, 6_730, 33.15],
     ],
     '+11.2%',
-    `**Business** brings in the most revenue from far fewer orders: its average order is more than twice Pro's. Pro wins on volume with 14K orders.`,
+    copyOf(COPY).planInsight,
   );
 }
 
@@ -126,8 +203,8 @@ function DataGrid({ rows, dim }: { rows: Row[]; dim: string }) {
                   <span className="w-9 text-end text-caption-1-regular text-text-secondary tabular-nums">{Math.round((r[1] / total) * 100)}%</span>
                 </span>
               </td>
-              <td className={cn('px-3 py-1.5 text-end text-text-secondary tabular-nums', i < rows.length - 1 && 'border-b border-separator-border')}>{r[2].toLocaleString('en-US')}</td>
-              <td className={cn('px-3 py-1.5 text-end text-text-secondary tabular-nums', i < rows.length - 1 && 'border-b border-separator-border')}>${r[3].toFixed(2)}</td>
+              <td className={cn('px-3 py-1.5 text-end text-text-secondary tabular-nums', i < rows.length - 1 && 'border-b border-separator-border')}>{fmt(r[2])}</td>
+              <td className={cn('px-3 py-1.5 text-end text-text-secondary tabular-nums', i < rows.length - 1 && 'border-b border-separator-border')}>{usd(fmt(r[3], 2))}</td>
             </tr>
           ))}
         </tbody>
@@ -138,20 +215,21 @@ function DataGrid({ rows, dim }: { rows: Row[]; dim: string }) {
 
 /** Stat header (card numbers) over bars that grow on the design system's ease, with light gridlines. */
 function Chart({ rows, grown, delta }: { rows: Row[]; grown: boolean; delta: string }) {
+  const t = useCopy(COPY);
   const max = Math.max(...rows.map((r) => r[1]));
   const total = rows.reduce((a, r) => a + r[1], 0);
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-end justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-caption-1-medium text-text-tertiary">Total revenue · 2025</span>
+          <span className="text-caption-1-medium text-text-tertiary">{t.totalRevenue}</span>
           <span className="flex items-center gap-2">
             <span className="text-title-2-semibold tracking-[-0.02em] tabular-nums">{compact(total)}</span>
             <Badge tone="success">{delta}</Badge>
           </span>
         </div>
         <span className="flex items-center gap-1.5 text-caption-1-regular text-text-tertiary">
-          <span className="size-2 rounded-sm bg-accent-500" /> Revenue
+          <span className="size-2 rounded-sm bg-accent-500" /> {t.revenue}
         </span>
       </div>
       <div className="relative h-40">
@@ -181,8 +259,9 @@ function Chart({ rows, grown, delta }: { rows: Row[]; grown: boolean; delta: str
 }
 
 function ReceiptView({ r }: { r: Receipt }) {
+  const t = useCopy(COPY);
   const [view, setView] = useState<'table' | 'chart'>('table');
-  const status = r.status === 'writing' ? <Badge tone="info">Writing SQL…</Badge> : r.status === 'running' ? <Badge tone="warning">Running…</Badge> : <Badge tone="success" dot>{r.rows.length} rows</Badge>;
+  const status = r.status === 'writing' ? <Badge tone="info">{t.writingSql}</Badge> : r.status === 'running' ? <Badge tone="warning">{t.running}</Badge> : <Badge tone="success" dot>{t.rowsCount(r.rows.length)}</Badge>;
   const seg = (on: boolean) => cn('flex h-6 items-center gap-1 rounded-md px-2 text-caption-1-medium transition-colors [&_svg]:size-3.5', on ? 'bg-background-primary-default text-text-primary shadow-xs' : 'text-text-secondary hover:text-text-primary');
   return (
     <Frame>
@@ -203,14 +282,14 @@ function ReceiptView({ r }: { r: Receipt }) {
           <div className="flex items-center gap-2 border-b border-separator-border px-3 py-1.5">
             <div role="tablist" className="flex rounded-lg bg-background-tertiary-default p-0.5">
               <button type="button" role="tab" aria-selected={view === 'table'} onClick={() => setView('table')} className={seg(view === 'table')}>
-                <Table2 /> Table
+                <Table2 /> {t.table}
               </button>
               <button type="button" role="tab" aria-selected={view === 'chart'} onClick={() => setView('chart')} className={seg(view === 'chart')}>
-                <ChartColumn /> Chart
+                <ChartColumn /> {t.chart}
               </button>
             </div>
             <span className="ms-auto text-caption-1-regular text-text-tertiary tabular-nums">
-              {r.rows.length} of {r.rows.length} rows
+              {t.rowsOf(r.rows.length)}
             </span>
           </div>
           {view === 'table' ? <DataGrid rows={r.rows} dim={r.dim} /> : <Chart rows={r.rows} grown={r.grown} delta={r.delta} />}
@@ -224,10 +303,10 @@ function ReceiptView({ r }: { r: Receipt }) {
       {r.status === 'done' && (
         <FrameFooter>
           <HeaderButton className="h-7 text-caption-1-medium">
-            <NotebookPen /> Open in notebook
+            <NotebookPen /> {t.openNotebook}
           </HeaderButton>
           <HeaderButton className="h-7 text-caption-1-medium">
-            <Download /> Export CSV
+            <Download /> {t.exportCsv}
           </HeaderButton>
         </FrameFooter>
       )}
@@ -238,16 +317,17 @@ function ReceiptView({ r }: { r: Receipt }) {
 const TYPE_ICON = { num: <Hash className="size-3 text-blue-500" />, text: <Type className="size-3 text-emerald-500" />, date: <CalendarDays className="size-3 text-amber-500" /> };
 
 function DatasetPanel() {
+  const t = useCopy(COPY);
   return (
     <Surface className="h-full w-[260px] shrink-0 gap-5 p-3">
       <div className="flex items-center justify-between px-1 pt-1">
-        <span className="text-headline-semibold">Datasets</span>
-        <button type="button" aria-label="Add dataset" className="grid size-7 place-items-center rounded-md text-foreground-icon-secondary hover:bg-background-secondary-hover">
+        <span className="text-headline-semibold">{t.datasets}</span>
+        <button type="button" aria-label={t.addDataset} className="grid size-7 place-items-center rounded-md text-foreground-icon-secondary hover:bg-background-secondary-hover">
           <Plus className="size-4" />
         </button>
       </div>
       <div className="flex flex-col gap-0.5">
-        {[['orders', '48.2K rows', true], ['customers', '9.4K rows', false], ['refunds', '1.1K rows', false]].map(([n, c, on]) => (
+        {[['orders', t.datasetRows[0], true], ['customers', t.datasetRows[1], false], ['refunds', t.datasetRows[2], false]].map(([n, c, on]) => (
           <div key={String(n)} className={cn('flex items-center gap-2 rounded-2lg px-2 py-2 text-body-2-medium', on ? 'bg-background-primary-default text-text-primary shadow-xs' : 'text-text-secondary hover:bg-background-secondary-hover')}>
             <Database className="size-4 shrink-0 text-foreground-icon-secondary" />
             {n}
@@ -256,12 +336,12 @@ function DatasetPanel() {
         ))}
       </div>
       <div className="flex flex-col gap-1">
-        <p className="px-1 pb-1 text-body-2-medium text-text-tertiary">orders · columns</p>
-        {COLUMNS.map(([c, t]) => (
+        <p className="px-1 pb-1 text-body-2-medium text-text-tertiary">{t.columnsOf}</p>
+        {COLUMNS.map(([c, ty]) => (
           <div key={c} className="flex items-center gap-2 rounded-lg px-2 py-1 font-mono text-caption-1-regular text-text-secondary hover:bg-background-secondary-hover">
-            {TYPE_ICON[t]}
+            {TYPE_ICON[ty]}
             {c}
-            <span className="ms-auto font-sans text-caption-2-regular text-text-tertiary">{t === 'num' ? 'numeric' : t === 'date' ? 'date' : 'text'}</span>
+            <span className="ms-auto font-sans text-caption-2-regular text-text-tertiary">{t.typeNames[ty]}</span>
           </div>
         ))}
       </div>
@@ -269,16 +349,15 @@ function DatasetPanel() {
         <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgb(16_185_129/0.18)]" />
         <span className="flex flex-col leading-tight">
           <span className="text-body-2-medium">Postgres</span>
-          <span className="text-caption-1-regular text-text-tertiary">analytics-prod · read-only</span>
+          <span className="text-caption-1-regular text-text-tertiary">{t.readOnly}</span>
         </span>
       </div>
     </Surface>
   );
 }
 
-const STARTERS = ['Break it down by plan', 'Show the monthly trend', 'Which region is growing fastest?'];
-
 export default function DataAnalystTemplate() {
+  const t = useCopy(COPY);
   const chat = useChatEngine({ intro, reply });
   const empty = chat.messages.length === 0;
   const last = chat.messages[chat.messages.length - 1];
@@ -297,7 +376,7 @@ export default function DataAnalystTemplate() {
       onSend={chat.send}
       onStop={chat.stop}
       busy={chat.busy}
-      placeholder="Ask a question about your data"
+      placeholder={t.placeholder}
       tools={
         <span className="flex h-8 items-center gap-1.5 rounded-full border border-border-button-default px-2.5 font-mono text-caption-1-regular text-text-secondary">
           <Database className="size-3.5 text-accent-500" /> orders
@@ -321,12 +400,12 @@ export default function DataAnalystTemplate() {
               <Database className="text-accent-500" /> orders <ChevronDown className="text-foreground-icon-secondary" />
             </HeaderButton>
             <Badge tone="success" dot className="hidden sm:inline-flex">
-              Connected
+              {t.connected}
             </Badge>
             <span className="ms-auto flex items-center gap-1">
               <HeaderTools />
               <HeaderButton onClick={chat.reset}>
-                <NotebookPen /> <span className="hidden sm:inline">New notebook</span>
+                <NotebookPen /> <span className="hidden sm:inline">{t.newNotebook}</span>
               </HeaderButton>
             </span>
           </>
@@ -334,9 +413,9 @@ export default function DataAnalystTemplate() {
         footer={!empty && composer}
       >
         {empty ? (
-          <Welcome title="Ask your data anything" subtitle="Questions become SQL, tables and charts on the orders dataset.">
+          <Welcome title={t.welcomeTitle} subtitle={t.welcomeSubtitle}>
             <div className="mt-2 w-full text-start">{composer}</div>
-            <Suggestions variant="list" items={STARTERS} onPick={chat.send} className="text-start" />
+            <Suggestions variant="list" items={t.starters} onPick={chat.send} className="text-start" />
           </Welcome>
         ) : (
           chat.messages.map((m, i) =>
@@ -349,7 +428,7 @@ export default function DataAnalystTemplate() {
             ),
           )
         )}
-        {last?.role === 'assistant' && last.done && !chat.busy && <Suggestions items={STARTERS} onPick={chat.send} />}
+        {last?.role === 'assistant' && last.done && !chat.busy && <Suggestions items={t.starters} onPick={chat.send} />}
       </ChatSurface>
     </Canvas>
   );

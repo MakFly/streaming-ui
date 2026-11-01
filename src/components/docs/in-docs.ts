@@ -22,3 +22,31 @@ export function useDocsCrumbs(crumbs: Crumb[]) {
     return () => set([]);
   }, [set, key]);
 }
+
+export interface SubnavLink {
+  label: string;
+  to: string;
+  count?: number;
+  on: boolean;
+}
+
+/** Links a page nests under its own sidebar entry (the gallery's collections under Responses). */
+export interface Subnav {
+  /** The sidebar entry they hang under, by label. */
+  item: string;
+  links: SubnavLink[];
+}
+
+/** The docs layout's setter for the page's sidebar sub-links. The page owns the data, so the sidebar never imports it. */
+export const DocsSubnav = createContext<((subnav: Subnav | null) => void) | null>(null);
+
+/** Hand the page's sub-links to the sidebar; cleared when the page unmounts. */
+export function useDocsSubnav(subnav: Subnav) {
+  const set = useContext(DocsSubnav);
+  const key = JSON.stringify(subnav);
+  useEffect(() => {
+    if (!set) return;
+    set(JSON.parse(key) as Subnav);
+    return () => set(null);
+  }, [set, key]);
+}

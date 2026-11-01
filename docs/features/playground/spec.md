@@ -7,7 +7,7 @@
 ## Context
 
 The site shows its pieces one page at a time: 249 streaming responses (/responses), 10 chat templates (/templates),
-11 composers (/composers), the model picker (/model-picker) and 9 thinking orbs (/orbs), plus 4 colour palettes and
+11 composers (/components/composers), the model picker (/components/model-picker) and 9 thinking orbs (/components/thinking-orbs), plus 4 colour palettes and
 light/dark. Nobody can see them **together**: pick a composer, a thinking style and a palette, type a message, and
 watch the whole chat answer with them. The playground is that place, one route (`/playground`) where every piece
 can be combined live, then shared or installed.

@@ -10,6 +10,11 @@
  * which would otherwise keep running for every card already passed. */
 .sui-stage[data-offscreen], .sui-stage[data-offscreen] *, .sui-stage[data-offscreen] *::before, .sui-stage[data-offscreen] *::after { animation-play-state: paused !important; }
 
+/* Each collection keeps its own theme (fonts, accents, components) but not its page colour: the panel a demo draws
+ * (.lib-*, the stage's direct child) sits on the site's own surface, so a navy Blocks or an olive Tool cards tile
+ * doesn't clash with the neutral ones. `[class]` lifts it over the scopes' own `.dark .lib-x` rules, which load later. */
+.sui-stage > [class*="lib-"][class] { --background: var(--color-background-secondary-default); background: var(--background); }
+
 html, body { height: 100%; }
 body { background-color: var(--color-background-full); color: var(--color-text-primary); font-family: var(--font-sans); }
 

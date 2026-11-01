@@ -1,5 +1,8 @@
-import { Fragment, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import hljs from 'highlight.js/lib/core';
+import { defineCopy, useCopy } from './i18n';
+
+const COPY = defineCopy({ en: { copy: 'Copy', copied: 'Copied' }, fr: { copy: 'Copier', copied: 'Copié' } });
 import typescript from 'highlight.js/lib/languages/typescript';
 import sql from 'highlight.js/lib/languages/sql';
 import bash from 'highlight.js/lib/languages/bash';
@@ -19,9 +22,14 @@ type Block =
   | { t: 'h'; level: number; text: string }
   | { t: 'p' | 'quote'; text: string }
   | { t: 'ul' | 'ol'; items: string[] }
-  | { t: 'code'; lang: string; code: string; open: boolean };
+  | { t: 'code'; lang: string; code: string; open: boolean }
+  | { t: 'table'; rows: string[][] }
+  | { t: 'img'; alt: string; src?: string };
 
-function parse(src: string): Block[] {
+export type MarkdownBlock = Block;
+
+/** The block parser behind `Markdown`, exported for templates that lay the blocks out themselves. */
+export function parseMarkdown(src: string): Block[] {
   const out: Block[] = [];
   const lines = src.split('\n');
   for (let i = 0; i < lines.length; i++) {
@@ -43,6 +51,22 @@ function parse(src: string): Block[] {
     const q = line.match(/^>\s?(.*)/);
     if (q) {
       out.push({ t: 'quote', text: q[1] });
+      continue;
+    }
+    // `![alt](src)`, or a bare `![caption]`; a half-streamed one stays hidden until its brackets close.
+    if (line.startsWith('![')) {
+      const im = line.trimEnd().match(/^!\[(.*?)\](?:\(([^)\s]*)\))?$/);
+      if (im) out.push({ t: 'img', alt: im[1], src: im[2] || undefined });
+      continue;
+    }
+    // GFM table: the first row is the header, the `|---|` separator is skipped and a blank line ends it.
+    if (line.startsWith('|')) {
+      const row = line.trimEnd();
+      if (/^\|[\s:|-]+\|?$/.test(row)) continue;
+      const cells = row.replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+      const last = out[out.length - 1];
+      if (last && last.t === 'table' && lines[i - 1]?.trim()) last.rows.push(cells);
+      else out.push({ t: 'table', rows: [cells] });
       continue;
     }
     const li = line.match(/^\s*(?:([-*])|(\d+)\.)\s+(.*)/);
@@ -101,12 +125,75 @@ function inline(text: string, cite?: (n: number) => ReactNode, decorate?: Decora
   return nodes;
 }
 
+/** Each word its own span, keyed by position: words already on screen keep their node, only new ones blur in. */
+export function Words({ text, keyPrefix, className = 'tpl-word-in' }: { text: string; keyPrefix: string; className?: string }) {
+  return (
+    <>
+      {text.split(/(\s+)/).map((w, i) =>
+        /^\s*$/.test(w) ? (
+          w
+        ) : (
+          <span key={`${keyPrefix}-${i}`} className={className}>
+            {w}
+          </span>
+        ),
+      )}
+    </>
+  );
+}
+
+/** A GFM table in a scrolling card; `cell` renders each cell's text, `classNames` restyles each layer. */
+export function MarkdownTable({
+  rows,
+  cell = (text) => text,
+  className,
+  style,
+  classNames,
+}: {
+  rows: string[][];
+  cell?: (text: string, row: number, col: number) => ReactNode;
+  className?: string;
+  style?: CSSProperties;
+  classNames?: { table?: string; head?: string; row?: string; cell?: string; th?: string; td?: string };
+}) {
+  const [head = [], ...body] = rows;
+  return (
+    <div className={cn('scrollbar-thin overflow-x-auto rounded-xl border border-separator-border', className)} style={style}>
+      <table className={cn('w-full border-collapse text-body-2-regular', classNames?.table)}>
+        <thead>
+          <tr className={cn('bg-background-secondary-default/60', classNames?.head)}>
+            {head.map((c, j) => (
+              <th key={j} className={cn('px-3 py-2 text-start align-top font-semibold text-text-primary', classNames?.cell, classNames?.th)}>
+                {cell(c, 0, j)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        {body.length > 0 && (
+          <tbody>
+            {body.map((r, i) => (
+              <tr key={i} className={cn('border-t border-separator-border', classNames?.row)}>
+                {r.map((c, j) => (
+                  <td key={j} className={cn('px-3 py-2 text-start align-top text-text-secondary', classNames?.cell, classNames?.td)}>
+                    {cell(c, i + 1, j)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        )}
+      </table>
+    </div>
+  );
+}
+
 export function CopyButton({ text, className }: { text: string; className?: string }) {
+  const t = useCopy(COPY);
   const [done, setDone] = useState(false);
   return (
     <button
       type="button"
-      aria-label={done ? 'Copied' : 'Copy'}
+      aria-label={done ? t.copied : t.copy}
       onClick={() => {
         void navigator.clipboard?.writeText(text).catch(() => {});
         setDone(true);
@@ -193,7 +280,7 @@ export function CodeBlock({
 
 /** Renders `text`. No caret while `streaming` (BoardUI): new blocks blur in, then only grow. `cite` overrides the [n] chip; `decorate` enriches plain text. */
 export function Markdown({ text, cite, decorate, className }: { text: string; streaming?: boolean; cite?: (n: number) => ReactNode; decorate?: Decorate; className?: string }) {
-  const blocks = parse(text);
+  const blocks = parseMarkdown(text);
   return (
     <div className={cn('flex flex-col gap-3 text-body-regular leading-7 text-text-primary', className)}>
       {blocks.map((b, i) => {
@@ -231,6 +318,15 @@ export function Markdown({ text, cite, decorate, className }: { text: string; st
           }
           case 'code':
             return <CodeBlock key={i} className="tpl-stream-in my-1" lang={b.lang} code={b.code} />;
+          case 'table':
+            return <MarkdownTable key={i} className="tpl-stream-in my-1" rows={b.rows} cell={(c) => inline(c, cite, decorate)} />;
+          case 'img':
+            return b.src ? (
+              <figure key={i} className="tpl-stream-in my-1 flex flex-col gap-1.5">
+                <img src={b.src} alt={b.alt} className="max-h-[448px] w-full rounded-xl border border-separator-border object-cover" />
+                {b.alt && <figcaption className="text-caption-1-regular text-text-tertiary">{b.alt}</figcaption>}
+              </figure>
+            ) : null;
         }
       })}
     </div>

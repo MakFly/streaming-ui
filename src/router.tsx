@@ -1,6 +1,27 @@
-import { createBrowserRouter } from 'react-router';
+import { Navigate, createBrowserRouter, useLocation } from 'react-router';
 import { RootLayout } from '@/routes/root-layout';
 import { NotFound, RouteError } from '@/routes/not-found';
+import { paths } from '@/lib/paths';
+
+/** A page that moved: replace the URL, keeping the query and the #variant. */
+function Moved({ to }: { to: string }) {
+  const { search, hash } = useLocation();
+  return <Navigate replace to={`${to}${search}${hash}`} />;
+}
+
+/** Dev only: throws on render so the error screen can be seen. /__error is a crash, ?kind=chunk a stale module,
+ *  /preview/__error the bare version the template iframes show. */
+function Crash(): null {
+  const { search } = useLocation();
+  if (new URLSearchParams(search).get('kind') === 'chunk') throw new TypeError('Failed to fetch dynamically imported module: http://localhost:5173/src/templates/mascot-chat.tsx');
+  throw new TypeError("Cannot read properties of undefined (reading 'voice')");
+}
+const devRoutes = import.meta.env.DEV
+  ? [
+      { path: '/__error', Component: Crash, errorElement: <RouteError /> },
+      { path: '/preview/__error', Component: Crash, errorElement: <RouteError /> },
+    ]
+  : [];
 
 /* Every page is its own chunk. The template iframes (/preview/:slug) then load only the template, not the
  * response engine and its 249 demos that the gallery and landing need; the main window prefetches the pages
@@ -20,6 +41,10 @@ const page = {
   docs: () => import('@/routes/docs-layout'),
   components: () => import('@/routes/components-page'),
   agentLimits: () => import('@/routes/agent-limits-page'),
+  threadNavigator: () => import('@/routes/thread-navigator-page'),
+  markdown: () => import('@/routes/markdown-page'),
+  agentFeed: () => import('@/routes/agent-feed-page'),
+  bloub: () => import('@/routes/bloub-page'),
   collections: () => import('@/routes/collections-page'),
   prompts: () => import('@/routes/prompts-page'),
   playground: () => import('@/routes/playground-page'),
@@ -33,7 +58,7 @@ const promptIn = (from: 'gallery' | 'demo' | 'template') => async () => {
 export function prefetchRoutes() {
   if (window.self !== window.top || window.location.pathname.includes('/preview/')) return;
   const run = () => {
-    for (const load of [page.landing, page.gallery, page.templates, page.docs, page.components, page.composers, page.orbs, page.modelPicker, page.agentLimits, page.collections, page.prompts, page.playground, page.demo, page.template, page.prompt]) void load();
+    for (const load of [page.landing, page.gallery, page.templates, page.docs, page.components, page.composers, page.orbs, page.modelPicker, page.agentLimits, page.threadNavigator, page.markdown, page.agentFeed, page.bloub, page.collections, page.prompts, page.playground, page.demo, page.template, page.prompt]) void load();
   };
   if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 3000 });
   else setTimeout(run, 1500);
@@ -54,15 +79,20 @@ export function prefetchRoutes() {
  * /prompts                       how the rebuild prompts work and where each one lives
  * /components                    component library index
  * /components/agent-limits-card  the context-window and plan-limits card
- * /composers                     the eleven composers, each in a live thread (#pill … #command, #compare)
- * /orbs                          thinking-orb loaders: nine-state showcase and a playground
- * /model-picker                  the composers' model picker on its own: demo, install and prompt
+ * /components/thread-navigator   rail of user turns, with a preview, for a long thread
+ * /components/markdown           the streaming Markdown renderer, tables included
+ * /components/agent-feed         several agents at work, a rolling three-row window
+ * /components/bloub              our animated agent avatar: default, cat, dog and flower
+ * /components/composers         the eleven composers, each in a live thread (#pill … #command, #compare)
+ * /components/thinking-orbs     thinking-orb loaders: nine-state showcase and a playground
+ * /components/model-picker      the composers' model picker on its own: demo, install and prompt
+ * /composers, /orbs, /model-picker   moved under /components (301 in deploy/Caddyfile, client redirect here)
  * /playground                    every piece together, the combination in the URL (?composer= &thinking= &response=…)
  * /preview/:slug                  bare template, no site chrome (what the iframes load)
  * /preview/composer/:variant      bare playground chat thread (the playground's tablet and mobile frames)
  * *                               404
  *
- * Every page from /responses to /model-picker sits in the docs layout (BoardUI-style sidebar, no navbar); the landing
+ * Every page from /responses to /components/* sits in the docs layout (BoardUI-style sidebar, no navbar); the landing
  * and the 404 keep the site navbar.
  *
  * The gallery is one layout route with every variant as a child, so switching library or opening a prompt keeps it mounted:
@@ -109,9 +139,17 @@ export const router = createBrowserRouter(
         { path: '/prompts', lazy: async () => ({ Component: (await page.prompts()).PromptsPage }) },
         { path: '/components', lazy: async () => ({ Component: (await page.components()).ComponentsPage }) },
         { path: '/components/agent-limits-card', lazy: async () => ({ Component: (await page.agentLimits()).AgentLimitsPage }) },
-        { path: '/composers', lazy: async () => ({ Component: (await page.composers()).ComposersPage }) },
-        { path: '/orbs', lazy: async () => ({ Component: (await page.orbs()).OrbsPage }) },
-        { path: '/model-picker', lazy: async () => ({ Component: (await page.modelPicker()).ModelPickerPage }) },
+        { path: '/components/thread-navigator', lazy: async () => ({ Component: (await page.threadNavigator()).ThreadNavigatorPage }) },
+        { path: '/components/markdown', lazy: async () => ({ Component: (await page.markdown()).MarkdownPage }) },
+        { path: '/components/agent-feed', lazy: async () => ({ Component: (await page.agentFeed()).AgentFeedPage }) },
+        { path: '/components/bloub', lazy: async () => ({ Component: (await page.bloub()).BloubPage }) },
+        { path: '/components/composers', lazy: async () => ({ Component: (await page.composers()).ComposersPage }) },
+        { path: '/components/thinking-orbs', lazy: async () => ({ Component: (await page.orbs()).OrbsPage }) },
+        { path: '/components/model-picker', lazy: async () => ({ Component: (await page.modelPicker()).ModelPickerPage }) },
+        // Pre-/components URLs. Caddy answers them with a 301 in production; this covers dev and old in-app links.
+        { path: '/composers', element: <Moved to={paths.composers()} /> },
+        { path: '/orbs', element: <Moved to={paths.orbs()} /> },
+        { path: '/model-picker', element: <Moved to={paths.modelPicker()} /> },
       ],
     },
     // Outside the root layout: a full-screen builder with its own header.
@@ -119,6 +157,7 @@ export const router = createBrowserRouter(
     // Outside the root layout: no navbar inside the preview iframes.
     { path: '/preview/:slug', lazy: async () => ({ Component: (await page.preview()).TemplatePreview }), errorElement: <RouteError /> },
     { path: '/preview/composer/:variant', lazy: async () => ({ Component: (await page.composerPreview()).ComposerPreview }), errorElement: <RouteError /> },
+    ...devRoutes,
   ],
   { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' },
 );

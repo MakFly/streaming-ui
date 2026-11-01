@@ -3,6 +3,7 @@ import { Command } from 'lucide-react';
 import type { ComposerExtension } from '../variant-types';
 
 import { PaletteComposerView } from './palette';
+import { copyOf, defineCopy } from '../i18n';
 
 /* The /composers showcase for Palette: picker glyph, scripted demo and comparison cells. */
 
@@ -23,19 +24,68 @@ function PaletteGlyph() {
   );
 }
 
-const intro: ComposerExtension['demo']['intro'] = async (api) => {
-  await api.sleep(500);
-  await api.user('Fix grammar: their going to announce the new pricing tommorow, so lets wait', { type: true });
-  const a = api.assistant();
-  await a.think('Proofreading', ['Spotting spelling and agreement errors'], 550);
-  await a.stream(
-    `> **They're** going to announce the new pricing **tomorrow**, so **let's** wait.
+const COPY = defineCopy({
+  en: {
+    prompt: 'Fix grammar: their going to announce the new pricing tommorow, so lets wait',
+    thinking: 'Proofreading',
+    steps: ['Spotting spelling and agreement errors'],
+    answer: `> **They're** going to announce the new pricing **tomorrow**, so **let's** wait.
 
 - *their* → **they're** (they are)
 - *tommorow* → **tomorrow**
 - *lets* → **let's** (let us)`,
-    26,
-  );
+    suggestions: ['Translate to French', 'Draft a reply to the team', 'Summarize thread'],
+    placeholder: 'Ask AI or search commands…',
+    kForActions: 'K for actions',
+    messages: (n: number) => `${n} messages`,
+    tabHands: 'Tab hands the query to AI',
+    tag: '5 commands, no slash',
+    compare: {
+      input: 'Single-line search',
+      model: 'Search row, right',
+      tools: 'Row under the palette',
+      builtIn: 'Commands, recents, attach (⌘K)',
+      status: 'Under',
+      busy: 'List folds, Stop button',
+      stop: 'Stop button + esc chip',
+      width: 'Centred overlay, 560–720px',
+    },
+  },
+  fr: {
+    prompt: 'Corriger la grammaire : ils vont annoncé les nouveaux tarifs demin, donc on attends',
+    thinking: 'Relecture',
+    steps: ["Repérage des fautes d'orthographe et d'accord"],
+    answer: `> Ils vont **annoncer** les nouveaux tarifs **demain**, donc on **attend**.
+
+- *annoncé* → **annoncer** (infinitif après « aller »)
+- *demin* → **demain**
+- *attends* → **attend** (« on » prend la terminaison de la 3e personne)`,
+    suggestions: ['Traduire en anglais', "Rédiger une réponse à l'équipe", 'Résumer le fil'],
+    placeholder: 'Demandez à l\'IA ou cherchez une commande…',
+    kForActions: 'K pour les actions',
+    messages: (n: number) => `${n} messages`,
+    tabHands: "Tab passe la requête à l'IA",
+    tag: '5 commandes, sans slash',
+    compare: {
+      input: 'Recherche sur une ligne',
+      model: 'Ligne de recherche, à droite',
+      tools: 'Rangée sous la palette',
+      builtIn: 'Commandes, récents, joindre (⌘K)',
+      status: 'En dessous',
+      busy: 'La liste se replie, bouton Stop',
+      stop: 'Bouton Stop + pastille échap',
+      width: 'Surcouche centrée, 560 à 720 px',
+    },
+  },
+});
+
+const intro: ComposerExtension['demo']['intro'] = async (api) => {
+  const t = copyOf(COPY);
+  await api.sleep(500);
+  await api.user(t.prompt, { type: true });
+  const a = api.assistant();
+  await a.think(t.thinking, t.steps, 550);
+  await a.stream(t.answer, 26);
   a.done();
 };
 
@@ -48,32 +98,41 @@ export const palette: ComposerExtension = {
   Glyph: PaletteGlyph,
   demo: {
     intro,
-    suggestions: ['Translate to French', 'Draft a reply to the team', 'Summarize thread'],
-    content: ({ picker, count }) => ({
-      model: picker,
-      placeholder: 'Ask AI or search commands…',
-      status: (
-        <>
-          <span className="flex items-center gap-1">
-            <Command /> K for actions
-          </span>
-          <span className="tabular-nums">{count ? `${count} messages` : 'Tab hands the query to AI'}</span>
-        </>
-      ),
-    }),
+    get suggestions() {
+      return copyOf(COPY).suggestions;
+    },
+    content: ({ picker, count }) => {
+      const t = copyOf(COPY);
+      return {
+        model: picker,
+        placeholder: t.placeholder,
+        status: (
+          <>
+            <span className="flex items-center gap-1">
+              <Command /> {t.kForActions}
+            </span>
+            <span className="tabular-nums">{count ? t.messages(count) : t.tabHands}</span>
+          </>
+        ),
+      };
+    },
   },
-  compare: {
-    Input: 'Single-line search',
-    'Shift+Enter newline': NO,
-    'Model slot': 'Search row, right',
-    'Tools slot': 'Row under the palette',
-    'Built-in tools': 'Commands, recents, attach (⌘K)',
-    'Status placement': 'Under',
-    Modes: NO,
-    'Slash commands': <Tag>5 commands, no slash</Tag>,
-    'Busy indicator': 'List folds, Stop button',
-    'Stop control': 'Stop button + esc chip',
-    'Esc to stop': YES,
-    'Best width': 'Centred overlay, 560–720px',
+  get compare() {
+    const t = copyOf(COPY);
+    const c = t.compare;
+    return {
+      Input: c.input,
+      'Shift+Enter newline': NO,
+      'Model slot': c.model,
+      'Tools slot': c.tools,
+      'Built-in tools': c.builtIn,
+      'Status placement': c.status,
+      Modes: NO,
+      'Slash commands': <Tag>{t.tag}</Tag>,
+      'Busy indicator': c.busy,
+      'Stop control': c.stop,
+      'Esc to stop': YES,
+      'Best width': c.width,
+    };
   },
 };

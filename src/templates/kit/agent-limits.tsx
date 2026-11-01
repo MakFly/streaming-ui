@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Popover } from 'radix-ui';
 import { Icon } from './icon';
 import { cn } from '@/lib/utils';
+import { copyOf, defineCopy, intlLocale, useCopy } from './i18n';
 
 /* Agent Limits Card and the context ring that opens it, with the Composer Panel's
  * top rail. Class strings, colours (chart-1…8 per bucket) and the sample data follow the reference design. */
@@ -20,37 +21,90 @@ export interface AgentLimits {
   limits: Limit[];
 }
 
-/** The reference example: a 1M window at 82%. */
-export const SAMPLE_LIMITS: AgentLimits = {
-  window: 1_000_000,
-  buckets: [
-    { label: 'Messages', tokens: 520_000, color: 'var(--color-chart-6)' },
-    { label: 'System tools', tokens: 96_000, color: 'var(--color-chart-5)' },
-    { label: 'MCP tools', tokens: 68_000, color: 'var(--color-chart-3)' },
-    { label: 'Skills', tokens: 54_000, color: 'var(--color-chart-8)' },
-    { label: 'System prompt', tokens: 42_000, color: 'var(--color-chart-7)' },
-    { label: 'Memory files', tokens: 24_000, color: 'var(--color-chart-4)' },
-    { label: 'Custom agents', tokens: 16_000, color: 'var(--color-chart-1)' },
-  ],
-  deferred: [
-    { label: 'MCP tools (deferred)', tokens: 69_900 },
-    { label: 'System tools (deferred)', tokens: 16_100 },
-  ],
-  groups: [
-    { label: 'MCP tools', items: [['browser', 54_200], ['figma', 41_800], ['vercel', 26_500], ['session', 15_400]] },
-    { label: 'Memory files', items: [['MEMORY.md', 16_400], ['project-conventions.md', 7_600]] },
-    { label: 'Custom agents', items: [['reviewer', 7_100], ['explorer', 5_200], ['planner', 3_700]] },
-  ],
-  plan: 'Max (5x)',
-  limits: [
-    { label: '5-hour limit', resets: 'Resets in 2 hr 46 min', percent: 38 },
-    { label: 'Weekly · all models', resets: 'Resets Tue 3:00 PM', percent: 3 },
-    { label: 'Weekly · Pro', resets: 'Resets Tue 3:00 PM', percent: 5 },
-  ],
+const COPY = defineCopy({
+  en: {
+    messages: 'Messages',
+    systemTools: 'System tools',
+    mcpTools: 'MCP tools',
+    skills: 'Skills',
+    systemPrompt: 'System prompt',
+    memoryFiles: 'Memory files',
+    customAgents: 'Custom agents',
+    mcpDeferred: 'MCP tools (deferred)',
+    systemDeferred: 'System tools (deferred)',
+    plan: 'Max (5x)',
+    fiveHour: '5-hour limit',
+    weeklyAll: 'Weekly · all models',
+    weeklyPro: 'Weekly · Pro',
+    resetsIn: 'Resets in 2 hr 46 min',
+    resetsTue: 'Resets Tue 3:00 PM',
+    contextWindow: 'Context window',
+    freeSpace: 'Free space',
+    planLimits: 'Plan usage limits',
+    managePlan: 'Manage plan',
+    contextUsed: (percent: number) => `Context ${percent}% used`,
+  },
+  fr: {
+    messages: 'Messages',
+    systemTools: 'Outils système',
+    mcpTools: 'Outils MCP',
+    skills: 'Skills',
+    systemPrompt: 'Prompt système',
+    memoryFiles: 'Fichiers mémoire',
+    customAgents: 'Agents personnalisés',
+    mcpDeferred: 'Outils MCP (différés)',
+    systemDeferred: 'Outils système (différés)',
+    plan: 'Max (5x)',
+    fiveHour: 'Limite sur 5 heures',
+    weeklyAll: 'Hebdo · tous les modèles',
+    weeklyPro: 'Hebdo · Pro',
+    resetsIn: 'Réinitialisation dans 2 h 46 min',
+    resetsTue: 'Réinitialisation mar. 15:00',
+    contextWindow: 'Fenêtre de contexte',
+    freeSpace: 'Espace libre',
+    planLimits: "Limites d'utilisation du forfait",
+    managePlan: 'Gérer le forfait',
+    contextUsed: (percent: number) => `Contexte utilisé à ${percent} %`,
+  },
+});
+
+/** The reference example: a 1M window at 82%. Read at render, so it follows the language. */
+export const sampleLimits = (): AgentLimits => {
+  const t = copyOf(COPY);
+  return {
+    window: 1_000_000,
+    buckets: [
+      { label: t.messages, tokens: 520_000, color: 'var(--color-chart-6)' },
+      { label: t.systemTools, tokens: 96_000, color: 'var(--color-chart-5)' },
+      { label: t.mcpTools, tokens: 68_000, color: 'var(--color-chart-3)' },
+      { label: t.skills, tokens: 54_000, color: 'var(--color-chart-8)' },
+      { label: t.systemPrompt, tokens: 42_000, color: 'var(--color-chart-7)' },
+      { label: t.memoryFiles, tokens: 24_000, color: 'var(--color-chart-4)' },
+      { label: t.customAgents, tokens: 16_000, color: 'var(--color-chart-1)' },
+    ],
+    deferred: [
+      { label: t.mcpDeferred, tokens: 69_900 },
+      { label: t.systemDeferred, tokens: 16_100 },
+    ],
+    groups: [
+      { label: t.mcpTools, items: [['browser', 54_200], ['figma', 41_800], ['vercel', 26_500], ['session', 15_400]] },
+      { label: t.memoryFiles, items: [['MEMORY.md', 16_400], ['project-conventions.md', 7_600]] },
+      { label: t.customAgents, items: [['reviewer', 7_100], ['explorer', 5_200], ['planner', 3_700]] },
+    ],
+    plan: t.plan,
+    limits: [
+      { label: t.fiveHour, resets: t.resetsIn, percent: 38 },
+      { label: t.weeklyAll, resets: t.resetsTue, percent: 3 },
+      { label: t.weeklyPro, resets: t.resetsTue, percent: 5 },
+    ],
+  };
 };
 
 /** "820k", "69.9k", "1M" — the kit's token format. */
-export const formatTokens = (n: number) => (n >= 1_000_000 ? `${+(n / 1_000_000).toFixed(1)}M` : `${+(n / 1000).toFixed(1)}k`);
+export const formatTokens = (n: number) => {
+  const num = (v: number) => (+v.toFixed(1)).toLocaleString(intlLocale());
+  return n >= 1_000_000 ? `${num(n / 1_000_000)}M` : `${num(n / 1000)}k`;
+};
 
 const used = (l: AgentLimits) => l.buckets.reduce((a, b) => a + b.tokens, 0);
 export const contextPercent = (l: AgentLimits) => Math.round((used(l) / l.window) * 100);
@@ -95,7 +149,9 @@ function GroupRow({ g }: { g: Group }) {
  * with reset times. Expanding the context window reveals the per-bucket breakdown, free space, deferred buckets
  * and collapsible member lists.
  */
-export function AgentLimitsCard({ limits = SAMPLE_LIMITS, defaultOpen = false, className }: { limits?: AgentLimits; defaultOpen?: boolean; className?: string }) {
+export function AgentLimitsCard({ limits: limitsProp, defaultOpen = false, className }: { limits?: AgentLimits; defaultOpen?: boolean; className?: string }) {
+  const t = useCopy(COPY);
+  const limits = limitsProp ?? sampleLimits();
   const [open, setOpen] = useState(defaultOpen);
   const total = used(limits);
   const free = limits.window - total;
@@ -103,7 +159,7 @@ export function AgentLimitsCard({ limits = SAMPLE_LIMITS, defaultOpen = false, c
   return (
     <section className={cn('flex w-full min-w-0 flex-col rounded-2xl bg-background-secondary-default px-4 pt-2.5 pb-4', className)}>
       <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="group -mx-2 flex cursor-pointer items-center justify-between gap-3 rounded-2lg px-2 py-1 text-start outline-none transition-colors duration-150 hover:bg-background-secondary-hover focus-visible:ring-2 focus-visible:ring-border-focus-ring">
-        <span className="text-body-medium text-text-secondary">Context window</span>
+        <span className="text-body-medium text-text-secondary">{t.contextWindow}</span>
         <span className="flex items-center gap-2">
           <span className="text-body-medium whitespace-nowrap text-text-secondary tabular-nums">
             {formatTokens(total)} / {formatTokens(limits.window)} <span className="text-text-primary">({contextPercent(limits)}%)</span>
@@ -129,7 +185,7 @@ export function AgentLimitsCard({ limits = SAMPLE_LIMITS, defaultOpen = false, c
           ))}
           <div className="flex items-center gap-2 py-[5px]">
             <span className="size-2.5 shrink-0 rounded-[3px] bg-chart-track" />
-            <span className="min-w-0 flex-1 truncate text-body-regular text-text-primary">Free space</span>
+            <span className="min-w-0 flex-1 truncate text-body-regular text-text-primary">{t.freeSpace}</span>
             <span className="text-body-regular text-text-tertiary tabular-nums">{formatTokens(free)}</span>
             <span className="w-14 text-end text-body-medium text-text-primary tabular-nums">{pct(free)}</span>
           </div>
@@ -142,8 +198,8 @@ export function AgentLimitsCard({ limits = SAMPLE_LIMITS, defaultOpen = false, c
       </Reveal>
       <div className="my-3 h-px w-full bg-separator-border-strong" />
       <div className="flex items-center justify-between gap-3 py-1">
-        <span className="text-body-medium text-text-secondary">Plan usage limits · {limits.plan}</span>
-        <a href="#" onClick={(e) => e.preventDefault()} aria-label="Manage plan" className="flex size-6 items-center justify-center rounded-md text-text-tertiary outline-none transition-colors duration-150 hover:bg-background-secondary-hover hover:text-text-secondary focus-visible:ring-2 focus-visible:ring-border-focus-ring">
+        <span className="text-body-medium text-text-secondary">{t.planLimits} · {limits.plan}</span>
+        <a href="#" onClick={(e) => e.preventDefault()} aria-label={t.managePlan} className="flex size-6 items-center justify-center rounded-md text-text-tertiary outline-none transition-colors duration-150 hover:bg-background-secondary-hover hover:text-text-secondary focus-visible:ring-2 focus-visible:ring-border-focus-ring">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" className="remixicon size-4 rtl:rotate-180">
             <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
           </svg>
@@ -185,9 +241,10 @@ export function ContextRing({ percent }: { percent: number }) {
 
 /** The ring as a button that opens the Agent Limits Card above it. */
 export function ContextMeter({ percent, limits, className }: { percent: number; limits?: AgentLimits; className?: string }) {
+  const t = useCopy(COPY);
   return (
     <Popover.Root>
-      <Popover.Trigger aria-label={`Context ${percent}% used`} className={cn('flex shrink-0 cursor-pointer items-center gap-1 rounded-[40px] py-1 ps-1.5 pe-2 outline-none transition-colors duration-150 hover:bg-background-tertiary-default/60 focus-visible:ring-2 focus-visible:ring-border-focus-ring', className)}>
+      <Popover.Trigger aria-label={t.contextUsed(percent)} className={cn('flex shrink-0 cursor-pointer items-center gap-1 rounded-[40px] py-1 ps-1.5 pe-2 outline-none transition-colors duration-150 hover:bg-background-tertiary-default/60 focus-visible:ring-2 focus-visible:ring-border-focus-ring', className)}>
         <ContextRing percent={percent} />
       </Popover.Trigger>
       <Popover.Portal>
@@ -199,7 +256,7 @@ export function ContextMeter({ percent, limits, className }: { percent: number; 
           className="z-50 w-[448px] max-w-[calc(100vw-32px)] rounded-[20px] border border-border-button-default bg-dropdown-background p-1 shadow-dropdown outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           <div className="scrollbar-thin max-h-[min(70vh,640px)] overflow-y-auto rounded-2xl">
-            <AgentLimitsCard limits={limits ?? { ...SAMPLE_LIMITS, buckets: scaleBuckets(SAMPLE_LIMITS, percent) }} />
+            <AgentLimitsCard limits={limits ?? { ...sampleLimits(), buckets: scaleBuckets(sampleLimits(), percent) }} />
           </div>
         </Popover.Content>
       </Popover.Portal>

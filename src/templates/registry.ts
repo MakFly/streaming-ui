@@ -128,6 +128,28 @@ export const templates: TemplateMeta[] = [
     file: 'model-compare.tsx',
     Component: lazy(() => import('./model-compare')),
   },
+  {
+    slug: 'mascot-chat',
+    name: 'Mascot Chat',
+    tagline: 'A messenger of typing characters',
+    description: 'A messenger whose assistants are characters: twelve mascots, each with its own shape, motion and voice. The one answering wiggles or hops in the typing bubble, then reacts when its reply lands. Pick who answers next above the composer, or let them take turns.',
+    tags: ['Typing indicator', 'Characters', 'Bubbles'],
+    features: [{"title":"Typing mascot","text":"The typing bubble holds a mascot that moves, glances and blinks until the first words arrive."},{"title":"Four voices","text":"Brief, warm, careful or dreamy: each mascot words its answers its own way, types at its own pace, and the intro hands its three turns to three of them."},{"title":"Who answers next","text":"A row above the composer picks the next mascot, with arrow keys and Home / End; Take turns hands each reply to the next one from your pick, and past replies keep theirs."},{"title":"Reactions","text":"A hop when the reply lands, happy eyes after a thanks, and a shrug with Try again when you stop it."}],
+    tryIt: ["Who are you?","My tests are flaky"],
+    file: 'mascot-chat.tsx',
+    Component: lazy(() => import('./mascot-chat')),
+  },
+  {
+    slug: 'grok',
+    name: 'Grok',
+    tagline: 'Heavy mode: agents think together',
+    description: "A clone of grok.com's chat in Heavy mode: four agents with living avatars search the web and talk it over in a rolling feed that blurs in and out, three items at a time, then fold into \"Réflexion : Ns\" while the answer streams word by word with source chips, a sources pill and follow-ups.",
+    tags: ['Multi-agent', 'Web search', 'Clone'],
+    features: [{"title":"Agents réfléchissent","text":"Avatar stack and a live timer while searches, agent messages and status lines roll through the feed."},{"title":"Rolling feed","text":"New items blur in from below, the others slide up, the oldest fades out upward: three on screen at a time."},{"title":"Word-by-word blur","text":"Every streamed word blurs in, with inline source chips, tables and lists."},{"title":"Reasoning panel","text":"\"Réflexion : Ns\" opens the full agent log in a side panel."}],
+    tryIt: ["meilleure carte pokemon actuel","Quel langage pour débuter en 2026 ?"],
+    file: 'grok.tsx',
+    Component: lazy(() => import('./grok')),
+  },
 ];
 
 const bySlug = new Map(templates.map((t) => [t.slug, t]));

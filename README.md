@@ -138,8 +138,8 @@ import { OrbStatus } from '@/components/thinking-orb/orb-status';
 | `/demo/:slug` | One response on its own page |
 | `/templates` | The 10 chat templates, each thumbnail live |
 | `/templates/:slug` | Template page: preview or code, device switcher, live preview, copy prompt |
-| `/composers` | The 11 composers, each in its own live thread, with spec, comparison, Prompt and Install |
-| `/orbs` | The thinking-orb loaders: all nine states, then a playground (state, size, play/pause) with its snippet |
+| `/components/composers` | The 11 composers, each in its own live thread, with spec, comparison, Prompt and Install |
+| `/components/thinking-orbs` | The thinking-orb loaders: all nine states, then a playground (state, size, play/pause) with its snippet |
 | `/preview/:slug` | A bare template, full window (what the previews load) |
 
 Every page with a Prompt has a matching `…/prompt` URL that opens it directly.
@@ -157,9 +157,10 @@ src/
     kit/                   the chat kit: engine, markdown, parts, model picker, attachments, limits
       composer-kit.tsx     props contract and shared composer behaviour
       composers.tsx        <Composer variant="…" /> switch
-      variants/            one file per composer (+ *.showcase.tsx for the /composers page)
+      variants/            one file per composer (+ *.showcase.tsx for the /components/composers page)
   styles/                  theme, typography, palettes, globals, scrollbars, per-collection scopes
 public/
+  logos/                   colour connector logos (SVG, or WebP when the brand only ships a raster icon), shown by LogoTile in the Plugins modal
   r/                       the built shadcn registry (bun run registry:build)
   sources/                 original registry sources, used to build the demo prompts
 scripts/                   build-registry.mjs, collect-classes.mjs

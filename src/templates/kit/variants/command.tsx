@@ -3,18 +3,51 @@ import { cn } from '@/lib/utils';
 import { ElapsedTimer } from '../primitives';
 import { AttachmentStrip } from '../attachments';
 import { withAttachments, Field, Status, useField, type VariantProps } from '../composer-kit';
+import { defineCopy, useCopy } from '../i18n';
+
+const COPY = defineCopy({
+  en: {
+    clear: 'Start a fresh conversation',
+    model: 'Switch the model',
+    tools: 'List the tools the agent can call',
+    summarize: 'Sum up the thread so far',
+    send: 'Send message',
+    run: 'run',
+    working: 'working',
+    interrupt: 'to interrupt',
+    sendHint: 'send',
+    newline: 'newline',
+    commands: 'commands',
+    attach: 'Attach file',
+  },
+  fr: {
+    clear: 'Démarrer une nouvelle conversation',
+    model: 'Changer de modèle',
+    tools: "Lister les outils que l'agent peut appeler",
+    summarize: 'Résumer le fil jusqu\'ici',
+    send: 'Envoyer le message',
+    run: 'exécuter',
+    working: 'en cours',
+    interrupt: 'pour interrompre',
+    sendHint: 'envoyer',
+    newline: 'saut de ligne',
+    commands: 'commandes',
+    attach: 'Joindre un fichier',
+  },
+});
 
 /* Command (terminal agents): monospace prompt, slash commands, key hints, Esc to interrupt.
  * Use <CommandComposer> on its own, or the view inside a switcher that owns the attachments. */
 
-const COMMANDS = [
-  { cmd: '/clear', hint: 'Start a fresh conversation' },
-  { cmd: '/model', hint: 'Switch the model' },
-  { cmd: '/tools', hint: 'List the tools the agent can call' },
-  { cmd: '/summarize', hint: 'Sum up the thread so far' },
-];
 
 export function CommandComposerView(p: VariantProps) {
+  const t = useCopy(COPY);
+  const COMMANDS = [
+    { cmd: '/clear', hint: t.clear },
+    { cmd: '/model', hint: t.model },
+    { cmd: '/tools', hint: t.tools },
+    { cmd: '/summarize', hint: t.summarize },
+  ];
   const field = useField(p);
   const slash = /^\/\S*$/.test(p.value);
   const matches = slash ? COMMANDS.filter((c) => c.cmd.startsWith(p.value)) : [];
@@ -58,27 +91,27 @@ export function CommandComposerView(p: VariantProps) {
         >
           <span className={cn('pt-px text-[14px] leading-6 select-none', p.busy ? 'text-text-tertiary' : 'text-accent-500')}>❯</span>
           <Field field={field} value={p.value} onChange={p.onChange} placeholder={p.placeholder.toLowerCase()} className="min-h-6 font-mono text-[13.5px] leading-6" />
-          <button type="submit" aria-label="Send message" disabled={p.busy || !p.value.trim()} className="mt-0.5 flex h-6 shrink-0 items-center gap-1 rounded-md border border-border-button-default px-1.5 text-[11px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-40">
-            run <CornerDownLeft className="size-3" />
+          <button type="submit" aria-label={t.send} disabled={p.busy || !p.value.trim()} className="mt-0.5 flex h-6 shrink-0 items-center gap-1 rounded-md border border-border-button-default px-1.5 text-[11px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-40">
+            {t.run} <CornerDownLeft className="size-3" />
           </button>
         </form>
         <div className="flex min-h-8 items-center gap-3 border-t border-dashed border-border-button-default px-3 py-1 text-[11px] text-text-tertiary">
           {p.busy ? (
             <span className="flex items-center gap-1.5">
-              <LoaderCircle className="size-3 animate-spin text-accent-500" /> working <ElapsedTimer className="text-[11px]" /> ·{' '}
+              <LoaderCircle className="size-3 animate-spin text-accent-500" /> {t.working} <ElapsedTimer className="text-[11px]" /> ·{' '}
               <button type="button" onClick={p.onStop} className="flex items-center gap-1 hover:text-text-primary">
-                <span className={kbd}>esc</span> to interrupt
+                <span className={kbd}>esc</span> {t.interrupt}
               </button>
             </span>
           ) : (
             <span className="flex items-center gap-3">
-              <span><span className={kbd}>⏎</span> send</span>
-              <span className="hidden sm:inline"><span className={kbd}>⇧⏎</span> newline</span>
-              <span><span className={kbd}>/</span> commands</span>
+              <span><span className={kbd}>⏎</span> {t.sendHint}</span>
+              <span className="hidden sm:inline"><span className={kbd}>⇧⏎</span> {t.newline}</span>
+              <span><span className={kbd}>/</span> {t.commands}</span>
             </span>
           )}
           <span className="ms-auto flex items-center gap-1 font-sans">
-            <button type="button" aria-label="Attach file" onClick={p.att.add} className="grid size-6 place-items-center rounded-md hover:bg-background-tertiary-default dark:hover:bg-background-primary-hover hover:text-text-primary">
+            <button type="button" aria-label={t.attach} onClick={p.att.add} className="grid size-6 place-items-center rounded-md hover:bg-background-tertiary-default dark:hover:bg-background-primary-hover hover:text-text-primary">
               <Paperclip className="size-3.5" />
             </button>
             <span className="[&_button]:h-6 [&_button]:text-caption-1-medium">{p.model}</span>

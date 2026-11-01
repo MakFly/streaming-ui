@@ -4,6 +4,8 @@ import { ArrowLeft, X } from 'lucide-react';
 import { getTemplate } from '@/templates/registry';
 import { ErrorScreen } from '@/routes/not-found';
 import { ComposerVariantProvider } from '@/templates/kit/composer-variant';
+import { LocaleSwitch } from '@/templates/kit/parts';
+import { useLocale } from '@/templates/kit/i18n';
 import { paths } from '@/lib/paths';
 import { applyHead } from '@/seo/routes';
 import { cn } from '@/lib/utils';
@@ -84,6 +86,8 @@ function ExitBar({ slug, name }: { slug: string; name: string }) {
         >
           <X className="size-4" />
         </button>
+        {/* Every template speaks English and French; the switch stays visible when the bar is compact. */}
+        <LocaleSwitch />
       </div>
     </div>
   );
@@ -95,6 +99,7 @@ export function TemplatePreview() {
   const { slug } = useParams();
   const t = getTemplate(slug);
   const [top] = useState(isTopWindow);
+  const locale = useLocale();
 
   useEffect(() => {
     if (!t) return;
@@ -114,10 +119,11 @@ export function TemplatePreview() {
 
   if (!t) return <ErrorScreen status={404} bare />;
   return (
-    <div className="h-dvh">
+    <div className="h-dvh" lang={locale}>
       <Suspense fallback={<div className="h-full bg-background-full" />}>
         <ComposerVariantProvider>
-          <t.Component />
+          {/* Keyed by the locale: a switch restarts the template, so its scripted conversation replays in the new language. */}
+          <t.Component key={locale} />
         </ComposerVariantProvider>
       </Suspense>
       {top && <ExitBar slug={t.slug} name={t.name} />}

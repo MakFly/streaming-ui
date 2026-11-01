@@ -2,6 +2,7 @@ import { AtSign } from 'lucide-react';
 import type { ComposerExtension } from '../variant-types';
 
 import { MentionComposerView, renderMentions } from './mention';
+import { copyOf, defineCopy } from '../i18n';
 
 /* The /composers showcase for Mention: picker glyph, scripted demo and comparison cells. */
 
@@ -24,55 +25,113 @@ function MentionGlyph() {
 const YES = <span className="text-emerald-600 dark:text-emerald-400">✓</span>;
 const NO = <span className="text-text-tertiary">—</span>;
 
-export const mention: ComposerExtension = {
-  Component: MentionComposerView,
-  Glyph: MentionGlyph,
-  demo: {
-    async intro(api) {
-      await api.sleep(500);
-      await api.user('Review @app.tsx with @Ana before release, and check @schema.sql for risky migrations', { type: true });
-      const a = api.assistant();
-      await a.think('Thinking', ['Opening the mentioned files', 'Noting what Ana should look at'], 550);
-      await a.tool('Read', 'src/app.tsx', { meta: '212 lines', ms: 700 });
-      await a.tool('Read', 'db/schema.sql', { meta: '96 lines', ms: 700 });
-      await a.stream(
-        `Two things to settle before release:
+const COPY = defineCopy({
+  en: {
+    prompt: 'Review @app.tsx with @Ana before release, and check @schema.sql for risky migrations',
+    thinking: 'Thinking',
+    steps: ['Opening the mentioned files', 'Noting what Ana should look at'],
+    lines: (n: number) => `${n} lines`,
+    answer: `Two things to settle before release:
 
 - @app.tsx: the new onboarding route skips the auth guard. Worth a look with @Ana, since it changes the first screen people see.
 - @schema.sql: \`ALTER TABLE orders DROP COLUMN legacy_ref\` is not reversible. Ship it behind a backup, or split it into its own release.
 
 Everything else reads as safe.`,
-        26,
-      );
+    suggestions: ['Loop in @Léo on the migration', 'Check @Linear for open release bugs', 'Summarize @README.md'],
+    placeholder: 'Type @ to mention a file, person or source',
+    filesPeople: 'Files, people, sources',
+    messages: (n: number) => `${n} messages`,
+    travel: 'Mentions travel as context',
+    compare: {
+      input: 'Rich text with @ chips',
+      model: 'Action row, right',
+      tools: 'After the @ button',
+      builtIn: 'Add, mention menu',
+      status: 'Under',
+      busy: 'Stop button',
+      stop: 'Stop button',
+      width: 'Thread column',
+    },
+  },
+  fr: {
+    prompt: 'Relis @app.tsx avec @Ana avant la release, et vérifie @schema.sql pour les migrations risquées',
+    thinking: 'Réflexion',
+    steps: ['Ouverture des fichiers mentionnés', 'Note de ce que Ana doit regarder'],
+    lines: (n: number) => `${n} lignes`,
+    answer: `Deux points à régler avant la release :
+
+- @app.tsx : la nouvelle route d'onboarding contourne la garde d'authentification. À regarder avec @Ana, puisque ça change le premier écran que voient les gens.
+- @schema.sql : \`ALTER TABLE orders DROP COLUMN legacy_ref\` n'est pas réversible. Livrez-le derrière une sauvegarde, ou isolez-le dans sa propre release.
+
+Le reste me paraît sûr.`,
+    suggestions: ['Mets @Léo dans la boucle sur la migration', 'Regarde @Linear pour les bugs de release ouverts', 'Résume @README.md'],
+    placeholder: 'Tapez @ pour mentionner un fichier, une personne ou une source',
+    filesPeople: 'Fichiers, personnes, sources',
+    messages: (n: number) => `${n} messages`,
+    travel: 'Les mentions voyagent comme contexte',
+    compare: {
+      input: 'Texte riche avec pastilles @',
+      model: "Rangée d'actions, à droite",
+      tools: 'Après le bouton @',
+      builtIn: 'Ajout, menu de mentions',
+      status: 'En dessous',
+      busy: 'Bouton Stop',
+      stop: 'Bouton Stop',
+      width: 'Colonne du fil',
+    },
+  },
+});
+
+export const mention: ComposerExtension = {
+  Component: MentionComposerView,
+  Glyph: MentionGlyph,
+  demo: {
+    async intro(api) {
+      const t = copyOf(COPY);
+      await api.sleep(500);
+      await api.user(t.prompt, { type: true });
+      const a = api.assistant();
+      await a.think(t.thinking, t.steps, 550);
+      await a.tool('Read', 'src/app.tsx', { meta: t.lines(212), ms: 700 });
+      await a.tool('Read', 'db/schema.sql', { meta: t.lines(96), ms: 700 });
+      await a.stream(t.answer, 26);
       a.done();
     },
     renderText: renderMentions,
-    suggestions: ['Loop in @Léo on the migration', 'Check @Linear for open release bugs', 'Summarize @README.md'],
-    content: ({ picker, count }) => ({
-      placeholder: 'Type @ to mention a file, person or source',
-      model: picker,
-      status: (
-        <>
-          <span className="flex items-center gap-1">
-            <AtSign /> Files, people, sources
-          </span>
-          <span className="tabular-nums">{count ? `${count} messages` : 'Mentions travel as context'}</span>
-        </>
-      ),
-    }),
+    get suggestions() {
+      return copyOf(COPY).suggestions;
+    },
+    content: ({ picker, count }) => {
+      const t = copyOf(COPY);
+      return {
+        placeholder: t.placeholder,
+        model: picker,
+        status: (
+          <>
+            <span className="flex items-center gap-1">
+              <AtSign /> {t.filesPeople}
+            </span>
+            <span className="tabular-nums">{count ? t.messages(count) : t.travel}</span>
+          </>
+        ),
+      };
+    },
   },
-  compare: {
-    Input: 'Rich text with @ chips',
-    'Shift+Enter newline': YES,
-    'Model slot': 'Action row, right',
-    'Tools slot': 'After the @ button',
-    'Built-in tools': 'Add, mention menu',
-    'Status placement': 'Under',
-    Modes: NO,
-    'Slash commands': NO,
-    'Busy indicator': 'Stop button',
-    'Stop control': 'Stop button',
-    'Esc to stop': YES,
-    'Best width': 'Thread column',
+  get compare() {
+    const c = copyOf(COPY).compare;
+    return {
+      Input: c.input,
+      'Shift+Enter newline': YES,
+      'Model slot': c.model,
+      'Tools slot': c.tools,
+      'Built-in tools': c.builtIn,
+      'Status placement': c.status,
+      Modes: NO,
+      'Slash commands': NO,
+      'Busy indicator': c.busy,
+      'Stop control': c.stop,
+      'Esc to stop': YES,
+      'Best width': c.width,
+    };
   },
 };

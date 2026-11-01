@@ -9,6 +9,7 @@ import { ScaledFrame } from '@/components/scaled-frame';
 import { templates, type TemplateMeta } from '@/templates/registry';
 import { paths } from '@/lib/paths';
 import { ThinkingChoice } from '@/templates/kit/thinking-style';
+import { useDocsSubnav } from '@/components/docs/in-docs';
 import { cn } from '@/lib/utils';
 
 export function TemplateCard({ t, featured }: { t: TemplateMeta; featured?: boolean }) {
@@ -67,6 +68,8 @@ export function TemplateCard({ t, featured }: { t: TemplateMeta; featured?: bool
 
 /** `/templates` — every chat template, each thumbnail a live, playing preview. */
 export function TemplatesPage() {
+  // Every template, nested under Templates in the sidebar.
+  useDocsSubnav({ item: 'Templates', links: templates.map((t) => ({ label: t.name, to: paths.template(t.slug), on: false })) });
   useEffect(() => {
     applyHead(TEMPLATES);
   }, []);

@@ -3,6 +3,30 @@ import { ArrowUp, Mic, Plus, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAttachments } from './attachments';
 import { ContextMeter } from './agent-limits';
+import { copyOf, defineCopy, useCopy } from './i18n';
+
+const COPY = defineCopy({
+  en: {
+    addAttachment: 'Add attachment',
+    stopDictation: 'Stop dictation',
+    dictate: 'Dictate',
+    stop: 'Stop generating',
+    send: 'Send message',
+    message: 'Message',
+    placeholder: 'Ask me anything',
+    heard: ['Summarize what changed since yesterday', 'Draft a short reply that says we ship on Friday', 'List the risks before we merge this'],
+  },
+  fr: {
+    addAttachment: 'Ajouter une pièce jointe',
+    stopDictation: 'Arrêter la dictée',
+    dictate: 'Dicter',
+    stop: 'Arrêter la génération',
+    send: 'Envoyer le message',
+    message: 'Message',
+    placeholder: 'Demandez-moi ce que vous voulez',
+    heard: ['Résume ce qui a changé depuis hier', 'Rédige une courte réponse pour dire qu\'on livre vendredi', 'Liste les risques avant de fusionner ça'],
+  },
+});
 
 /* What every composer variant shares: the props contract, the textarea behaviour (auto-grow, Enter / Shift+Enter /
  * Esc) and the small buttons and status line. Lives apart from composers.tsx so variant files (kit/variants/*)
@@ -61,11 +85,14 @@ export function useField({ value, busy, onSend, onStop }: Pick<ComposerProps, 'v
   return { ref, submit, onKeyDown, fit };
 }
 
-export const AddButton = ({ className, onClick }: { className?: string; onClick?: () => void }) => (
-  <button type="button" aria-label="Add attachment" onClick={onClick} className={cn('grid size-9 shrink-0 place-items-center rounded-full bg-ai-chat-composer-add-background text-foreground-icon-primary transition-[background-color,scale] hover:bg-ai-chat-composer-add-hover-background active:scale-[0.96]', className)}>
+export function AddButton({ className, onClick }: { className?: string; onClick?: () => void }) {
+  const t = useCopy(COPY);
+  return (
+  <button type="button" aria-label={t.addAttachment} onClick={onClick} className={cn('grid size-9 shrink-0 place-items-center rounded-full bg-ai-chat-composer-add-background text-foreground-icon-primary transition-[background-color,scale] hover:bg-ai-chat-composer-add-hover-background active:scale-[0.96]', className)}>
     <Plus className="size-5" />
   </button>
-);
+  );
+}
 
 /* Dictation: the browser's speech recognition writes into the field as you talk; where there is none, or the mic is
  * refused, a short phrase is "heard" word by word instead so the button always does something. Click again to stop. */
@@ -74,7 +101,6 @@ const recognitionCtor = () => {
   const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 };
-const HEARD = ['Summarize what changed since yesterday', 'Draft a short reply that says we ship on Friday', 'List the risks before we merge this'];
 
 export function useDictation(value: string, onChange: (v: string) => void) {
   const [listening, setListening] = useState(false);
@@ -105,7 +131,7 @@ export function useDictation(value: string, onChange: (v: string) => void) {
     const simulate = () => {
       if (session.current !== s) return;
       s.rec = null;
-      const words = HEARD[turn.current++ % HEARD.length].split(' ');
+      const words = copyOf(COPY).heard[turn.current++ % copyOf(COPY).heard.length].split(' ');
       let i = 0;
       s.timer = window.setInterval(() => {
         live.current.onChange(join(words.slice(0, ++i).join(' ')));
@@ -143,11 +169,12 @@ export function useDictation(value: string, onChange: (v: string) => void) {
 
 /** Dictate into the field; pulses while listening. */
 export function MicButton({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
+  const t = useCopy(COPY);
   const { listening, toggle } = useDictation(value, onChange);
   return (
     <button
       type="button"
-      aria-label={listening ? 'Stop dictation' : 'Dictate'}
+      aria-label={listening ? t.stopDictation : t.dictate}
       aria-pressed={listening}
       onClick={toggle}
       className={cn(
@@ -163,12 +190,13 @@ export function MicButton({ value, onChange, className }: { value: string; onCha
 }
 
 export function SendButton({ busy, disabled, onStop, className, stopClassName }: { busy?: boolean; disabled: boolean; onStop?: () => void; className?: string; stopClassName?: string }) {
+  const t = useCopy(COPY);
   return busy ? (
-    <button type="button" onClick={onStop} aria-label="Stop generating" className={cn('grid size-9 shrink-0 place-items-center rounded-full bg-background-tertiary-default text-foreground-icon-primary transition-colors hover:bg-background-tertiary-hover', stopClassName)}>
+    <button type="button" onClick={onStop} aria-label={t.stop} className={cn('grid size-9 shrink-0 place-items-center rounded-full bg-background-tertiary-default text-foreground-icon-primary transition-colors hover:bg-background-tertiary-hover', stopClassName)}>
       <Square className="size-3.5 fill-current" />
     </button>
   ) : (
-    <button type="submit" aria-label="Send message" disabled={disabled} className={cn('grid size-9 shrink-0 place-items-center rounded-full bg-text-primary text-background-primary-default transition-[opacity,scale] active:scale-95 disabled:opacity-30', className)}>
+    <button type="submit" aria-label={t.send} disabled={disabled} className={cn('grid size-9 shrink-0 place-items-center rounded-full bg-text-primary text-background-primary-default transition-[opacity,scale] active:scale-95 disabled:opacity-30', className)}>
       <ArrowUp className="size-5" />
     </button>
   );
@@ -194,7 +222,9 @@ export const Status = ({ children, context, className }: { children?: ReactNode;
   );
 };
 
-export const Field = ({ field, value, onChange, placeholder, className }: { field: ReturnType<typeof useField>; value: string; onChange: (v: string) => void; placeholder: string; className?: string }) => (
+export function Field({ field, value, onChange, placeholder, className }: { field: ReturnType<typeof useField>; value: string; onChange: (v: string) => void; placeholder: string; className?: string }) {
+  const t = useCopy(COPY);
+  return (
   <textarea
     ref={field.ref}
     rows={1}
@@ -202,23 +232,25 @@ export const Field = ({ field, value, onChange, placeholder, className }: { fiel
     onChange={(e) => onChange(e.target.value)}
     onKeyDown={field.onKeyDown}
     placeholder={placeholder}
-    aria-label="Message"
+    aria-label={t.message}
     className={cn('scrollbar-thin w-full resize-none bg-transparent text-body-regular leading-6 text-text-primary caret-text-primary outline-none placeholder:text-text-tertiary', className)}
   />
-);
+  );
+}
 
 /**
  * Makes a composer view standalone: it owns its attachment queue and clears it on send, as a chat composer
  * should. Every composer file exports both the view (for a switcher that shares one queue) and this wrapped form.
  */
 export function withAttachments(View: ComponentType<VariantProps>) {
-  function StandaloneComposer({ placeholder = 'Ask me anything', ...p }: ComposerProps) {
+  function StandaloneComposer({ placeholder, ...p }: ComposerProps) {
+    const t = useCopy(COPY);
     const att = useAttachments();
     const onSend = (v: string) => {
       p.onSend(v);
       att.clear();
     };
-    return <View {...p} placeholder={placeholder} onSend={onSend} att={att} />;
+    return <View {...p} placeholder={placeholder ?? t.placeholder} onSend={onSend} att={att} />;
   }
   StandaloneComposer.displayName = View.displayName ?? View.name.replace(/View$/, '');
   return StandaloneComposer;

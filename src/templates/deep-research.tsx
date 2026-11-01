@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { Bot, Check, Clock, Download, FileSearch, Globe, Layers, ListTree, LoaderCircle, Lock, Microscope, Share } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { copyOf, defineCopy, useCopy } from './kit/i18n';
 import { useChatEngine, type ChatScriptApi, type Part } from './kit/engine';
 import { Cite, Markdown } from './kit/markdown';
 import { ActionBar, Badge, Canvas, ChatSurface, Composer, Frame, FrameFooter, FrameHeader, FramePanel, HeaderButton, Reasoning, Suggestions, HeaderTools, UserMessage, Welcome, replyRefOf, textOf } from './kit/parts';
@@ -11,12 +12,7 @@ import { ActionBar, Badge, Canvas, ChatSurface, Composer, Frame, FrameFooter, Fr
 
 type Lane = { agent: string; topic: string; url: string; pages: number; found: number; progress: number; status: 'queued' | 'browsing' | 'done' };
 
-const LANES: Omit<Lane, 'pages' | 'found' | 'progress' | 'status'>[] = [
-  { agent: 'Agent 1', topic: 'Battery chemistry roadmaps', url: 'nature.com/articles/s41560-025', },
-  { agent: 'Agent 2', topic: 'Cost per kWh, 2020–2026', url: 'about.bnef.com/blog/battery-pack-prices', },
-  { agent: 'Agent 3', topic: 'Grid storage deployments', url: 'iea.org/reports/batteries-and-secure-energy', },
-  { agent: 'Agent 4', topic: 'Sodium-ion supply chain', url: 'ft.com/content/sodium-ion-catl', },
-];
+const LANE_URLS = ['nature.com/articles/s41560-025', 'about.bnef.com/blog/battery-pack-prices', 'iea.org/reports/batteries-and-secure-energy', 'ft.com/content/sodium-ion-catl'];
 
 const PAGES = [
   ['nature.com', 'ft.com', 'iea.org'],
@@ -25,7 +21,16 @@ const PAGES = [
   ['ft.com', 'catl.com', 'benchmarkminerals.com'],
 ];
 
-const REPORT = `## Summary
+const COPY = defineCopy({
+  en: {
+    agent: (n: number) => `Agent ${n}`,
+    topics: ['Battery chemistry roadmaps', 'Cost per kWh, 2020–2026', 'Grid storage deployments', 'Sodium-ion supply chain'],
+    planTitle: 'Planning the research',
+    planSteps: ['Split into chemistry, cost, deployment and supply chain', 'Assign one browser agent per question', 'Budget: 40 pages, 2 minutes'],
+    writeTitle: 'Writing the report',
+    writeSteps: ['Merging 4 agent briefs', 'Resolving conflicting price figures'],
+    introQuery: 'How fast is grid battery storage getting cheaper, and what comes after lithium-ion?',
+    report: `## Summary
 Lithium-ion pack prices fell to roughly **$115/kWh in 2024** and are on track to break $100 by 2026 [2]. That drop, more than any chemistry breakthrough, is what moved grid storage from pilot projects to the default choice for evening peaks [3].
 
 ## Cost curve
@@ -40,14 +45,92 @@ Lithium-ion pack prices fell to roughly **$115/kWh in 2024** and are on track to
 Sodium-ion cells entered mass production in 2025. They trade energy density for cheaper, abundant materials, a good fit for stationary use where weight matters less [4].
 
 ## Outlook
-Expect LFP to dominate stationary storage through 2030, with sodium-ion taking share at the low-cost end if lithium prices rebound [1][4].`;
+Expect LFP to dominate stationary storage through 2030, with sodium-ion taking share at the low-cost end if lithium prices rebound [1][4].`,
+    toc: ['Summary', 'Cost curve', 'Deployments', 'Sodium-ion', 'Outlook'],
+    browserAgents: 'Browser agents',
+    running: (n: number) => `${n} running`,
+    allDone: 'All done',
+    pagesRead: (n: number) => `${n} pages read`,
+    sourcesKept: (n: number) => `${n} sources kept`,
+    sources: 'sources',
+    pagesReadLabel: 'pages read',
+    agents: 'agents',
+    elapsed: 'elapsed',
+    elapsedValue: '1m 12s',
+    researchReport: 'Research report',
+    writing: 'Writing…',
+    highConfidence: 'High confidence',
+    contents: 'Contents',
+    exportPdf: 'Export PDF',
+    share: 'Share',
+    replyRef: 'Report',
+    placeholder: 'What should the agents research?',
+    deepResearch: 'Deep research',
+    title: 'Deep Research',
+    agentsBadge: '4 agents',
+    newReport: 'New report',
+    welcomeTitle: 'Research anything, in depth',
+    welcomeSubtitle: 'Four browser agents read the web in parallel, then write a cited report.',
+    suggestions: ['State of small modular reactors in 2026', 'How do LLM evals compare across labs?', 'Market for heat pumps in Europe'],
+  },
+  fr: {
+    agent: (n: number) => `Agent ${n}`,
+    topics: ['Feuilles de route des chimies de batteries', 'Coût par kWh, 2020–2026', 'Déploiements de stockage réseau', 'Chaîne d’approvisionnement du sodium-ion'],
+    planTitle: 'Planification de la recherche',
+    planSteps: ['Découpage en chimie, coût, déploiement et chaîne d’approvisionnement', 'Un agent navigateur par question', 'Budget : 40 pages, 2 minutes'],
+    writeTitle: 'Rédaction du rapport',
+    writeSteps: ['Fusion des 4 synthèses d’agents', 'Résolution des chiffres de prix contradictoires'],
+    introQuery: 'À quelle vitesse le stockage par batteries sur le réseau devient-il moins cher, et que vient après le lithium-ion ?',
+    report: `## Résumé
+Le prix des packs lithium-ion est tombé à environ **115 $/kWh en 2024** et devrait passer sous les 100 $ d’ici 2026 [2]. Cette baisse, plus que n’importe quelle percée en chimie, a fait du stockage réseau le choix par défaut pour les pointes du soir, bien au-delà des projets pilotes [3].
 
-const TOC = ['Summary', 'Cost curve', 'Deployments', 'Sodium-ion', 'Outlook'];
+## Courbe des coûts
+- Le prix des packs a baissé d’environ 20 % rien qu’en 2024, la chute la plus forte depuis 2017 [2].
+- Les cellules LFP sont désormais 25 à 30 % moins chères que les NMC, d’où leur place dans la plupart des stockages stationnaires [1].
+
+## Déploiements
+- Les ajouts de stockage réseau dans le monde ont à peu près doublé en 2024, tirés par la Chine et les États-Unis [3].
+- Les systèmes de quatre heures sont devenus la norme ; les durées plus longues restent marginales tant que les coûts n’auront pas encore baissé [3].
+
+## Sodium-ion
+Les cellules sodium-ion sont entrées en production de masse en 2025. Elles sacrifient de la densité énergétique au profit de matériaux abondants et moins chers, un bon compromis pour le stationnaire où le poids compte moins [4].
+
+## Perspectives
+Le LFP devrait dominer le stockage stationnaire jusqu’en 2030, le sodium-ion gagnant des parts sur le segment économique si le prix du lithium remonte [1][4].`,
+    toc: ['Résumé', 'Courbe des coûts', 'Déploiements', 'Sodium-ion', 'Perspectives'],
+    browserAgents: 'Agents navigateur',
+    running: (n: number) => (n > 1 ? `${n} en cours` : `${n} en cours`),
+    allDone: 'Tout est terminé',
+    pagesRead: (n: number) => `${n} ${n > 1 ? 'pages lues' : 'page lue'}`,
+    sourcesKept: (n: number) => `${n} ${n > 1 ? 'sources retenues' : 'source retenue'}`,
+    sources: 'sources',
+    pagesReadLabel: 'pages lues',
+    agents: 'agents',
+    elapsed: 'écoulées',
+    elapsedValue: '1 min 12 s',
+    researchReport: 'Rapport de recherche',
+    writing: 'Rédaction…',
+    highConfidence: 'Confiance élevée',
+    contents: 'Sommaire',
+    exportPdf: 'Exporter en PDF',
+    share: 'Partager',
+    replyRef: 'Rapport',
+    placeholder: 'Que doivent rechercher les agents ?',
+    deepResearch: 'Recherche approfondie',
+    title: 'Recherche approfondie',
+    agentsBadge: '4 agents',
+    newReport: 'Nouveau rapport',
+    welcomeTitle: 'Recherchez tout, en profondeur',
+    welcomeSubtitle: 'Quatre agents navigateur lisent le web en parallèle, puis rédigent un rapport sourcé.',
+    suggestions: ['État des petits réacteurs modulaires en 2026', 'Comment se comparent les évaluations de LLM entre laboratoires ?', 'Marché des pompes à chaleur en Europe'],
+  },
+});
 
 async function research(api: ChatScriptApi, query: string) {
+  const t = copyOf(COPY);
   const a = api.assistant();
-  await a.think('Planning the research', ['Split into chemistry, cost, deployment and supply chain', 'Assign one browser agent per question', 'Budget: 40 pages, 2 minutes'], 520);
-  const lanes: Lane[] = LANES.map((l) => ({ ...l, pages: 0, found: 0, progress: 0, status: 'queued' }));
+  await a.think(t.planTitle, t.planSteps, 520);
+  const lanes: Lane[] = LANE_URLS.map((url, i) => ({ agent: t.agent(i + 1), topic: t.topics[i], url, pages: 0, found: 0, progress: 0, status: 'queued' }));
   const set = a.custom('lanes', { lanes: lanes.map((l) => ({ ...l })), query });
   // All four agents advance on the same tick at different speeds, as parallel browsers would.
   const speed = [7, 5, 6, 4];
@@ -66,15 +149,15 @@ async function research(api: ChatScriptApi, query: string) {
     await api.sleep(160);
   }
   a.custom('stats', { sources: lanes.reduce((n, l) => n + l.found, 0), pages: lanes.reduce((n, l) => n + l.pages, 0) });
-  await a.think('Writing the report', ['Merging 4 agent briefs', 'Resolving conflicting price figures'], 450);
-  a.custom('toc', { items: TOC });
-  await a.stream(REPORT, 32);
+  await a.think(t.writeTitle, t.writeSteps, 450);
+  a.custom('toc', { items: t.toc });
+  await a.stream(t.report, 32);
   a.done();
 }
 
 async function intro(api: ChatScriptApi) {
   await api.sleep(500);
-  await api.user('How fast is grid battery storage getting cheaper, and what comes after lithium-ion?', { type: true });
+  await api.user(copyOf(COPY).introQuery, { type: true });
   await research(api, 'grid battery storage');
 }
 
@@ -86,11 +169,12 @@ const favicon = (url: string) => url.split('.')[0][0].toUpperCase();
 
 /** Four browser agents side by side: mini chrome with the live URL, a page skeleton, progress and counts. */
 function Lanes({ lanes }: { lanes: Lane[] }) {
+  const t = useCopy(COPY);
   const done = lanes.filter((l) => l.status === 'done').length;
   return (
     <Frame>
-      <FrameHeader icon={<Bot />} title="Browser agents">
-        {done < lanes.length ? <Badge tone="info">{lanes.length - done} running</Badge> : <Badge tone="success" dot>All done</Badge>}
+      <FrameHeader icon={<Bot />} title={t.browserAgents}>
+        {done < lanes.length ? <Badge tone="info">{t.running(lanes.length - done)}</Badge> : <Badge tone="success" dot>{t.allDone}</Badge>}
       </FrameHeader>
       <div className="grid grid-cols-1 gap-[3px] sm:grid-cols-2">
         {lanes.map((l) => (
@@ -123,8 +207,8 @@ function Lanes({ lanes }: { lanes: Lane[] }) {
                 <div className={cn('h-full rounded-full transition-[width] duration-300', l.status === 'done' ? 'bg-emerald-500' : 'bg-accent-500')} style={{ width: `${l.progress}%` }} />
               </div>
               <div className="flex items-center justify-between text-caption-1-regular text-text-tertiary tabular-nums">
-                <span>{l.pages} pages read</span>
-                <span>{l.found} sources kept</span>
+                <span>{t.pagesRead(l.pages)}</span>
+                <span>{t.sourcesKept(l.found)}</span>
               </div>
             </div>
           </FramePanel>
@@ -135,11 +219,12 @@ function Lanes({ lanes }: { lanes: Lane[] }) {
 }
 
 function Stats({ sources, pages }: { sources: number; pages: number }) {
+  const t = useCopy(COPY);
   const items: [React.ReactNode, string, string][] = [
-    [<Layers key="s" />, String(sources), 'sources'],
-    [<FileSearch key="p" />, String(pages), 'pages read'],
-    [<Bot key="a" />, '4', 'agents'],
-    [<Clock key="t" />, '1m 12s', 'elapsed'],
+    [<Layers key="s" />, String(sources), t.sources],
+    [<FileSearch key="p" />, String(pages), t.pagesReadLabel],
+    [<Bot key="a" />, '4', t.agents],
+    [<Clock key="t" />, t.elapsedValue, t.elapsed],
   ];
   return (
     <div className="tpl-reveal grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -158,6 +243,7 @@ function Stats({ sources, pages }: { sources: number; pages: number }) {
 const SRC = ['nature.com', 'bnef.com', 'iea.org', 'ft.com'];
 
 export default function DeepResearchTemplate() {
+  const t = useCopy(COPY);
   const chat = useChatEngine({ intro, reply });
   const empty = chat.messages.length === 0;
 
@@ -174,16 +260,16 @@ export default function DeepResearchTemplate() {
         })}
         {text && (
           <Frame>
-            <FrameHeader icon={<Microscope />} title="Research report">
-              {!text.done ? <Badge tone="info">Writing…</Badge> : <Badge tone="success">High confidence</Badge>}
+            <FrameHeader icon={<Microscope />} title={t.researchReport}>
+              {!text.done ? <Badge tone="info">{t.writing}</Badge> : <Badge tone="success">{t.highConfidence}</Badge>}
             </FrameHeader>
             {/* overflow-visible so the contents can stick while the report scrolls past. */}
             <FramePanel className="flex overflow-visible">
               {toc && (
                 <div className="hidden w-44 shrink-0 border-e border-separator-border md:block">
-                <nav aria-label="Contents" className="sticky top-14 flex flex-col gap-0.5 p-3">
+                <nav aria-label={t.contents} className="sticky top-14 flex flex-col gap-0.5 p-3">
                   <span className="flex items-center gap-1.5 pb-1.5 text-caption-1-medium text-text-tertiary">
-                    <ListTree className="size-3.5" /> Contents
+                    <ListTree className="size-3.5" /> {t.contents}
                   </span>
                   {toc.map((h) => {
                     const reached = text.text.slice(0, text.shown).includes(`## ${h}`);
@@ -203,10 +289,10 @@ export default function DeepResearchTemplate() {
             {text.done && (
               <FrameFooter>
                 <HeaderButton className="h-7 text-caption-1-medium">
-                  <Download /> Export PDF
+                  <Download /> {t.exportPdf}
                 </HeaderButton>
                 <HeaderButton className="h-7 text-caption-1-medium">
-                  <Share /> Share
+                  <Share /> {t.share}
                 </HeaderButton>
                 <span className="ms-auto flex -space-x-1.5">
                   {SRC.map((s) => (
@@ -219,7 +305,7 @@ export default function DeepResearchTemplate() {
             )}
           </Frame>
         )}
-        {text?.done && <ActionBar message={m} isLast={isLast} onReply={() => chat.startReply(replyRefOf(m, 'Report'))} />}
+        {text?.done && <ActionBar message={m} isLast={isLast} onReply={() => chat.startReply(replyRefOf(m, t.replyRef))} />}
       </div>
     );
   };
@@ -232,10 +318,10 @@ export default function DeepResearchTemplate() {
       onSend={chat.send}
       onStop={chat.stop}
       busy={chat.busy}
-      placeholder="What should the agents research?"
+      placeholder={t.placeholder}
       tools={
         <span className="flex h-8 items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 text-body-2-medium text-violet-700 dark:text-violet-300">
-          <Microscope className="size-4" /> Deep research
+          <Microscope className="size-4" /> {t.deepResearch}
         </span>
       }
     />
@@ -252,14 +338,14 @@ export default function DeepResearchTemplate() {
             <span className="grid size-7 place-items-center rounded-lg bg-violet-500 text-white">
               <Microscope className="size-4" />
             </span>
-            <span className="text-headline-medium">Deep Research</span>
+            <span className="text-headline-medium">{t.title}</span>
             <Badge tone="purple" className="hidden sm:inline-flex">
-              <Globe /> 4 agents
+              <Globe /> {t.agentsBadge}
             </Badge>
             <span className="ms-auto flex items-center gap-1">
               <HeaderTools />
               <HeaderButton outline onClick={chat.reset}>
-                New report
+                {t.newReport}
               </HeaderButton>
             </span>
           </>
@@ -267,9 +353,9 @@ export default function DeepResearchTemplate() {
         footer={!empty && composer}
       >
         {empty ? (
-          <Welcome title="Research anything, in depth" subtitle="Four browser agents read the web in parallel, then write a cited report.">
+          <Welcome title={t.welcomeTitle} subtitle={t.welcomeSubtitle}>
             <div className="mt-2 w-full text-start">{composer}</div>
-            <Suggestions variant="list" items={['State of small modular reactors in 2026', 'How do LLM evals compare across labs?', 'Market for heat pumps in Europe']} onPick={chat.send} className="text-start" />
+            <Suggestions variant="list" items={t.suggestions} onPick={chat.send} className="text-start" />
           </Welcome>
         ) : (
           chat.messages.map((m, i) => (

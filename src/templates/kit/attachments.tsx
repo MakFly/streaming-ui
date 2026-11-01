@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { defineCopy, useCopy } from './i18n';
 import { CAT_JPG as cat, CODE_ICON as codeIcon, DOC_DARK_ICON as docDarkIcon, DOC_ICON as docIcon, SHEET_ICON as sheetIcon, SLIDES_ICON as slidesIcon, VIDEO_ICON as videoIcon } from './attachments-assets';
 
 /* Composer Attachments: a strip of 56px tiles above
@@ -39,7 +40,13 @@ const SAMPLES: Omit<Attachment, 'id'>[] = [
 /** The rounded-rect outline the ring traces, starting top-centre (pathLength 100). */
 const RING = 'M 28 1 H 44 A 11 11 0 0 1 55 12 V 44 A 11 11 0 0 1 44 55 H 12 A 11 11 0 0 1 1 44 V 12 A 11 11 0 0 1 12 1 Z';
 
+const COPY = defineCopy({
+  en: { remove: (name: string) => `Remove ${name}` },
+  fr: { remove: (name: string) => `Retirer ${name}` },
+});
+
 export function AttachmentTile({ attachment: a, onRemove }: { attachment: Attachment; onRemove?: () => void }) {
+  const t = useCopy(COPY);
   const uploading = a.progress !== undefined;
   const image = a.kind === 'image';
   const icon = a.kind === 'image' ? null : ICONS[a.kind];
@@ -70,7 +77,7 @@ export function AttachmentTile({ attachment: a, onRemove }: { attachment: Attach
         </span>
         <button
           type="button"
-          aria-label={`Remove ${a.name}`}
+          aria-label={t.remove(a.name)}
           onClick={onRemove}
           disabled={uploading}
           className={cn(

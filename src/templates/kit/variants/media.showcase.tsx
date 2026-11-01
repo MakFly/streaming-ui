@@ -3,6 +3,7 @@ import type { ChatScriptApi, Script } from '../engine';
 import type { ComposerExtension } from '../variant-types';
 
 import { MediaComposerView, withFlags } from './media';
+import { copyOf, defineCopy } from '../i18n';
 
 /* The /composers showcase for Media: picker glyph, scripted demo and comparison cells. */
 
@@ -25,33 +26,86 @@ function MediaGlyph() {
 
 /* ------------------------------------------------------------------ demo */
 
-const INTRO_PROMPT = 'a koi pond at dawn, mist over the water, soft film grain';
-
-const intro: Script = async (api) => {
-  await api.sleep(500);
-  // Type the prompt only; the flags arrive with the message, as the composer appends them on send.
-  for (let i = 1; i <= INTRO_PROMPT.length; i += 2) {
-    api.setDraft(INTRO_PROMPT.slice(0, i));
-    await api.sleep(28);
-  }
-  api.setDraft(INTRO_PROMPT);
-  await api.sleep(350);
-  api.setDraft('');
-  await api.user(withFlags(INTRO_PROMPT, { ar: '16:9', stylize: 250, chaos: 10, style: 'photo', n: 4 }));
-  await generate(api, INTRO_PROMPT, 4, '16:9');
-};
-
-async function generate(api: ChatScriptApi, prompt: string, n: number, ar: string) {
-  const a = api.assistant();
-  await a.think('Composing', ['Reading the prompt and its parameters', `Planning ${n} variation${n > 1 ? 's' : ''} at ${ar}`], 550);
-  await a.tool('Generate', prompt.length > 48 ? `${prompt.slice(0, 47)}…` : prompt, { meta: `${n} image${n > 1 ? 's' : ''} · ${ar}`, ms: 1400, output: ['seed 4127 · sampling 30 steps', `${n} preview${n > 1 ? 's' : ''} ready`] });
-  await a.stream(
-    `Here ${n > 1 ? `are **${n} variations**` : 'is **one image**'} at **${ar}**.
+const COPY = defineCopy({
+  en: {
+    introPrompt: 'a koi pond at dawn, mist over the water, soft film grain',
+    thinking: 'Composing',
+    readParams: 'Reading the prompt and its parameters',
+    planning: (n: number, ar: string) => `Planning ${n} variation${n > 1 ? 's' : ''} at ${ar}`,
+    images: (n: number) => `${n} image${n > 1 ? 's' : ''}`,
+    toolOutput: (n: number) => ['seed 4127 · sampling 30 steps', `${n} preview${n > 1 ? 's' : ''} ready`],
+    answer: (n: number, ar: string) => `Here ${n > 1 ? `are **${n} variations**` : 'is **one image**'} at **${ar}**.
 
 - **U1–U${n}** upscales one; **V1–V${n}** riffs on it.
 - Raise **Stylize** for a more painterly look, or **Chaos** for a wilder spread across the grid.`,
-    26,
-  );
+    suggestions: ['a lighthouse in a storm, oil painting', 'isometric tiny bakery, soft clay render', 'portrait of a red fox in snow'],
+    placeholder: 'Describe the image you want',
+    dropRefs: 'Drop images as references',
+    messages: (n: number) => `${n} messages`,
+    flagsSent: 'Parameters are sent as flags',
+    flagsTag: '--flags on send',
+    compare: {
+      input: 'Growing textarea + reference strip',
+      model: 'Settings row, right',
+      tools: 'After the parameter chips',
+      builtIn: 'References, ratio, stylize/chaos, style, batch',
+      status: 'Under',
+      busy: 'Stop button',
+      stop: 'Stop button',
+      width: 'Main column (chips scroll when narrow)',
+    },
+  },
+  fr: {
+    introPrompt: 'un étang de carpes koï à l\'aube, brume sur l\'eau, grain de pellicule doux',
+    thinking: 'Composition',
+    readParams: 'Lecture du prompt et de ses paramètres',
+    planning: (n: number, ar: string) => `Préparation de ${n} variation${n > 1 ? 's' : ''} en ${ar}`,
+    images: (n: number) => `${n} image${n > 1 ? 's' : ''}`,
+    toolOutput: (n: number) => ['seed 4127 · échantillonnage en 30 étapes', `${n} aperçu${n > 1 ? 's' : ''} prêt${n > 1 ? 's' : ''}`],
+    answer: (n: number, ar: string) => `Voici ${n > 1 ? `**${n} variations**` : '**une image**'} en **${ar}**.
+
+- **U1–U${n}** agrandit une image ; **V1–V${n}** en propose une variante.
+- Augmentez **Stylisation** pour un rendu plus pictural, ou **Chaos** pour un éventail plus sauvage dans la grille.`,
+    suggestions: ['un phare dans la tempête, peinture à l\'huile', 'minuscule boulangerie isométrique, rendu argile douce', 'portrait d\'un renard roux dans la neige'],
+    placeholder: 'Décrivez l\'image souhaitée',
+    dropRefs: 'Déposez des images comme références',
+    messages: (n: number) => `${n} messages`,
+    flagsSent: 'Les paramètres sont envoyés sous forme de flags',
+    flagsTag: '--flags à l\'envoi',
+    compare: {
+      input: 'Zone de texte extensible + bandeau de références',
+      model: 'Rangée de réglages, à droite',
+      tools: 'Après les pastilles de paramètres',
+      builtIn: 'Références, format, stylisation/chaos, style, lot',
+      status: 'En dessous',
+      busy: 'Bouton Stop',
+      stop: 'Bouton Stop',
+      width: 'Colonne principale (les pastilles défilent si étroit)',
+    },
+  },
+});
+
+const intro: Script = async (api) => {
+  const prompt = copyOf(COPY).introPrompt;
+  await api.sleep(500);
+  // Type the prompt only; the flags arrive with the message, as the composer appends them on send.
+  for (let i = 1; i <= prompt.length; i += 2) {
+    api.setDraft(prompt.slice(0, i));
+    await api.sleep(28);
+  }
+  api.setDraft(prompt);
+  await api.sleep(350);
+  api.setDraft('');
+  await api.user(withFlags(prompt, { ar: '16:9', stylize: 250, chaos: 10, style: 'photo', n: 4 }));
+  await generate(api, prompt, 4, '16:9');
+};
+
+async function generate(api: ChatScriptApi, prompt: string, n: number, ar: string) {
+  const t = copyOf(COPY);
+  const a = api.assistant();
+  await a.think(t.thinking, [t.readParams, t.planning(n, ar)], 550);
+  await a.tool('Generate', prompt.length > 48 ? `${prompt.slice(0, 47)}…` : prompt, { meta: `${t.images(n)} · ${ar}`, ms: 1400, output: t.toolOutput(n) });
+  await a.stream(t.answer(n, ar), 26);
   a.done();
 }
 
@@ -64,38 +118,48 @@ async function reply(api: ChatScriptApi, text: string) {
 
 /* ------------------------------------------------------------------ extension */
 
+const YES = <span className="text-emerald-600 dark:text-emerald-400">✓</span>;
+
 export const media: ComposerExtension = {
   Component: MediaComposerView,
   Glyph: MediaGlyph,
   demo: {
     intro,
     reply,
-    suggestions: ['a lighthouse in a storm, oil painting', 'isometric tiny bakery, soft clay render', 'portrait of a red fox in snow'],
-    content: ({ picker, count }) => ({
-      placeholder: 'Describe the image you want',
-      model: picker,
-      status: (
-        <>
-          <span className="flex items-center gap-1">
-            <ImageIcon /> Drop images as references
-          </span>
-          <span className="tabular-nums">{count ? `${count} messages` : 'Parameters are sent as flags'}</span>
-        </>
-      ),
-    }),
+    get suggestions() {
+      return copyOf(COPY).suggestions;
+    },
+    content: ({ picker, count }) => {
+      const t = copyOf(COPY);
+      return {
+        placeholder: t.placeholder,
+        model: picker,
+        status: (
+          <>
+            <span className="flex items-center gap-1">
+              <ImageIcon /> {t.dropRefs}
+            </span>
+            <span className="tabular-nums">{count ? t.messages(count) : t.flagsSent}</span>
+          </>
+        ),
+      };
+    },
   },
-  compare: {
-    Input: 'Growing textarea + reference strip',
-    'Shift+Enter newline': <span className="text-emerald-600 dark:text-emerald-400">✓</span>,
-    'Model slot': 'Settings row, right',
-    'Tools slot': 'After the parameter chips',
-    'Built-in tools': 'References, ratio, stylize/chaos, style, batch',
-    'Status placement': 'Under',
-    Modes: <span className="text-text-tertiary">—</span>,
-    'Slash commands': <span className="inline-flex h-5 items-center rounded-full bg-sky-500/10 px-2 text-caption-1-medium text-sky-600 dark:text-sky-400">--flags on send</span>,
-    'Busy indicator': 'Stop button',
-    'Stop control': 'Stop button',
-    'Esc to stop': <span className="text-emerald-600 dark:text-emerald-400">✓</span>,
-    'Best width': 'Main column (chips scroll when narrow)',
+  get compare() {
+    const c = copyOf(COPY).compare;
+    return {
+      Input: c.input,
+      'Shift+Enter newline': YES,
+      'Model slot': c.model,
+      'Tools slot': c.tools,
+      'Built-in tools': c.builtIn,
+      'Status placement': c.status,
+      Modes: <span className="text-text-tertiary">—</span>,
+      'Slash commands': <span className="inline-flex h-5 items-center rounded-full bg-sky-500/10 px-2 text-caption-1-medium text-sky-600 dark:text-sky-400">{copyOf(COPY).flagsTag}</span>,
+      'Busy indicator': c.busy,
+      'Stop control': c.stop,
+      'Esc to stop': YES,
+      'Best width': c.width,
+    };
   },
 };
