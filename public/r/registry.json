@@ -69,6 +69,11 @@
           "path": "src/templates/kit/mention-field.tsx",
           "type": "registry:component",
           "target": "components/composer/mention-field.tsx"
+        },
+        {
+          "path": "src/templates/kit/i18n.ts",
+          "type": "registry:component",
+          "target": "components/composer/i18n.ts"
         }
       ]
     },
@@ -379,6 +384,11 @@
           "path": "src/templates/kit/icon.tsx",
           "type": "registry:component",
           "target": "components/composer/icon.tsx"
+        },
+        {
+          "path": "src/templates/kit/i18n.ts",
+          "type": "registry:component",
+          "target": "components/composer/i18n.ts"
         }
       ]
     },

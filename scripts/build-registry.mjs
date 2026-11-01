@@ -80,7 +80,7 @@ const registry = {
       description: 'What every composer shares: the props contract, field behaviour, buttons, dictation, the status line with the context ring, the Composer Loader rim and the Composer Attachments strip.',
       dependencies: ['lucide-react', 'radix-ui'],
       registryDependencies: ['utils', url('composer-theme')],
-      files: ['composer-kit.tsx', 'primitives.tsx', 'attachments.tsx', 'attachments-assets.ts', 'agent-limits.tsx', 'icon.tsx', 'mention-menu.tsx', 'mention-field.tsx'].map((f) => file(f)),
+      files: ['composer-kit.tsx', 'primitives.tsx', 'attachments.tsx', 'attachments-assets.ts', 'agent-limits.tsx', 'icon.tsx', 'mention-menu.tsx', 'mention-field.tsx', 'i18n.ts'].map((f) => file(f)),
     },
     ...COMPOSERS.map(([id, title, description, ui]) => ({
       name: `composer-${id}`,
@@ -116,7 +116,7 @@ const registry = {
       description: 'Context window split by token bucket with an expandable breakdown, plan usage limits with reset times, and the context ring that opens it.',
       dependencies: ['radix-ui'],
       registryDependencies: ['utils', url('composer-theme')],
-      files: [file('agent-limits.tsx'), file('icon.tsx')],
+      files: [file('agent-limits.tsx'), file('icon.tsx'), file('i18n.ts')],
     },
     {
       name: 'thinking-orb',
